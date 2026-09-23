@@ -36,8 +36,18 @@ First public draft, under the name *Conditional Interest Discovery*.
 
 Consolidates three earlier internal drafts written under a former working
 name, and incorporates two independent adversarial reviews of the consolidated
-text and nine issues found while writing the reference implementation
+text and twelve issues found while writing the reference implementation
 (`impl/SPEC-ISSUES.md`).
+
+The last of those, S-12, is worth naming here because it changes what the
+document claims rather than what it specifies. A comparative harness built to
+test the protocol against existing mechanisms showed that the coarsening
+illustrated in Section 15.4 provides no protection against inference: it
+relabels one deterministic answer as another, and an adaptive querent's
+partition of the responder's possible values is unchanged. Sections 15.4, 15.5
+and 24.3 were corrected before publication, and Section 24.3 now states that
+the only mitigation in CID 0.1 which bounds adaptive inference is a bound on
+the number of claims. The measurements are in `spec/alternatives.md`.
 
 Everything before the first publication is absorbed into this version: there
 is no history to preserve until a reader can cite one. From the day 0.1 is

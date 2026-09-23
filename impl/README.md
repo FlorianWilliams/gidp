@@ -53,7 +53,10 @@ specification set for itself and it is now met — but all four were written by
 the same hand, which is exactly how a shared blind spot survives. The test
 that matters is a domain profile written by someone else. `test_limits.py` is
 the other half: four cases chosen because they should *fail*, and they do —
-see `../spec/LIMITS.md`. `test_schema.py` validates every
+see `../spec/LIMITS.md`. `baselines/` runs the same case through four existing
+mechanisms and sweeps this implementation's answering policies against query
+budgets, measuring leakage identically for each; it is what `../spec/alternatives.md`
+rests on, and it is what found S-12. `test_schema.py` validates every
 object of both sessions against freshly generated schemas, so the schema
 cannot drift from the code.
 

@@ -8,7 +8,7 @@ carefully.
 Each entry states what the specification says, what a reader cannot determine
 from it, what this implementation decided, and whether CID 0.1 should change.
 
-**Status: all eight were applied to CID 0.1 on 23 September 2026**, before the
+**Status: all twelve were applied to CID 0.1 on 23 September 2026**, before the
 specification was frozen for publication. The entries are kept because the
 record of what an implementation found is worth more than a clean file: it is
 the evidence that the draft was tested rather than merely written.
@@ -282,3 +282,56 @@ forbids a recipient from treating the Opportunity as complete while it is
 non-empty. This is a change to the object model, made before publication and
 therefore absorbed into 0.1 (see `../spec/CHANGELOG.md`); after publication it
 would have required 0.2.
+
+---
+
+## S-12 — Coarsening is presented as an inference control and is not one
+
+**Found.** 2026-09-23, by the comparative harness (`baselines/mitigations.py`),
+which was built to test a different claim entirely.
+
+**Spec.** Section 15.4 illustrates a private threshold answered
+`conditionally_compatible` without being transmitted. Section 15.5 permits
+replacing a truthful answer "in order to limit inference (coarsening,
+randomised response within these bounds, privacy budgets)". Section 24.3 lists
+"bucketed or randomised responses" among the mitigations against probing.
+
+**The defect.** The default policy — coarsen when the truthful answer would
+have been affirmative and the attribute is evaluation-only — maps one
+deterministic answer onto another. `compatible` becomes
+`conditionally_compatible`; `incompatible` stays `incompatible`. The two
+truths still produce two distinguishable answers, so a querent's partition of
+the responder's possible values is *identical* to the partition it would have
+obtained from a plainly truthful oracle. Measured over an adaptive querent at
+budgets of 4, 8, 16 and 64 claims, the two policies leak the same number of
+bits in every cell, to the last decimal.
+
+Coarsening does exactly what Section 15.4 was written for: it keeps `80M` off
+the wire. It does nothing whatever for Section 15.5's stated purpose. Since
+15.5 and 24.3 both present it as an inference control, an implementer who
+follows the specification will believe they have a mitigation in place and
+will have none.
+
+The sweep also disposes of the two obvious repairs. Coarsening *every* local
+answer leaks nothing and qualifies every counterparty, including those that
+should have been refused. Declining every local answer leaks nothing and
+qualifies none. Randomising half the local answers holds an adversary to
+3.04 bits at a budget of 8 where a deterministic policy has already given up
+7.94 — and gives up 7.94 itself by a budget of 16, because the adversary
+re-asks, while costing 39 points of true-negative rate.
+
+**Decided here.** Nothing in the code changes: the default policy is correct
+for what it is for, and the alternatives are worse. The harness, its sweep and
+`tests/test_baselines.py` are the record.
+
+**Spec should change.** Yes, and it is the kind of change that matters more
+than an object-model fix, because it corrects a claim a reader would otherwise
+rely on.
+
+**Resolution — applied to CID 0.1 on 2026-09-23.** Section 15.4 now states
+that coarsening protects the value and not the inference, and why. Section
+15.5 no longer attributes an inference-limiting purpose to the permitted
+replacements, and says that the question is answered in 24.3. Section 24.3 now
+states that the only mitigation in CID 0.1 which bounds adaptive inference is
+a bound on the number of claims, names that bound's known weakness, and points
+at the measurements. See `../spec/alternatives.md`.

@@ -34,14 +34,18 @@ stops there.
 | [`spec/explainer.md`](spec/explainer.md) | One page, for a first reader. |
 | [`spec/use-cases.md`](spec/use-cases.md) | Eight cases the protocol is meant to serve. |
 | [`spec/open-problems.md`](spec/open-problems.md) | Design rationale, the formal open problem, candidate directions. Non-normative. |
+| [`spec/alternatives.md`](spec/alternatives.md) | Why not use a broker, a listing, a secure comparison or a set intersection? Measured, not argued. Non-normative. |
 | [`spec/LIMITS.md`](spec/LIMITS.md) | Where this protocol should **not** be used. Non-normative. |
 | [`spec/CHANGELOG.md`](spec/CHANGELOG.md) | Versioning policy and history. |
 | [`impl/`](impl/) | Reference implementation in Python, with the four worked domains, the probing attack, the limit cases, and the JSON Schemas. |
 | [`impl/SPEC-ISSUES.md`](impl/SPEC-ISSUES.md) | Every ambiguity the implementation found in the draft, and what changed because of it. |
 
 Read the explainer first, then the specification. If you are looking for
-reasons to reject the design, `spec/LIMITS.md` and `spec/open-problems.md` are
-where the weaknesses are written down rather than hidden.
+reasons to reject the design, `spec/LIMITS.md`, `spec/alternatives.md` and
+`spec/open-problems.md` are where the weaknesses are written down rather than
+hidden — including the measurement showing that one of the specification's own
+stated mitigations does not work, and the number saying how much a probing
+counterparty can extract.
 
 ## Running the implementation
 
@@ -52,6 +56,8 @@ python -m pytest            # the conformance and scenario suite
 python examples/cross_border.py
 python examples/probing.py  # what an adversarial querent can extract
 python examples/limits.py   # the four cases chosen because they should break
+python -m baselines.compare      # the same case through four existing mechanisms
+python -m baselines.mitigations  # do the protocol's own defences work?
 ```
 
 The implementation is the specification's test, not its authority: where the
