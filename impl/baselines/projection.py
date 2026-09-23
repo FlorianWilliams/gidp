@@ -110,6 +110,32 @@ def truly_relevant(candidate: Interest, query: Interest) -> bool:
     )
 
 
+def resolving(level: "Level") -> "Level":
+    """The same publisher, read by a provider that understands the vocabulary.
+
+    `InMemoryProvider` matches retrieval attributes by exact token equality:
+    a publisher that said `munich` is never returned to a querent that said
+    `germany`. That is not a property of the protocol — Section 12 leaves
+    retrieval to the provider and Section 5 puts domain ontologies out of
+    scope — but it is a property of every number this harness produces, so
+    the alternative has to be measured rather than assumed away.
+
+    This variant resolves both sides of the geography to the coarsest common
+    level before comparing, which is the cheapest thing a provider can do
+    that deserves to be called semantic: no embeddings, no ontology, one
+    hierarchy.
+    """
+    def matches(c: Interest, q: Interest) -> bool:
+        return (
+            c.sector == q.sector
+            and CITIES[c.city] == CITIES[q.city]
+            and abs(c.size - q.size) <= 1
+            and c.direction == _opposite(q.direction)
+        ) if level is LEVELS[0] else level.matches(c, q)
+
+    return Level(level.name + "  + resolving provider", level.projection_bits, matches)
+
+
 LEVELS = (
     Level("L0  everything, exactly", PRIOR_BITS,
           lambda c, q: (c.sector == q.sector and c.city == q.city
@@ -133,6 +159,19 @@ LEVELS = (
           lambda c, q: c.sector == q.sector),
 )
 
+
+
+
+def _measure(level, people, asks, matchable):
+    found = retrievals = 0
+    for q in asks:
+        retrieved = [c for c in people if level.matches(c, q)]
+        found += sum(1 for c in retrieved if truly_relevant(c, q))
+        retrievals += len(retrieved)
+    recall = found / matchable if matchable else 0.0
+    sessions = retrievals / len(people)
+    drained = min(1.0, sessions * SESSION_BITS / PRIVATE_BITS)
+    return recall, sessions, drained
 
 def main() -> None:
     people = population(2_000)
@@ -159,14 +198,7 @@ def main() -> None:
 
     rows = []
     for level in LEVELS:
-        found = retrievals = 0
-        for q in asks:
-            retrieved = [c for c in people if level.matches(c, q)]
-            found += sum(1 for c in retrieved if truly_relevant(c, q))
-            retrievals += len(retrieved)
-        recall = found / matchable if matchable else 0.0
-        sessions = retrievals / len(people)
-        drained = min(1.0, sessions * SESSION_BITS / PRIVATE_BITS)
+        recall, sessions, drained = _measure(level, people, asks, matchable)
         rows.append((level, recall, sessions, drained))
         print(f"{level.name:<32} {level.projection_bits:>6.2f}b {recall:>8.0%} "
               f"{sessions:>20.1f} {drained:>19.0%}")
@@ -204,6 +236,28 @@ def main() -> None:
         print("is missing. It is not a constant: it is wherever the marginal session")
         print("costs more than the marginal index disclosure saves, which depends")
         print("entirely on how crowded the index is.")
+    resolved = resolving(LEVELS[0])
+    r_recall, r_sessions, r_drained = _measure(resolved, people, asks, matchable)
+    print()
+    print("-" * 98)
+    print(f"{resolved.name:<32} {resolved.projection_bits:>6.2f}b {r_recall:>8.0%} "
+          f"{r_sessions:>20.1f} {r_drained:>19.0%}")
+    print("-" * 98)
+    print()
+    print("That last row is the same precise publisher, read by a provider that")
+    print("resolves a city to its country before comparing — one hierarchy, no")
+    print(f"embeddings, no ontology. Recall goes from {rows[0][1]:.0%} to {r_recall:.0%} "
+          f"without the")
+    print("publisher changing anything it publishes.")
+    print()
+    print("Which relocates the problem. The low recall of a precise projection is")
+    print("not a fact about projections, it is a fact about a provider that")
+    print("compares strings. Coarsening is the publisher's way of compensating for")
+    print("a provider that cannot resolve vocabulary — and it compensates by")
+    print("disclosing less precisely to an index, which is the one thing the")
+    print("publisher should not have to trade for retrieval. Where a provider")
+    print("resolves, recall stops arguing for coarsening at all, and the only")
+    print("pressure left is the one that argues against it: sessions.")
     print()
     print("Which is the awkward part. A publishing Agent cannot compute its own")
     print("optimum, because the quantity that decides it — how many other")

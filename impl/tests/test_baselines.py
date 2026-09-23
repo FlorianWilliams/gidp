@@ -214,3 +214,27 @@ def test_the_coarsest_projection_drains_the_publisher():
         "publishing only a category should expose the publisher to more "
         "sessions than its private facts can survive"
     )
+
+
+def test_resolving_one_hierarchy_removes_the_recall_penalty():
+    """The recall cost of a precise projection is the provider's, not the
+    protocol's: it disappears with one hierarchy and no ontology."""
+    from baselines.projection import (
+        LEVELS, population, queries, resolving, truly_relevant,
+    )
+
+    people, asks = population(800), queries(120)
+    matchable = sum(1 for q in asks for c in people if truly_relevant(c, q))
+
+    def recall(level) -> float:
+        return sum(
+            1 for q in asks for c in people
+            if level.matches(c, q) and truly_relevant(c, q)
+        ) / matchable
+
+    plain = recall(LEVELS[0])
+    resolved = recall(resolving(LEVELS[0]))
+    assert plain < 0.5
+    assert resolved > 0.95
+    # And the publisher conceded exactly as much to the index either way.
+    assert resolving(LEVELS[0]).projection_bits == LEVELS[0].projection_bits
