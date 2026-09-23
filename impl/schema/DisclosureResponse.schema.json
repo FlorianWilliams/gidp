@@ -1,0 +1,86 @@
+{
+  "$defs": {
+    "DisclosureStatus": {
+      "description": "DisclosureResponse statuses (Section 14.4).",
+      "enum": [
+        "granted",
+        "declined",
+        "granted_if_reciprocal",
+        "granted_if_verified",
+        "pending_principal_approval"
+      ],
+      "title": "DisclosureStatus",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": "cidisc/0.1",
+      "default": "cidisc/0.1",
+      "title": "Version",
+      "type": "string"
+    },
+    "expires_at": {
+      "format": "date-time",
+      "title": "Expires At",
+      "type": "string"
+    },
+    "session_id": {
+      "title": "Session Id",
+      "type": "string"
+    },
+    "request_ref": {
+      "title": "Request Ref",
+      "type": "string"
+    },
+    "type": {
+      "const": "DisclosureResponse",
+      "default": "DisclosureResponse",
+      "title": "Type",
+      "type": "string"
+    },
+    "attribute": {
+      "title": "Attribute",
+      "type": "string"
+    },
+    "status": {
+      "$ref": "#/$defs/DisclosureStatus"
+    },
+    "value": {
+      "anyOf": [
+        {},
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Value"
+    },
+    "verification_required": {
+      "anyOf": [
+        {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Verification Required"
+    }
+  },
+  "required": [
+    "expires_at",
+    "session_id",
+    "request_ref",
+    "attribute",
+    "status"
+  ],
+  "title": "DisclosureResponse",
+  "type": "object",
+  "$id": "urn:example:cidisc:0.1:DisclosureResponse"
+}

@@ -1,0 +1,82 @@
+{
+  "$defs": {
+    "Feature": {
+      "description": "Optional features declared in SessionOpen (Section 14.1).",
+      "enum": [
+        "dependency_primitives",
+        "multi_party"
+      ],
+      "title": "Feature",
+      "type": "string"
+    },
+    "Surface": {
+      "description": "Where an attribute, or a coarsened derivative of it, may appear.\n\nSection 10.1. Totally ordered from most to least exposed. Note the\nconsequence, which is a frequent source of confusion: an attribute\nclassified ``session`` is *more* sensitive than one classified\n``network``, because fewer places may carry it.",
+      "enum": [
+        "public",
+        "discovery",
+        "network",
+        "session",
+        "local"
+      ],
+      "title": "Surface",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": "cidisc/0.1",
+      "default": "cidisc/0.1",
+      "title": "Version",
+      "type": "string"
+    },
+    "expires_at": {
+      "format": "date-time",
+      "title": "Expires At",
+      "type": "string"
+    },
+    "session_id": {
+      "title": "Session Id",
+      "type": "string"
+    },
+    "request_ref": {
+      "title": "Request Ref",
+      "type": "string"
+    },
+    "type": {
+      "const": "SessionAccept",
+      "default": "SessionAccept",
+      "title": "Type",
+      "type": "string"
+    },
+    "responder": {
+      "title": "Responder",
+      "type": "string"
+    },
+    "max_depth": {
+      "$ref": "#/$defs/Surface"
+    },
+    "profile": {
+      "title": "Profile",
+      "type": "string"
+    },
+    "features": {
+      "items": {
+        "$ref": "#/$defs/Feature"
+      },
+      "title": "Features",
+      "type": "array"
+    }
+  },
+  "required": [
+    "expires_at",
+    "session_id",
+    "request_ref",
+    "responder",
+    "max_depth",
+    "profile"
+  ],
+  "title": "SessionAccept",
+  "type": "object",
+  "$id": "urn:example:cidisc:0.1:SessionAccept"
+}

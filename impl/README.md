@@ -1,0 +1,73 @@
+# CID 0.1 — reference implementation
+
+Reference implementation of the **Conditional Interest Discovery** protocol,
+draft 0.1. The specification is in `../spec/CID-0.1.md`; the open problems and
+design rationale are in `../spec/open-problems.md`.
+
+This code exists to test the specification, not to ship a product.
+
+## What it does
+
+The bilateral core under the `core` profile: the object model of Section 14
+with request/response correlation, the session state machine exactly as the
+normative table of Section 17.2 gives it, the Disclosure Policy engine
+(surface × gate, session depth, `evaluation_only` values that never leave the
+Agent), the result vocabulary with the truthfulness rule of Section 15.5,
+Discovery Projection derivation under the content rule, and an in-memory
+Discovery Provider.
+
+## What it deliberately does not do
+
+Multi-party discovery, any transport binding, and **any cryptography at all**.
+CID 0.1 requires none of these, and a toy version of any of them would
+misrepresent what the protocol guarantees.
+
+**This implementation provides no confidentiality** against a malicious peer
+beyond what the policy layer withholds, and none at all against a malicious
+operator of the process. What it demonstrates is that the protocol's
+information flows are implementable and internally consistent.
+
+## Run it
+
+```
+pip install pydantic
+python examples/cross_border.py           # Appendix C.1, with transcript
+python examples/executive_succession.py   # Appendix C.2, a different domain
+python examples/partnership.py            # Appendix C.3, dependency primitives
+python examples/co_investment.py          # Appendix C.5, a contingent Opportunity
+python examples/limits.py                 # four cases chosen because they break
+python examples/probing.py                # the attack of Section 24.3, measured
+python tools/emit_schema.py schema        # JSON Schema for every object
+pytest                                    # 61 tests; see below
+```
+
+The suite is in four parts. `test_conformance.py` has one test per criterion of
+Section 23.2, named after it, so a third party can run it against their own
+implementation. `test_scenario.py` replays a whole session and asserts the
+property the protocol exists for: **no Agent transmits its own
+evaluation-only values** — a per-sender property, and the nuance is worth
+reading. `test_horizontality.py` checks Appendix F.2 mechanically: the four
+materially different domains must use the same objects, operators and results,
+differing only in vocabulary and policy. Four is the threshold the
+specification set for itself and it is now met — but all four were written by
+the same hand, which is exactly how a shared blind spot survives. The test
+that matters is a domain profile written by someone else. `test_limits.py` is
+the other half: four cases chosen because they should *fail*, and they do —
+see `../spec/LIMITS.md`. `test_schema.py` validates every
+object of both sessions against freshly generated schemas, so the schema
+cannot drift from the code.
+
+`examples/probing.py` implements the open problem the specification states:
+an adversarial querent locating a private threshold it is never told. It ships
+here on purpose. An implementer choosing a query budget deserves a measured
+number, and a weakness the authors demonstrate themselves is one nobody has to
+publish as a finding against the protocol.
+
+## Issues found in the specification
+
+`SPEC-ISSUES.md` logs every ambiguity met while writing this code, before it
+was resolved here. That file is the point of the exercise.
+
+## Licence
+
+Apache-2.0.

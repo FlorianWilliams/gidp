@@ -1,0 +1,103 @@
+{
+  "$defs": {
+    "Claim": {
+      "additionalProperties": false,
+      "description": "One question about one dimension (Section 14.2).",
+      "properties": {
+        "key": {
+          "title": "Key",
+          "type": "string"
+        },
+        "operator": {
+          "$ref": "#/$defs/ClaimOperator"
+        },
+        "value": {
+          "title": "Value"
+        }
+      },
+      "required": [
+        "key",
+        "operator",
+        "value"
+      ],
+      "title": "Claim",
+      "type": "object"
+    },
+    "ClaimOperator": {
+      "description": "Core claim operators (Section 14.2). Profiles MAY add operators.",
+      "enum": [
+        "equals",
+        "intersects",
+        "within",
+        "compatible_with"
+      ],
+      "title": "ClaimOperator",
+      "type": "string"
+    },
+    "ClaimResult": {
+      "description": "Per-claim results (Section 15.1).\n\n``CONDITIONALLY_COMPATIBLE`` and ``UNKNOWN`` are non-committal by\ndefinition: they assert neither that the claim holds nor that it fails,\nwhich is what makes the coarsening rule of 15.5 truthful.",
+      "enum": [
+        "compatible",
+        "incompatible",
+        "conditionally_compatible",
+        "unknown",
+        "requires_disclosure",
+        "requires_principal_approval",
+        "declined"
+      ],
+      "title": "ClaimResult",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": "cidisc/0.1",
+      "default": "cidisc/0.1",
+      "title": "Version",
+      "type": "string"
+    },
+    "expires_at": {
+      "format": "date-time",
+      "title": "Expires At",
+      "type": "string"
+    },
+    "session_id": {
+      "title": "Session Id",
+      "type": "string"
+    },
+    "request_id": {
+      "title": "Request Id",
+      "type": "string"
+    },
+    "type": {
+      "const": "CompatibilityRequest",
+      "default": "CompatibilityRequest",
+      "title": "Type",
+      "type": "string"
+    },
+    "claims": {
+      "items": {
+        "$ref": "#/$defs/Claim"
+      },
+      "title": "Claims",
+      "type": "array"
+    },
+    "allowed_results": {
+      "items": {
+        "$ref": "#/$defs/ClaimResult"
+      },
+      "title": "Allowed Results",
+      "type": "array"
+    }
+  },
+  "required": [
+    "expires_at",
+    "session_id",
+    "request_id",
+    "claims"
+  ],
+  "title": "CompatibilityRequest",
+  "type": "object",
+  "$id": "urn:example:cidisc:0.1:CompatibilityRequest"
+}

@@ -1,0 +1,131 @@
+{
+  "$defs": {
+    "ClaimOutcome": {
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "title": "Key",
+          "type": "string"
+        },
+        "result": {
+          "$ref": "#/$defs/ClaimResult"
+        }
+      },
+      "required": [
+        "key",
+        "result"
+      ],
+      "title": "ClaimOutcome",
+      "type": "object"
+    },
+    "ClaimResult": {
+      "description": "Per-claim results (Section 15.1).\n\n``CONDITIONALLY_COMPATIBLE`` and ``UNKNOWN`` are non-committal by\ndefinition: they assert neither that the claim holds nor that it fails,\nwhich is what makes the coarsening rule of 15.5 truthful.",
+      "enum": [
+        "compatible",
+        "incompatible",
+        "conditionally_compatible",
+        "unknown",
+        "requires_disclosure",
+        "requires_principal_approval",
+        "declined"
+      ],
+      "title": "ClaimResult",
+      "type": "string"
+    },
+    "NextAction": {
+      "description": "Values of ``next.permitted`` in a CompatibilityResponse (14.3).",
+      "enum": [
+        "compatibility_request",
+        "disclosure_request",
+        "consent_request",
+        "handoff",
+        "close"
+      ],
+      "title": "NextAction",
+      "type": "string"
+    },
+    "NextBlock": {
+      "additionalProperties": false,
+      "properties": {
+        "permitted": {
+          "items": {
+            "$ref": "#/$defs/NextAction"
+          },
+          "title": "Permitted",
+          "type": "array"
+        },
+        "requires": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Requires",
+          "type": "array"
+        }
+      },
+      "title": "NextBlock",
+      "type": "object"
+    },
+    "SessionStatus": {
+      "description": "Session status (Section 15.2).",
+      "enum": [
+        "open",
+        "potentially_compatible",
+        "incompatible",
+        "closed"
+      ],
+      "title": "SessionStatus",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": "cidisc/0.1",
+      "default": "cidisc/0.1",
+      "title": "Version",
+      "type": "string"
+    },
+    "expires_at": {
+      "format": "date-time",
+      "title": "Expires At",
+      "type": "string"
+    },
+    "session_id": {
+      "title": "Session Id",
+      "type": "string"
+    },
+    "request_ref": {
+      "title": "Request Ref",
+      "type": "string"
+    },
+    "type": {
+      "const": "CompatibilityResponse",
+      "default": "CompatibilityResponse",
+      "title": "Type",
+      "type": "string"
+    },
+    "results": {
+      "items": {
+        "$ref": "#/$defs/ClaimOutcome"
+      },
+      "title": "Results",
+      "type": "array"
+    },
+    "session_status": {
+      "$ref": "#/$defs/SessionStatus"
+    },
+    "next": {
+      "$ref": "#/$defs/NextBlock"
+    }
+  },
+  "required": [
+    "expires_at",
+    "session_id",
+    "request_ref",
+    "results",
+    "session_status"
+  ],
+  "title": "CompatibilityResponse",
+  "type": "object",
+  "$id": "urn:example:cidisc:0.1:CompatibilityResponse"
+}

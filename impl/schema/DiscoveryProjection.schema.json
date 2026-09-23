@@ -1,0 +1,79 @@
+{
+  "additionalProperties": false,
+  "description": "Section 11. The only object published to a Discovery Provider.\n\n``type``, ``version``, ``expires_at``, ``projection_id`` and ``endpoint``\nare protocol metadata: they are not derived from the Standing Interest and\nare not subject to the content rule of Section 11.2.",
+  "properties": {
+    "version": {
+      "const": "cidisc/0.1",
+      "default": "cidisc/0.1",
+      "title": "Version",
+      "type": "string"
+    },
+    "expires_at": {
+      "format": "date-time",
+      "title": "Expires At",
+      "type": "string"
+    },
+    "type": {
+      "const": "DiscoveryProjection",
+      "default": "DiscoveryProjection",
+      "title": "Type",
+      "type": "string"
+    },
+    "projection_id": {
+      "title": "Projection Id",
+      "type": "string"
+    },
+    "endpoint": {
+      "title": "Endpoint",
+      "type": "string"
+    },
+    "interest_ref": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Interest Ref"
+    },
+    "categories": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Categories",
+      "type": "array"
+    },
+    "domains": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Domains",
+      "type": "array"
+    },
+    "geographies": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Geographies",
+      "type": "array"
+    },
+    "relation": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Relation",
+      "type": "array"
+    }
+  },
+  "required": [
+    "expires_at",
+    "projection_id",
+    "endpoint"
+  ],
+  "title": "DiscoveryProjection",
+  "type": "object",
+  "$id": "urn:example:cidisc:0.1:DiscoveryProjection"
+}

@@ -1,0 +1,83 @@
+{
+  "$defs": {
+    "IdentityStatus": {
+      "description": "Per-side identity status carried in an Opportunity (Section 14.6).",
+      "enum": [
+        "not_requested",
+        "pending_principal_approval",
+        "granted",
+        "declined"
+      ],
+      "title": "IdentityStatus",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "One-way notification produced on PROBING -> QUALIFIED (Section 14.6).",
+  "properties": {
+    "version": {
+      "const": "cidisc/0.1",
+      "default": "cidisc/0.1",
+      "title": "Version",
+      "type": "string"
+    },
+    "expires_at": {
+      "format": "date-time",
+      "title": "Expires At",
+      "type": "string"
+    },
+    "session_id": {
+      "title": "Session Id",
+      "type": "string"
+    },
+    "type": {
+      "const": "Opportunity",
+      "default": "Opportunity",
+      "title": "Type",
+      "type": "string"
+    },
+    "structure": {
+      "title": "Structure",
+      "type": "string"
+    },
+    "evaluated_dimensions": {
+      "title": "Evaluated Dimensions",
+      "type": "integer"
+    },
+    "compatible_dimensions": {
+      "title": "Compatible Dimensions",
+      "type": "integer"
+    },
+    "open_conditions": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Open Conditions",
+      "type": "array"
+    },
+    "contingent_on": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Contingent On",
+      "type": "array"
+    },
+    "identity_status": {
+      "additionalProperties": {
+        "$ref": "#/$defs/IdentityStatus"
+      },
+      "title": "Identity Status",
+      "type": "object"
+    }
+  },
+  "required": [
+    "expires_at",
+    "session_id",
+    "structure",
+    "evaluated_dimensions",
+    "compatible_dimensions"
+  ],
+  "title": "Opportunity",
+  "type": "object",
+  "$id": "urn:example:cidisc:0.1:Opportunity"
+}

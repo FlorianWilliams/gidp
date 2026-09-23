@@ -1,0 +1,65 @@
+{
+  "$defs": {
+    "CloseReason": {
+      "description": "SessionClose reasons (Section 14.8).",
+      "enum": [
+        "declined",
+        "incompatible",
+        "unsupported",
+        "expired",
+        "completed",
+        "unspecified"
+      ],
+      "title": "CloseReason",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Section 14.8. Carries request_ref only when sent in place of a response.",
+  "properties": {
+    "version": {
+      "const": "cidisc/0.1",
+      "default": "cidisc/0.1",
+      "title": "Version",
+      "type": "string"
+    },
+    "expires_at": {
+      "format": "date-time",
+      "title": "Expires At",
+      "type": "string"
+    },
+    "session_id": {
+      "title": "Session Id",
+      "type": "string"
+    },
+    "type": {
+      "const": "SessionClose",
+      "default": "SessionClose",
+      "title": "Type",
+      "type": "string"
+    },
+    "reason": {
+      "$ref": "#/$defs/CloseReason"
+    },
+    "request_ref": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Request Ref"
+    }
+  },
+  "required": [
+    "expires_at",
+    "session_id",
+    "reason"
+  ],
+  "title": "SessionClose",
+  "type": "object",
+  "$id": "urn:example:cidisc:0.1:SessionClose"
+}

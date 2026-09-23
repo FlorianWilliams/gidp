@@ -1,0 +1,104 @@
+{
+  "$defs": {
+    "IntendedUse": {
+      "enum": [
+        "compatibility_evaluation",
+        "identity_verification",
+        "handoff_preparation"
+      ],
+      "title": "IntendedUse",
+      "type": "string"
+    },
+    "Retention": {
+      "enum": [
+        "session_only",
+        "until_handoff",
+        "unrestricted"
+      ],
+      "title": "Retention",
+      "type": "string"
+    },
+    "Surface": {
+      "description": "Where an attribute, or a coarsened derivative of it, may appear.\n\nSection 10.1. Totally ordered from most to least exposed. Note the\nconsequence, which is a frequent source of confusion: an attribute\nclassified ``session`` is *more* sensitive than one classified\n``network``, because fewer places may carry it.",
+      "enum": [
+        "public",
+        "discovery",
+        "network",
+        "session",
+        "local"
+      ],
+      "title": "Surface",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": "cidisc/0.1",
+      "default": "cidisc/0.1",
+      "title": "Version",
+      "type": "string"
+    },
+    "expires_at": {
+      "format": "date-time",
+      "title": "Expires At",
+      "type": "string"
+    },
+    "session_id": {
+      "title": "Session Id",
+      "type": "string"
+    },
+    "request_id": {
+      "title": "Request Id",
+      "type": "string"
+    },
+    "type": {
+      "const": "DisclosureRequest",
+      "default": "DisclosureRequest",
+      "title": "Type",
+      "type": "string"
+    },
+    "attribute": {
+      "title": "Attribute",
+      "type": "string"
+    },
+    "purpose": {
+      "title": "Purpose",
+      "type": "string"
+    },
+    "requested_surface": {
+      "$ref": "#/$defs/Surface"
+    },
+    "intended_use": {
+      "$ref": "#/$defs/IntendedUse"
+    },
+    "retention": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Retention"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "reciprocal": {
+      "default": false,
+      "title": "Reciprocal",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "expires_at",
+    "session_id",
+    "request_id",
+    "attribute",
+    "purpose",
+    "requested_surface",
+    "intended_use"
+  ],
+  "title": "DisclosureRequest",
+  "type": "object",
+  "$id": "urn:example:cidisc:0.1:DisclosureRequest"
+}
