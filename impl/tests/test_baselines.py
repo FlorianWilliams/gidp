@@ -238,3 +238,26 @@ def test_resolving_one_hierarchy_removes_the_recall_penalty():
     assert resolved > 0.95
     # And the publisher conceded exactly as much to the index either way.
     assert resolving(LEVELS[0]).projection_bits == LEVELS[0].projection_bits
+
+
+# -- simulatability, in the sense of [KMN2005] -----------------------------
+
+def test_the_policy_the_specification_illustrates_is_the_only_leaky_decision():
+    """Section 15.4's coarsening consults the secret to decide; the others
+    do not. This is the general reason behind S-12."""
+    from baselines.mitigations import simulatability_report
+
+    report = simulatability_report()
+    assert report["default (spec 15.4)"] is False
+    for name, simulatable in report.items():
+        if name != "default (spec 15.4)":
+            assert simulatable, f"{name} unexpectedly consults the private value"
+
+
+def test_a_non_simulatable_decision_leaks_as_much_as_no_concealment():
+    """The claim the classification makes, checked against the measurement."""
+    from baselines.mitigations import probe
+
+    leaky, _ = probe(POLICIES["default (spec 15.4)"], 64)
+    plain, _ = probe(POLICIES["truthful (no coarsening)"], 64)
+    assert leaky == pytest.approx(plain)

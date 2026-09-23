@@ -116,6 +116,60 @@ POLICIES: dict[str, Policy] = {
 
 
 # --------------------------------------------------------------------------
+# Simulatability, in the sense of [KMN2005]
+# --------------------------------------------------------------------------
+
+def decision_of(evaluation: LocalEvaluation, policy: Policy,
+                over_budget: bool = False) -> str:
+    """Which of the three moves of Section 15.5 the policy took.
+
+    The answer a policy gives and the *decision* to give it are different
+    objects, and only the second is at issue here. A truthful oracle leaks
+    through its answers, which is what it is for. What [KMN2005] forbids is a
+    decision -- to withhold, to blur -- that is itself computed from the data
+    being protected, because then the choice carries the datum.
+    """
+    admissible = policy(evaluation, over_budget)
+    if len(admissible) > 1:
+        return "randomised"
+    answer = next(iter(admissible))
+    if answer is ClaimResult.DECLINED:
+        return "decline"
+    if answer is _truthful(evaluation):
+        return "truthful"
+    return "coarsen"
+
+
+def is_simulatable(policy: Policy, claim: Claim, candidates) -> bool:
+    """Is the policy's decision independent of the private value?
+
+    An attacker that knows the policy can reproduce a simulatable decision
+    without the data, so the decision tells it nothing. A decision that
+    differs between two candidate values is a channel exactly as wide as the
+    answer it was supposed to replace.
+    """
+    decisions = {
+        decision_of(evaluate_claim(build(), claim), policy)
+        for build in candidates
+    }
+    return len(decisions) == 1
+
+
+def simulatability_report() -> dict[str, bool]:
+    """Every policy in the sweep, classified."""
+    claim = Claim(key="valuation_floor", operator=ClaimOperator.WITHIN,
+                  value={"min": 40_000_000, "max": 60_000_000})
+    candidates = [
+        (lambda v=v: b_interest(valuation_floor=v))
+        for v in (0, 45_000_000, 200_000_000)
+    ]
+    return {
+        name: is_simulatable(policy, claim, candidates)
+        for name, policy in POLICIES.items()
+    }
+
+
+# --------------------------------------------------------------------------
 # The probing counterparty
 # --------------------------------------------------------------------------
 
@@ -249,12 +303,14 @@ def main() -> None:
     print("swept across every counterparty in the prior. Both must be high for a")
     print("policy to be worth anything; either alone is trivially achievable.")
     print()
-    header = f"{'policy':<26}" + "".join(f"{f'budget {b}':>20}" for b in budgets)
+    simulatable = simulatability_report()
+    header = f"{'policy':<26}{'simulatable':>13}" + "".join(
+        f"{f'budget {b}':>20}" for b in budgets)
     print(header)
     print("-" * len(header))
     rows = {}
     for name, policy in POLICIES.items():
-        row = f"{name:<26}"
+        row = f"{name:<26}{'yes' if simulatable[name] else 'NO':>13}"
         for budget in budgets:
             bits, _ = probe(policy, budget)
             tpr, tnr = discrimination(policy, budget)
@@ -274,6 +330,17 @@ def main() -> None:
     dec = rows[("decline all local", 64)]
     r_bits, r_tpr, r_tnr = rows[("randomised 50%", 64)]
 
+    print("The column that explains the rest is the second one. A decision to")
+    print("coarsen or decline is *simulatable* when an attacker who knows the")
+    print("policy can reproduce it without the data [KMN2005]; a decision that")
+    print("consults the responder's own values carries those values, whatever it")
+    print("then says. Exactly one policy in this sweep fails that test, and it is")
+    print("the one the specification illustrates: Section 15.4 coarsens when the")
+    print("truthful answer would have been affirmative, so the choice to coarsen")
+    print("is the affirmative answer, spelled differently. That is the general")
+    print("reason behind the identical rows below, and it is a 2005 result rather")
+    print("than a property of this implementation.")
+    print()
     print(f"The coarsening of Section 15.4 buys a factor, not a bound. At a budget")
     print(f"of eight it holds the adversary to {d8:.2f} bits where a plainly truthful")
     print(f"oracle gives up {t8:.2f}; at an unbounded budget it gives up {d_bits:.2f} all the")

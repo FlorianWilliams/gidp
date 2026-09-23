@@ -8,7 +8,7 @@ carefully.
 Each entry states what the specification says, what a reader cannot determine
 from it, what this implementation decided, and whether CID 0.1 should change.
 
-**Status: all fourteen were applied to CID 0.1 on 23 September 2026**, before the
+**Status: all seventeen were applied to CID 0.1 on 23 September 2026**, before the
 specification was frozen for publication. The entries are kept because the
 record of what an implementation found is worth more than a clean file: it is
 the evidence that the draft was tested rather than merely written.
@@ -425,3 +425,101 @@ what a non-echo means, states the `metadata` carriage convention and why a
 CID object does not belong in a Part, warns that the two negotiations are
 independent, and notes that an unallocated URI is an interoperability
 question rather than a detail.
+
+---
+
+## S-15 — `requires_principal_approval` is normative and unreachable
+
+**Found.** 2026-09-23, by a coverage pass over the closed vocabularies: of 89
+values, twenty are referenced nowhere outside their own definition.
+
+**Spec.** Section 15.1 lists `requires_principal_approval` as a compatibility
+result meaning "answering requires a per-instance Principal decision that is
+pending", and Section 15.2 makes it one of the results that prevent a session
+from qualifying.
+
+**The defect.** Nothing can produce it. Gates — including
+`principal_approval` — are properties of the Disclosure Policy and govern
+disclosure and consent, and Section 15.4 is emphatic that answering a claim is
+not disclosing. So within CID 0.1's own model there is no construct under
+which answering a claim requires a Principal decision, the result is
+unreachable by construction, and Section 15.2's rule about it is vacuous.
+Three enumerations carry a "pending principal approval" token; two are
+reachable and this one is not.
+
+**Decided here.** Removed from the result vocabulary. A closed vocabulary that
+nothing can produce is not a harmless spare part: it is an interoperability
+obligation on every implementer, for a case none of them can reach.
+
+**Spec should change.** Yes. Removing it also makes Section 15.2 say something.
+
+**Resolution — applied to CID 0.1 on 2026-09-23.** Removed from the Section
+15.1 table and from the Section 15.2 blocking list. If a deployment shows that
+a Principal should approve *answers* and not only disclosures, a future
+version can reintroduce it with the construct that produces it — noting that
+such a rule must remain simulatable in the sense of Section 24.3, since a
+decision keyed to the responder's own values is a channel.
+
+---
+
+## S-16 — An enumeration for outcomes the specification says it does not define
+
+**Found.** 2026-09-23, same coverage pass. All five members unused.
+
+**Spec.** Section 15.3 says operational outcomes — `unsupported`,
+`unauthorized`, `expired`, `rate_limited`, `temporarily_unavailable` — "belong
+to the transport binding, not to the CID object set: a binding conveys them
+through its own error mechanism, and CID defines no object for them."
+
+**The defect.** The implementation shipped a closed `OperationalOutcome`
+enumeration anyway, contradicting the sentence it was implementing. Nothing
+used it, which is what a vocabulary looks like when the specification was
+right and the code disagreed.
+
+**Decided here.** Removed. The tokens stay in Section 15.3's prose, where they
+name what a binding conveys.
+
+**Spec should change.** Only to close the door: Section 15.3 now adds that CID
+defines no enumeration for them either, so that the next implementer does not
+repeat this.
+
+**Resolution — applied to CID 0.1 on 2026-09-23.**
+
+---
+
+## S-17 — A gated consent could be asked for and never answered
+
+**Found.** 2026-09-23, by the coverage tool: `ConsentStatus.DECLINED` and
+`IdentityStatus.GRANTED` were reached by nothing, which turned out not to be a
+documentation gap.
+
+**Spec.** Section 14 requires every request-type object to be answered by
+exactly one terminal response, with a provisional response explicitly not
+discharging the request. Section 17.2's table has both branches:
+`CONSENT_PENDING` goes to `CONSENTED` on a grant and back to `QUALIFIED` on a
+refusal.
+
+**The defect, in the implementation.** The Agent could emit
+`pending_principal_approval` and had no method by which the Principal's
+answer ever arrived. A gated consent therefore stayed provisional for the life
+of the session, the request was never discharged, and the refusal branch of
+17.2 was unreachable. The `principal_approval` gate — the mechanism the
+specification offers for the most sensitive attributes — could ask a human a
+question and could not hear the reply. The same held for a gated disclosure.
+
+That no test noticed is the interesting part. The conformance suite checked
+that a provisional response does not discharge a request, which passed, and
+nothing checked that anything ever does.
+
+**Decided here.** `Agent.principal_answers_consent` and
+`Agent.principal_answers_disclosure` emit the terminal response on either
+branch, with a refusal carrying no scope and a refused disclosure being
+`declined` like any other (Section 14.4, so a refusal by the Principal is
+indistinguishable from a refusal by the policy).
+
+**Spec should change.** Marginally, and in one place only: Section 14.5 should
+say that the Principal's decision arrives as the terminal response to the
+original request, because an implementer reading 14.5 alone will build what
+this implementation built.
+
+**Resolution — applied to CID 0.1 on 2026-09-23.**

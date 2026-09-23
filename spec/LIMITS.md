@@ -30,12 +30,24 @@ The disclosure model is monotonically permissive: every class is an upper
 bound on exposure and none is a lower bound. That is a deliberate design — a
 protocol whose purpose is to withhold has no business compelling disclosure —
 but it means regimes built on mandatory transparency are not merely poorly
-served, they are inexpressible.
+served, they cannot be stated in this vocabulary at all.
+
+*A correction to an earlier version of this document, which said the conflict
+was inexpressible.* It is inexpressible **here**; it is not inexpressible.
+W3C's ODRL Information Model 2.2 has carried the distinction since 2018: a
+Permission permits an action, a Prohibition forbids one, and a **Duty**
+obligates one, with a Policy attaching obligations by reference. A deployment
+that must express "this MUST be published" already has a standard vocabulary
+for saying so, and the honest statement of L-1 is therefore not that the
+problem is unsolvable but that CID's Disclosure Policy is a permission
+language and a duty language is a different object, which this protocol does
+not attempt and should compose with rather than absorb.
 
 **Consequence.** Public procurement, regulated listing disclosure, and any
 market where publication is an obligation rather than a choice are out of
-scope. A deployment in such a market would need an obligation layer outside
-the protocol, and this document does not propose one.
+scope. A deployment in such a market needs an obligation layer beside the
+protocol; ODRL is the obvious candidate and this document does not propose a
+competing one.
 
 ---
 

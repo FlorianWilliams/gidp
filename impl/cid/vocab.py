@@ -80,7 +80,6 @@ class ClaimResult(str, Enum):
     CONDITIONALLY_COMPATIBLE = "conditionally_compatible"
     UNKNOWN = "unknown"
     REQUIRES_DISCLOSURE = "requires_disclosure"
-    REQUIRES_PRINCIPAL_APPROVAL = "requires_principal_approval"
     DECLINED = "declined"
 
 
@@ -100,22 +99,6 @@ class SessionStatus(str, Enum):
     POTENTIALLY_COMPATIBLE = "potentially_compatible"
     INCOMPATIBLE = "incompatible"
     CLOSED = "closed"
-
-
-class OperationalOutcome(str, Enum):
-    """Transport-level outcomes (Section 15.3).
-
-    These belong to the binding, not to the CID object set: a binding conveys
-    them through its own error mechanism. They are named here because they are
-    observable by a peer and therefore part of the protocol's information flow.
-    An operational outcome MUST NOT be used to encode a compatibility result.
-    """
-
-    UNSUPPORTED = "unsupported"
-    UNAUTHORIZED = "unauthorized"
-    EXPIRED = "expired"
-    RATE_LIMITED = "rate_limited"
-    TEMPORARILY_UNAVAILABLE = "temporarily_unavailable"
 
 
 class Authority(str, Enum):

@@ -452,3 +452,80 @@ def test_only_the_initiator_emits_the_opportunity():
         b.session.build_opportunity(
             structure="test", expires_at=_soon(), identity_status={}
         )
+
+
+# -- the Principal's decision reaches the wire ------------------------------
+
+def test_a_principal_may_refuse_consent_and_the_request_is_discharged():
+    """The `principal_approval` gate is only a gate if a refusal is possible.
+
+    Found by the vocabulary coverage pass: `ConsentStatus.DECLINED` had the
+    transition of Section 17.2 behind it and no way for an Agent to reach it,
+    so a gated consent stayed provisional for the life of the session and the
+    request was never discharged (Section 14).
+    """
+    from cid.transport import Wire
+    from cid.vocab import ConsentStatus, SessionState
+
+    a, b = _pair()
+    a.session.state = SessionState.QUALIFIED
+    b.session.state = SessionState.QUALIFIED
+
+    wire = Wire()
+    request = wire.send("A", a.request_consent(ConsentAction.REVEAL_IDENTITY,
+                                               ["identity"]))
+    provisional = wire.send("B", b.handle_consent_request(request))
+    assert provisional.status is ConsentStatus.PENDING_PRINCIPAL_APPROVAL
+    assert wire.unanswered(), "a provisional response must not discharge (14)"
+    a.session.record_consent(provisional)
+    b.session.record_consent(provisional, discharge=False)
+
+    refusal = wire.send("B", b.principal_answers_consent(request, granted=False))
+    assert refusal.status is ConsentStatus.DECLINED
+    assert refusal.granted_scope == []
+    a.session.record_consent(refusal)
+    b.session.record_consent(refusal, discharge=False)
+
+    assert not wire.unanswered(), "the terminal response discharges the request"
+    assert a.session.state is SessionState.QUALIFIED
+
+
+def test_a_principal_may_refuse_a_disclosure_and_it_looks_like_any_refusal():
+    """Section 14.4: a refusal says nothing about the attribute."""
+    from cid.vocab import DisclosureStatus
+
+    a, b = _pair()
+    request = a.request_disclosure("identity", purpose="test")
+    response = b.principal_answers_disclosure(request, granted=False)
+    assert response.status is DisclosureStatus.DECLINED
+    assert response.value is None
+
+
+def test_an_opportunity_records_that_identity_was_actually_granted():
+    """`IdentityStatus.GRANTED` is the normal end of a consented session and
+    no worked domain reached it: the examples all stop at `not_requested`.
+    A status nothing ever sets is a status no reader can trust."""
+    from cid.vocab import ConsentStatus, IdentityStatus, SessionState
+
+    a, b = _pair()
+    a.session.state = SessionState.QUALIFIED
+    b.session.state = SessionState.QUALIFIED
+    request = a.request_consent(ConsentAction.REVEAL_IDENTITY, ["identity"])
+    provisional = b.handle_consent_request(request)
+    a.session.record_consent(provisional)
+    b.session.record_consent(provisional, discharge=False)
+    granted = b.principal_answers_consent(request, granted=True)
+    assert granted.status is ConsentStatus.GRANTED
+    a.session.record_consent(granted)
+    b.session.record_consent(granted, discharge=False)
+
+    a.session.qualify()
+    opportunity = a.session.build_opportunity(
+        structure="introduction",
+        expires_at=_soon(),
+        identity_status={
+            "initiator": IdentityStatus.NOT_REQUESTED,
+            "responder": IdentityStatus.GRANTED,
+        },
+    )
+    assert opportunity.identity_status["responder"] is IdentityStatus.GRANTED

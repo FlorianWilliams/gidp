@@ -472,6 +472,61 @@ class Agent:
             expires_at=_soon(),
         )
 
+    # -- the Principal answers ---------------------------------------------
+
+    def principal_answers_consent(
+        self, request: ConsentRequest, granted: bool
+    ) -> ConsentResponse:
+        """The terminal response to a consent the Principal was asked about.
+
+        Without this the `principal_approval` gate is decorative. Section 14
+        requires every request to be answered by exactly one terminal
+        response, and a provisional `pending_principal_approval` does not
+        discharge it; an Agent that can only ever say "pending" leaves a
+        request outstanding for the life of the session and a human decision
+        with nowhere to go. Section 17.2 has the transition on both branches
+        (`CONSENT_PENDING` returns to `QUALIFIED` on a refusal); it was the
+        Agent that had no way to fire it.
+        """
+        assert self.session is not None
+        if granted:
+            self.consents.approved_attributes.update(request.scope)
+            self.consents.granted_attributes.update(request.scope)
+        self._log(
+            "consent_granted" if granted else "consent_declined",
+            f"{request.action.value} (principal)",
+        )
+        return ConsentResponse(
+            session_id=self.session.session_id,
+            request_ref=request.request_id,
+            status=ConsentStatus.GRANTED if granted else ConsentStatus.DECLINED,
+            granted_scope=list(request.scope) if granted else [],
+            expires_at=_soon(),
+        )
+
+    def principal_answers_disclosure(
+        self, request: DisclosureRequest, granted: bool
+    ) -> DisclosureResponse:
+        """The terminal response to a disclosure the Principal was asked about.
+
+        A refusal is `declined`, which Section 14.4 requires to be
+        indistinguishable from any other refusal: it says nothing about
+        whether the attribute exists or what it holds.
+        """
+        assert self.session is not None
+        if not granted:
+            self._log("disclosure_declined", request.attribute)
+            return DisclosureResponse(
+                session_id=self.session.session_id,
+                request_ref=request.request_id,
+                attribute=request.attribute,
+                status=DisclosureStatus.DECLINED,
+                expires_at=_soon(),
+            )
+        self.consents.approved_attributes.add(request.attribute)
+        self._log("disclosure_granted", f"{request.attribute} (principal)")
+        return self.handle_disclosure_request(request)
+
     # -- handoff -----------------------------------------------------------
 
     def handoff(self, protocol_ref: str) -> Handoff:

@@ -254,7 +254,7 @@ class Session:
         # Section 15.2: every claim must have resolved `compatible` or
         # `conditionally_compatible`, and at least one `compatible`. A
         # `declined`, `unknown`, `requires_disclosure` or
-        # `requires_principal_approval` result prevents qualification, so that
+        # A non-qualifying result prevents qualification, so that
         # an Opportunity never rests on silence (Section 18).
         qualifying = (ClaimResult.COMPATIBLE, ClaimResult.CONDITIONALLY_COMPATIBLE)
         qualifies = (
