@@ -487,7 +487,7 @@ discovery_projection:
 The projection omits Principal identity, transaction direction (buy vs sell), valuation limits, ARR range, rationale and exclusions.
 
 ### 11.4 Minimisation
-Agents SHOULD minimise projections while preserving sufficient retrieval quality. This is a fundamental trade-off: more specific projections improve retrieval and increase inference risk; less specific projections do the reverse. CID 0.1 does not prescribe an optimum. Coarsening techniques include generalising geography (city → region), bucketing economic ranges, and replacing direction-revealing attributes with symmetric ones (`strategic_transaction` rather than `acquire`). The last has an established precedent: in the equivalent human market, an indication of interest may omit side and price and still attract a counterparty [COND-ORDERS].
+Agents SHOULD minimise projections while preserving sufficient retrieval quality. This is a fundamental trade-off: more specific projections improve retrieval and increase inference risk; less specific projections do the reverse. CID 0.1 does not prescribe an optimum, and the shape of the curve is worth stating even though the optimum is not, because minimisation past a point reverses. Two effects, both measured on a synthetic index in the reference implementation. An over-precise projection is retrieved *less*, not more: it answers only querents who described the target in the same terms, so a publisher that named a city is never found by a querent that named the country. And a projection coarse enough to be retrieved by everyone is retrieved by everyone — each retrieval being a Compatibility Session with a counterparty that had no business finding this Principal, and each session an opportunity to probe under Section 24.3. Past a certain coarseness the sessions cost a publisher more than the projection saved it. The quantity that decides where that point falls is how many other publishers a given projection will be confused with, which the publishing Agent cannot observe and the Discovery Provider can; Section 12 gives a provider no way to say so, and a provider that reported the size of a matching set would also be helping an adversary calibrate. Coarsening techniques include generalising geography (city → region), bucketing economic ranges, and replacing direction-revealing attributes with symmetric ones (`strategic_transaction` rather than `acquire`). The last has an established precedent: in the equivalent human market, an indication of interest may omit side and price and still attract a counterparty [COND-ORDERS].
 
 ### 11.5 Multiple projections
 An Agent MAY derive different projections from one Standing Interest for different Discovery Providers or trust contexts.
@@ -620,6 +620,8 @@ expires_at: "2026-09-21T12:00:00Z"
 
 ### 14.2 Claims
 A *claim* is a question about one dimension. Required fields: `key` (attribute or category name, from the core vocabulary or the session's profile), `operator`, `value`. CID 0.1 defines the operators `equals`, `intersects` (set overlap), `within` (the asked range, expressed as `{min, max}` or a named bucket from the profile, is compatible with the responder's private value). Where the responder's own value is itself a range — the normal case for a reservation value — `within` is satisfied by **overlap**, not containment: a private range and an asked range are compatible if they intersect at all. Containment would make almost every honest claim incompatible. Implementers should be aware that overlap semantics are also what make the probing of Section 24.3 cheap, since each answer partitions the space, and `compatible_with` (profile-defined predicate). Profiles MAY add operators.
+
+An operator may not fit the shape of the value a responder holds: `within` names an interval but the responder's value is a label or a list, or `intersects` names a set but the responder's value is a range. A responder MUST answer `unknown` in that case. It MUST NOT treat the mismatch as a malformed message, and MUST NOT fail. Two reasons, and the second is the operative one. Failing on some shapes and answering on others makes the responder's behaviour a function of the shape of its own private value, which is an inference channel in the sense of Section 24.3. And a responder that can be made to fail by a well-formed message with an ill-fitting operator can be made to fail by anybody, which turns a claim into a denial of service. A requester learns nothing from `unknown` beyond what Section 15.1 already permits it to learn.
 
 ### 14.3 CompatibilityRequest / CompatibilityResponse
 
@@ -953,7 +955,7 @@ A core research question is whether approximately the same protocol mechanics su
 CID is transport-independent; bindings MAY be defined separately. A binding MUST NOT require Standing Interests or any `session`/`local` attribute to be published in the host protocol's discovery metadata, and SHOULD NOT redefine the host protocol's transport, authentication, task lifecycle or generic messaging semantics.
 
 ### 22.2 A2A binding sketch (non-normative)
-The most likely first binding is an extension of an agent-to-agent protocol such as A2A [A2A]. A2A declares extensions in the Agent Card's `capabilities.extensions` array, each entry carrying `uri`, `description` and `required` (specification §4.6); a CID implementation could advertise support as:
+The most likely first binding is an extension of an agent-to-agent protocol such as A2A [A2A]. A2A version 1.0 declares extensions in the Agent Card's `capabilities.extensions` array (§4.4.3 `AgentCapabilities`), each entry being an `AgentExtension` (§4.4.4) with the fields `uri`, `description`, `required` and `params`. A CID implementation could advertise support as:
 
 ```json
 {
@@ -961,15 +963,24 @@ The most likely first binding is an extension of an agent-to-agent protocol such
     "extensions": [
       {
         "uri": "{{CANONICAL_URL}}/extensions/conditional-interest-discovery/0.1",
-        "description": "Conditional Interest Discovery experimental extension",
-        "required": false
+        "description": "Conditional Interest Discovery 0.1",
+        "required": false,
+        "params": { "profiles": ["core"] }
       }
     ]
   }
 }
 ```
 
-CID objects would then be carried in extension-defined structured data according to the host protocol's extension rules. The extension URI above is illustrative: no URI is allocated by this draft, and the binding is not defined here. Whether CID is ultimately an A2A extension, a separate protocol or a reusable application profile is an open governance question (Appendix E).
+`required` is false deliberately. An Agent that made CID mandatory would refuse every counterparty that speaks plain A2A, which is the opposite of what a discovery protocol is for.
+
+Declaring an extension does not activate it. A client that intends to use one sends the `A2A-Extensions` header carrying a comma-separated list of extension URIs, and the responder echoes back the subset it actually activated; an extension that was not echoed is not in force, whatever the Agent Card says. This matters for CID more than for most extensions, because it is the point at which an exchange can be refused before any CID object exists, and therefore before any Disclosure Policy has been consulted.
+
+CID objects are then carried in the `metadata` map of A2A's core structures, under keys prefixed by the extension URI — A2A's own convention, which keeps extensions from colliding and leaves core types unmodified. A CID object is not content for a human to read, so it belongs in `metadata` rather than in a message Part.
+
+Note that two negotiations are now in play and neither subsumes the other. A2A activation answers *does this peer speak CID at all*; the `features` of Section 14.1 answer *which optional CID features are in force for this session*, and Section 14.1 requires `SessionAccept` to carry the intersection actually supported rather than an echo. A peer may activate the extension and support no optional feature whatever. An implementation that derives one from the other will be wrong in the direction that matters, by assuming a feature is in force because the extension was activated.
+
+The extension URI above is illustrative: CID 0.1 allocates no URI and registers nothing (Section 26), and two deployments that pick different URIs will not interoperate — which is an argument for allocating one before there are two. The binding itself is not defined here. Whether CID is ultimately an A2A extension, a separate protocol or a reusable application profile is an open governance question (Appendix E). A worked mapping, with round-trip tests against every object that crosses a wire, is in the reference implementation under `impl/cid/bindings/a2a.py`.
 
 ### 22.3 Tool and context protocols
 An Agent MAY use a tool/context protocol such as MCP [MCP] to obtain the local context required to construct or evaluate a Standing Interest. That interaction is outside CID.
@@ -1055,6 +1066,10 @@ This threat has a formal treatment. [RANI2026] formalises *behavioural privacy l
 
 ### 24.4 Sybil agents
 An attacker operates many Agents or Principals to bypass query limits or obtain different disclosure views. Identity, credential, reputation, staking, economic or membership mechanisms MAY be used.
+
+This threat and the mitigation of Section 24.3 cancel each other, and the cancellation is measurable rather than theoretical. A query budget keyed to the counterparty bounds only the product of the budget and the number of counterparties an attacker can mint: in the reference implementation's worked case, an allowance of two claims per counterparty and four identities extracts exactly what an allowance of eight and one identity extracts, because nothing in this protocol connects the two. That is not an oversight in the budget design. It follows from the same property that keeps a responder from profiling its counterparties — opaque endpoints — seen from the other side: an Agent that cannot recognise who it is talking to cannot recognise that it is being enumerated.
+
+A cap on the responder's *total* answered claims, to anyone, over the life of a Standing Interest, cannot be diluted by identities and does bound. Its price is that it cannot distinguish the populations it is rationing. In the worked case a complete extraction costs seven answered claims and an honest session costs six, so any cap generous enough to serve two honest counterparties has already funded a complete extraction, and a cap mean enough to prevent one serves nobody. Deployments SHOULD state which of the two they have chosen and at what level; CID 0.1 defines neither, and an implementer should not read Sections 24.3 and 24.4 together as describing a solved problem.
 
 ### 24.5 Fraudulent projections and unauthorised delegation
 Agents may publish fraudulent or low-intent Discovery Projections to harvest information or spam Principals, or claim authority they do not hold. Mitigations: verified authorisation to represent (Section 20); reputation; economic cost; the invariant of Section 16.2.

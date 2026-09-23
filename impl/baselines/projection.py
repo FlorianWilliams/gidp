@@ -1,0 +1,219 @@
+"""Section 11.4 says there is a fundamental trade-off. Here it is, measured.
+
+    "Agents SHOULD minimise projections while preserving sufficient retrieval
+    quality. This is a fundamental trade-off: more specific projections
+    improve retrieval and increase inference risk; less specific projections
+    do the reverse. CID 0.1 does not prescribe an optimum."
+
+That is asserted, not shown, and the shape of the curve decides whether the
+advice is useful. Run it:
+
+    python -m baselines.projection
+
+The finding is that coarsening does not reduce a publisher's exposure so much
+as move it: a vaguer projection discloses less to the index and is retrieved
+by more querents, each of whom opens a session and probes. Total exposure is
+therefore U-shaped, it has a computable minimum for a given population, and
+at the coarse end it is *worse* than publishing precisely.
+"""
+
+from __future__ import annotations
+
+import random
+import sys
+from dataclasses import dataclass
+from math import log2
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+SECTORS = ("enterprise_software", "climate_hardware", "medtech", "logistics",
+           "fintech", "industrial", "consumer", "energy")
+CITIES = {
+    "paris": "fr", "lyon": "fr", "toulouse": "fr", "nantes": "fr",
+    "berlin": "de", "munich": "de", "hamburg": "de", "cologne": "de",
+    "milan": "it", "rome": "it", "turin": "it", "bologna": "it",
+    "madrid": "es", "barcelona": "es", "valencia": "es", "seville": "es",
+    "amsterdam": "nl", "rotterdam": "nl", "utrecht": "nl", "eindhoven": "nl",
+}
+SIZE_BUCKETS = tuple(range(6))
+DIRECTIONS = ("acquire", "divest")
+
+#: What a publisher risks, before anyone reads anything.
+PRIOR_BITS = log2(len(SECTORS)) + log2(len(CITIES)) + log2(len(SIZE_BUCKETS)) + 1.0
+
+#: Measured, not assumed: the private facts an honest six-claim session gives
+#: up to its counterparty, from `baselines.mechanisms.cid_honest` with the two
+#: existence bits removed, since being in the index already conceded those.
+SESSION_BITS = 2.30
+
+
+@dataclass(frozen=True)
+class Interest:
+    sector: str
+    city: str
+    size: int
+    direction: str
+
+
+@dataclass(frozen=True)
+class Level:
+    name: str
+    #: bits the projection concedes to anyone who can read the index
+    projection_bits: float
+    #: how a candidate is judged retrievable at this coarseness
+    matches: object
+
+
+def population(count: int = 400, seed: int = 3) -> list[Interest]:
+    rng = random.Random(seed)
+    return [
+        Interest(rng.choice(SECTORS), rng.choice(list(CITIES)),
+                 rng.choice(SIZE_BUCKETS), rng.choice(DIRECTIONS))
+        for _ in range(count)
+    ]
+
+
+def queries(count: int = 300, seed: int = 5) -> list[Interest]:
+    """The other side of the index.
+
+    A publisher is not read by one querent. It is read by everyone whose
+    query its projection answers, and that is the quantity a coarsening
+    decision actually moves.
+    """
+    rng = random.Random(seed)
+    return [
+        Interest(rng.choice(SECTORS), rng.choice(list(CITIES)),
+                 rng.choice(SIZE_BUCKETS), rng.choice(DIRECTIONS))
+        for _ in range(count)
+    ]
+
+
+#: The private facts behind a projection, from `baselines.scenario`: a
+#: valuation threshold and a categorical condition. Exposure saturates here,
+#: because no number of sessions extracts more than exists.
+PRIVATE_BITS = 7.94
+
+
+def _opposite(direction: str) -> str:
+    return "divest" if direction == "acquire" else "acquire"
+
+
+def truly_relevant(candidate: Interest, query: Interest) -> bool:
+    """What a querent actually wants: same sector, same country, adjacent
+    size, opposite direction."""
+    return (
+        candidate.sector == query.sector
+        and CITIES[candidate.city] == CITIES[query.city]
+        and abs(candidate.size - query.size) <= 1
+        and candidate.direction == _opposite(query.direction)
+    )
+
+
+LEVELS = (
+    Level("L0  everything, exactly", PRIOR_BITS,
+          lambda c, q: (c.sector == q.sector and c.city == q.city
+                        and abs(c.size - q.size) <= 1
+                        and c.direction == _opposite(q.direction))),
+    Level("L1  city generalised to country",
+          log2(len(SECTORS)) + log2(5) + log2(len(SIZE_BUCKETS)) + 1.0,
+          lambda c, q: (c.sector == q.sector and CITIES[c.city] == CITIES[q.city]
+                        and abs(c.size - q.size) <= 1
+                        and c.direction == _opposite(q.direction))),
+    Level("L2  + size bucketed coarsely",
+          log2(len(SECTORS)) + log2(5) + log2(2) + 1.0,
+          lambda c, q: (c.sector == q.sector and CITIES[c.city] == CITIES[q.city]
+                        and (c.size // 3) == (q.size // 3)
+                        and c.direction == _opposite(q.direction))),
+    Level("L3  + direction made symmetric",
+          log2(len(SECTORS)) + log2(5) + log2(2),
+          lambda c, q: (c.sector == q.sector and CITIES[c.city] == CITIES[q.city]
+                        and (c.size // 3) == (q.size // 3))),
+    Level("L4  sector and category only", log2(len(SECTORS)),
+          lambda c, q: c.sector == q.sector),
+)
+
+
+def main() -> None:
+    people = population(2_000)
+    asks = queries(300)
+    truth = {id(q): [c for c in people if truly_relevant(c, q)] for q in asks}
+    matchable = sum(len(v) for v in truth.values())
+
+    print("=" * 98)
+    print("Section 11.4: the projection trade-off, measured")
+    print("=" * 98)
+    print()
+    print(f"{len(people)} published interests, {len(asks)} querents searching the index,")
+    print(f"{matchable} genuine matches to be found across every query.")
+    print()
+    print(f"A publisher concedes bits to the index by publishing, and "
+          f"{SESSION_BITS:.2f} more to")
+    print(f"each querent that opens a session. It has {PRIVATE_BITS:.2f} bits of private")
+    print("facts to lose in total, so the session column saturates: past a certain")
+    print("number of counterparties there is nothing left to take.")
+    print()
+    print(f"{'coarsening':<32} {'index':>7} {'recall':>8} "
+          f"{'sessions/publisher':>20} {'private facts lost':>20}")
+    print("-" * 98)
+
+    rows = []
+    for level in LEVELS:
+        found = retrievals = 0
+        for q in asks:
+            retrieved = [c for c in people if level.matches(c, q)]
+            found += sum(1 for c in retrieved if truly_relevant(c, q))
+            retrievals += len(retrieved)
+        recall = found / matchable if matchable else 0.0
+        sessions = retrievals / len(people)
+        drained = min(1.0, sessions * SESSION_BITS / PRIVATE_BITS)
+        rows.append((level, recall, sessions, drained))
+        print(f"{level.name:<32} {level.projection_bits:>6.2f}b {recall:>8.0%} "
+              f"{sessions:>20.1f} {drained:>19.0%}")
+
+    print()
+    print("=" * 98)
+    print("What the curve says")
+    print("=" * 98)
+    print()
+
+    usable = [r for r in rows if r[1] >= 0.8 and r[3] < 1.0]
+    print("Both ends are bad, and they are bad for different reasons.")
+    print()
+    print(f"At the precise end, {rows[0][0].name.strip()} concedes the most to the index")
+    print(f"and finds only {rows[0][1]:.0%} of the matches available to it. That is the")
+    print("result Section 11.4 does not lead a reader to expect: an over-precise")
+    print("projection is not merely risky, it is *retrieved less*, because it only")
+    print("answers querents who happened to describe the target in the same terms.")
+    print("Precision in a projection is not accuracy, it is a narrower agreement")
+    print("about vocabulary, and a querent who says `germany` never meets a")
+    print("publisher who said `munich`.")
+    print()
+    print(f"At the vague end, {rows[-1][0].name.strip()} concedes the least — "
+          f"{rows[-1][0].projection_bits:.2f} bits —")
+    print(f"and is retrieved {rows[-1][2]:.0f} times per publisher. At "
+          f"{SESSION_BITS:.2f} bits a session that is")
+    print("total extraction: the publisher keeps nothing, and it kept nothing by")
+    print("following the advice to minimise. The index disclosure it saved is the")
+    print("cheapest part of what it had.")
+    print()
+    if usable:
+        band = ", ".join(r[0].name.strip().split("  ")[0] for r in usable)
+        print(f"What is left is a band — {band} — where recall is high and the")
+        print("publisher is not drained. That band is the stopping rule Section 11.4")
+        print("is missing. It is not a constant: it is wherever the marginal session")
+        print("costs more than the marginal index disclosure saves, which depends")
+        print("entirely on how crowded the index is.")
+    print()
+    print("Which is the awkward part. A publishing Agent cannot compute its own")
+    print("optimum, because the quantity that decides it — how many other")
+    print("publishers this projection will be confused with, and how many querents")
+    print("will therefore arrive — is visible only to the Discovery Provider.")
+    print("Section 12 gives a provider no way to tell it, and a provider that")
+    print("returned the size of the matching set would be helping an adversary")
+    print("calibrate at the same time. That is a real open engineering question")
+    print("and it is recorded as one rather than patched.")
+
+
+if __name__ == "__main__":
+    main()

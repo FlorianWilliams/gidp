@@ -19,6 +19,7 @@ a false claim into `compatible`.
 
 from __future__ import annotations
 
+from collections.abc import Hashable
 from dataclasses import dataclass
 from typing import Any
 
@@ -100,12 +101,30 @@ def _evaluate_dependency(
 
 
 def _apply(operator: ClaimOperator, private: Any, asked: Any) -> bool | None:
+    """Resolve one operator against one private value.
+
+    Returns ``None`` — "cannot determine" — whenever the operator does not
+    fit the shape of the value it is applied to: `within` against a label or
+    a list, `intersects` against a range. Section 14.2 does not say what a
+    responder does with a shape mismatch, and the first instinct is to treat
+    it as a malformed request. That instinct is wrong twice over. A responder
+    that raises has been made to behave differently by the *shape* of its own
+    private value, which tells the querent something it should not learn; and
+    a responder that can be crashed by a well-formed message with an
+    ill-fitting operator can be crashed by anyone. `unknown` is the answer
+    that discloses nothing and stays available (SPEC-ISSUES S-13).
+    """
     if operator is ClaimOperator.EQUALS:
         return private == asked
 
     if operator is ClaimOperator.INTERSECTS:
         left = private if isinstance(private, (list, set, tuple)) else [private]
         right = asked if isinstance(asked, (list, set, tuple)) else [asked]
+        if not all(isinstance(v, Hashable) for v in (*left, *right)):
+            # A range has no membership to intersect. The honest answer is
+            # that this Agent cannot determine one (Section 15.1), not a
+            # crash -- see the note on shape mismatches below.
+            return None
         return bool(set(left) & set(right))
 
     if operator is ClaimOperator.WITHIN:
@@ -138,8 +157,18 @@ def _within(private: Any, asked: Any) -> bool | None:
     if isinstance(private, dict):
         p_min = private.get("min")
         p_max = private.get("max")
-    else:
+    elif isinstance(private, (int, float)) and not isinstance(private, bool):
         p_min = p_max = private
+    else:
+        # A list or a label is not a point on the axis the claim names.
+        return None
+
+    if not all(
+        isinstance(bound, (int, float)) and not isinstance(bound, bool)
+        for bound in (a_min, a_max, p_min, p_max)
+        if bound is not None
+    ):
+        return None
 
     if a_min is not None and p_max is not None and p_max < a_min:
         return False

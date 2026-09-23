@@ -58,6 +58,8 @@ python examples/probing.py  # what an adversarial querent can extract
 python examples/limits.py   # the four cases chosen because they should break
 python -m baselines.compare      # the same case through four existing mechanisms
 python -m baselines.mitigations  # do the protocol's own defences work?
+python -m baselines.sybil        # what a query budget is worth against many identities
+python -m baselines.projection   # the Section 11.4 trade-off, measured
 ```
 
 The implementation is the specification's test, not its authority: where the
@@ -71,6 +73,14 @@ an attempt to break it: a market it claims to serve and does not, an inference
 attack cheaper than the one in `examples/probing.py`, a reading of the
 truthfulness rule that permits a lie, or a second implementation that disagrees
 with this one.
+
+How much rests on that question is now measured rather than asserted. A
+counterparty that spends questions instead of asking once extracts 65% of
+everything private in the worked case, in seventeen claims; the coarsening the
+specification illustrates stops none of it; and the query budget that does
+bound it is bypassed by an adversary holding several identities, which the
+specification's own threat model acknowledges. `spec/alternatives.md` has the
+numbers.
 
 The bounded-disclosure question in §24.3 of the specification is open: no
 result is known that bounds what an *adaptive* querent learns from a truthful

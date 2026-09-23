@@ -146,3 +146,71 @@ def test_a_budget_is_the_only_lever_that_bounds():
     bounded, _ = probe(POLICIES["default (spec 15.4)"], 4)
     unbounded, _ = probe(POLICIES["default (spec 15.4)"], 64)
     assert bounded < unbounded
+
+
+# -- Section 24.4, the Sybil demonstration ---------------------------------
+
+def test_a_per_counterparty_budget_bounds_nothing_against_many_identities():
+    """The bits track budget times identities, not the budget."""
+    from baselines.sybil import probe_with_identities
+
+    policy = POLICIES["default (spec 15.4)"]
+    alone = probe_with_identities(policy, per_counterparty=2, identities=1)
+    crowd = probe_with_identities(policy, per_counterparty=2, identities=8)
+    assert alone.bits < crowd.bits
+    assert crowd.bits == pytest.approx(
+        probe_with_identities(policy, per_counterparty=8, identities=1).bits
+    )
+
+
+def test_a_global_cap_bounds_and_the_price_is_the_shop():
+    """A cap not keyed to the asker cannot be diluted by identities, and
+    cannot tell an adversary from a customer either."""
+    from baselines.sybil import honest_sessions_served, probe_with_identities
+
+    policy = POLICIES["default (spec 15.4)"]
+    tight = probe_with_identities(policy, 6, identities=64, global_budget=4)
+    loose = probe_with_identities(policy, 6, identities=64, global_budget=24)
+    assert tight.bits < loose.bits
+    # Tight enough to stop the extraction is tight enough to serve nobody.
+    assert honest_sessions_served(policy, 6, 4) == 0
+    assert honest_sessions_served(policy, 6, 24) > 0
+
+
+# -- Section 11.4, the projection trade-off --------------------------------
+
+def test_an_over_precise_projection_is_retrieved_less():
+    """The result Section 11.4 does not lead a reader to expect."""
+    from baselines.projection import LEVELS, population, queries, truly_relevant
+
+    people, asks = population(800), queries(120)
+    matchable = sum(
+        1 for q in asks for c in people if truly_relevant(c, q)
+    )
+
+    def recall(level) -> float:
+        found = sum(
+            1 for q in asks for c in people
+            if level.matches(c, q) and truly_relevant(c, q)
+        )
+        return found / matchable
+
+    assert recall(LEVELS[0]) < recall(LEVELS[1]), (
+        "the most precise projection should find fewer of its own matches"
+    )
+
+
+def test_the_coarsest_projection_drains_the_publisher():
+    from baselines.projection import (
+        LEVELS, PRIVATE_BITS, SESSION_BITS, population, queries,
+    )
+
+    people, asks = population(800), queries(120)
+    retrievals = sum(
+        1 for q in asks for c in people if LEVELS[-1].matches(c, q)
+    )
+    sessions = retrievals / len(people)
+    assert sessions * SESSION_BITS > PRIVATE_BITS, (
+        "publishing only a category should expose the publisher to more "
+        "sessions than its private facts can survive"
+    )

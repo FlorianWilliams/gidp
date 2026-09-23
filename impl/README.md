@@ -56,7 +56,16 @@ the other half: four cases chosen because they should *fail*, and they do —
 see `../spec/LIMITS.md`. `baselines/` runs the same case through four existing
 mechanisms and sweeps this implementation's answering policies against query
 budgets, measuring leakage identically for each; it is what `../spec/alternatives.md`
-rests on, and it is what found S-12. `test_schema.py` validates every
+rests on, and it is what found S-12, S-13 and S-14.
+
+`baselines/sybil.py` measures what a query budget is worth against an
+adversary that mints identities; `baselines/projection.py` measures the
+Section 11.4 trade-off and finds it non-monotone;
+`tests/test_properties.py` generates Standing Interests nobody designed and
+checks the invariants against them, which is the closest a single
+implementation can come to the real check — a second implementation written
+by somebody else. `cid/bindings/a2a.py` is the Section 22.2 binding written
+against the published A2A 1.0 mechanism rather than from memory. `test_schema.py` validates every
 object of both sessions against freshly generated schemas, so the schema
 cannot drift from the code.
 

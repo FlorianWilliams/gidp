@@ -8,7 +8,7 @@ carefully.
 Each entry states what the specification says, what a reader cannot determine
 from it, what this implementation decided, and whether CID 0.1 should change.
 
-**Status: all twelve were applied to CID 0.1 on 23 September 2026**, before the
+**Status: all fourteen were applied to CID 0.1 on 23 September 2026**, before the
 specification was frozen for publication. The entries are kept because the
 record of what an implementation found is worth more than a clean file: it is
 the evidence that the draft was tested rather than merely written.
@@ -335,3 +335,93 @@ replacements, and says that the question is answered in 24.3. Section 24.3 now
 states that the only mitigation in CID 0.1 which bounds adaptive inference is
 a bound on the number of claims, names that bound's known weakness, and points
 at the measurements. See `../spec/alternatives.md`.
+
+---
+
+## S-13 — A claim whose operator does not fit the value crashes the responder
+
+**Found.** 2026-09-23, by `tests/test_properties.py` on its first run, at the
+first generated example. No hand-written test had produced a claim whose
+operator did not match the shape of the private value, because no author
+writes one.
+
+**Spec.** Section 14.2 defines the operators and the fields of a claim. It
+says nothing about what a responder does when the operator does not fit the
+value it holds.
+
+**The defect.** `intersects` against a range raised `TypeError: unhashable
+type: 'dict'`; `within` against a label or a list raised `TypeError: '<' not
+supported between instances of 'str' and 'int'`. Three lines of generated
+input, three uncaught exceptions in the evaluation core.
+
+It is worse than an ordinary crash. The responder's behaviour becomes a
+function of the *shape* of its own private value — a querent that sends
+`within` and receives an error, rather than an answer, has learned that the
+attribute is not numeric, which is information the Disclosure Policy never
+authorised. And a responder that can be made to fail by a well-formed message
+with an ill-fitting operator can be made to fail by anyone: the same message
+is a denial of service.
+
+**Decided here.** `_apply` returns "cannot determine" on any shape mismatch,
+which the vocabulary already renders as `unknown`. The fix is four lines; the
+reason it matters is the paragraph above.
+
+**Spec should change.** Yes. An implementer's first instinct is to reject a
+mismatched claim as malformed, and that instinct produces both failures.
+
+**Resolution — applied to CID 0.1 on 2026-09-23.** Section 14.2 now requires
+`unknown` on a shape mismatch, forbids treating it as a malformed message,
+forbids failing, and states both reasons.
+
+---
+
+## S-14 — The A2A binding sketch does not match the mechanism it sketches
+
+**Found.** 2026-09-23, by writing the binding against the published
+Agent2Agent 1.0 specification instead of from memory.
+
+**Spec.** Section 22.2 showed an Agent Card fragment with
+`capabilities.extensions` entries carrying `uri`, `description` and
+`required`, citing "specification §4.6".
+
+**Three errors and an omission.** `AgentCapabilities` is §4.4.3 and
+`AgentExtension` is §4.4.4, not §4.6. `AgentExtension` has a fourth field,
+`params`, which is where a CID implementation would naturally declare the
+profiles it supports. And the sketch said nothing about **activation**: in
+A2A, declaring an extension in the Agent Card does not turn it on. A client
+sends the `A2A-Extensions` header listing the URIs it intends to activate and
+the responder echoes the subset it actually activated. An extension that was
+not echoed is not in force.
+
+The omission is the substantive one. Activation is the point at which a CID
+exchange can be refused before any CID object exists, and therefore before
+any Disclosure Policy has been consulted — which is the earliest and cheapest
+refusal available to a responder, and Section 22.2 did not tell an
+implementer it was there.
+
+**The question the sketch did not raise.** Layered on A2A there are two
+negotiations. A2A activation asks *do you speak CID*; Section 14.1's
+`features` ask *which optional CID features are in force*. Neither implies
+the other, and the obvious implementation error is to assume a feature is
+available because the extension was activated. `tests/test_a2a_binding.py`
+holds a case where a peer activates the extension and supports no optional
+feature at all.
+
+**Decided here.** `cid/bindings/a2a.py` implements declaration, the
+activation round trip and carriage in `metadata` under URI-prefixed keys,
+with round-trip tests over every object a real session puts on the wire.
+Writing it also showed that `REQUEST_TYPES`, `RESPONSE_TYPES` and
+`ONE_WAY_TYPES` do not between them enumerate every transmitted object —
+`SessionClose` and `DiscoveryProjection` are in none of them — so a binding
+that trusts those tuples silently cannot carry two object types.
+
+**Spec should change.** Yes, editorially but concretely: a sketch that cites
+the wrong section and omits the handshake is worse than no sketch, because a
+reader will copy it.
+
+**Resolution — applied to CID 0.1 on 2026-09-23.** Section 22.2 now cites
+§4.4.3 and §4.4.4, includes `params`, describes the activation round trip and
+what a non-echo means, states the `metadata` carriage convention and why a
+CID object does not belong in a Part, warns that the two negotiations are
+independent, and notes that an unallocated URI is an interoperability
+question rather than a detail.

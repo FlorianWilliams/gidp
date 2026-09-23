@@ -183,3 +183,47 @@ and that CID keeps all of them only for as long as the counterparty's questions
 are bounded. Whether that bound can be made principled rather than arbitrary is
 the open problem of `open-problems.md`, and this document is the first
 measurement of how much rests on it.
+
+## Three further measurements
+
+The harness built for this comparison turned out to answer three more
+questions the specification had asserted rather than shown. They are
+summarised here because they belong to the same argument; the detail is in
+`impl/baselines/` and in the specification sections they corrected.
+
+**A query budget does not survive Sybil identities, and the cap that does
+cannot tell its customers from its attackers.** Section 24.3 offers query
+budgets as the defence against probing and Section 24.4 acknowledges that an
+attacker may mint counterparties to get around them. Measured, the two cancel
+exactly: an allowance of two claims per counterparty with four identities
+extracts precisely what an allowance of eight with one identity extracts. A
+cap on the responder's *total* answered claims cannot be diluted that way and
+does bound — but a complete extraction costs seven answered claims here and an
+honest session costs six, so no threshold separates the two populations. A
+deployment is rationing, not defending, and should say which.
+
+**Minimising a projection reverses past a point.** Section 11.4 calls the
+trade-off fundamental and frames it as retrieval quality against inference
+risk. On a synthetic index of two thousand publishers and three hundred
+querents, an over-precise projection is retrieved *less* — it answers only
+querents who described the target in the same words, so naming a city hides
+you from someone who named the country — while a projection coarse enough to
+be retrieved by everyone is retrieved by everyone, and at a session's worth of
+inference per retrieval the publisher is drained completely. The usable band
+is narrow, and the quantity that locates it is visible to the Discovery
+Provider rather than to the publisher.
+
+**The implementation crashed on the first input nobody designed.** Property
+tests over generated Standing Interests found, at their first example, that a
+claim whose operator does not fit the shape of the private value raised an
+uncaught exception rather than answering `unknown` — which is both a denial of
+service available to any counterparty and an inference channel, since the
+responder's failure is a function of the shape of its own secret. Section 14.2
+now requires `unknown`. Every hand-written test had passed, because an author
+writes the claims the protocol was designed for.
+
+None of the three changes what CID does. All three change what the
+specification may claim, and the first two narrow the claim in the same
+direction the table above does: this protocol's guarantees hold against a
+counterparty whose questions are bounded, and CID 0.1 does not contain a
+principled way to bound them.
