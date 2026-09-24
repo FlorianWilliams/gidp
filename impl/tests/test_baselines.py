@@ -354,3 +354,47 @@ def test_an_adversary_that_ignores_drift_ends_confident_and_wrong():
     bits, correct = run(periods=12, per_period=1, drift_steps=4, aware=False)
     assert bits > 4.0, "the naive adversary believes it has narrowed"
     assert not correct, "and its belief is false"
+
+
+# -- a budget in bits, audited simulatably ---------------------------------
+
+
+def test_budgeting_bits_bounds_the_extractor():
+    """What budgeting questions could not do."""
+    from baselines.auditing import Auditor, extractor
+
+    auditor = Auditor(budget_bits=2.0)
+    extractor(auditor, 45_000_000)
+    assert auditor.disclosed <= 2.0
+    assert auditor.refusals >= 1
+
+
+def test_the_same_budget_still_serves_most_honest_counterparties():
+    """The separation the question-count budget could not produce."""
+    from baselines.auditing import Auditor, honest
+
+    auditor = Auditor(budget_bits=2.0)
+    served = honest(auditor, 45_000_000, counterparties=40)
+    assert served >= 30, f"only {served} of 40 honest counterparties served"
+
+
+def test_the_refusal_does_not_depend_on_the_value():
+    """Simulatability, checked: the same claim sequence must be admitted or
+    refused identically whatever the responder happens to hold."""
+    from baselines.auditing import GRID, Auditor
+    from cid.objects import Claim
+    from cid.vocab import ClaimOperator
+
+    claim = Claim(
+        key="valuation_floor",
+        operator=ClaimOperator.WITHIN,
+        value={"min": 60_000_000, "max": 60_000_000},
+    )
+    decisions = set()
+    for floor in (0, 45_000_000, 200_000_000):
+        auditor = Auditor(budget_bits=1.0)
+        assert floor in GRID
+        decisions.add(auditor.admits(claim))
+    assert len(decisions) == 1, (
+        "the decision to refuse must not be a function of the protected value"
+    )

@@ -230,5 +230,11 @@ writes the claims the protocol was designed for.
 None of the three changes what CID does. All three change what the
 specification may claim, and the first two narrow the claim in the same
 direction the table above does: this protocol's guarantees hold against a
-counterparty whose questions are bounded, and CID 0.1 does not contain a
-principled way to bound them.
+counterparty whose questions are bounded — and, since these measurements were
+taken, CID does contain a principled way to bound them. Budgeting *information*
+rather than questions, with the refusal decided from what an observer already
+knows rather than from the value, holds a probing counterparty to under a bit
+of a five-bit threshold while serving most honest ones. It needs no identity
+and no operator, so the Sybil result above does not defeat it. What it does not
+do is protect: a budget of two bits gives two bits away, to everyone, for good.
+The measurement is `impl/baselines/auditing.py`.
