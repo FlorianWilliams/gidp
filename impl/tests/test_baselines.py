@@ -320,3 +320,37 @@ def test_extraction_cost_is_measured_not_assumed():
     for candidates in (8, 41, 512):
         cost = extraction_cost(candidates)
         assert cost <= log2(candidates) + 1
+
+
+# -- a rate against a moving value -----------------------------------------
+
+
+def test_a_throttle_alone_only_delays():
+    """Twelve periods at one question each is twelve questions, and twelve
+    questions are more than this secret is worth."""
+    from math import log2
+
+    from baselines.drift import GRID, run
+
+    bits, _ = run(periods=12, per_period=1, drift_steps=0, aware=True)
+    assert bits == pytest.approx(log2(len(GRID)))
+
+
+def test_drift_preserves_uncertainty_only_against_a_slow_adversary():
+    """Exponential in the rate, linear in the movement: halving the first
+    is worth more than doubling the second."""
+    from baselines.drift import run
+
+    slow, _ = run(periods=12, per_period=1, drift_steps=4, aware=True)
+    fast, _ = run(periods=12, per_period=4, drift_steps=4, aware=True)
+    assert slow < fast, "a lower rate must leave the adversary knowing less"
+    assert slow < 4.0, "a throttled adversary should not get everything"
+
+
+def test_an_adversary_that_ignores_drift_ends_confident_and_wrong():
+    """The finding worth keeping: it does not end uncertain."""
+    from baselines.drift import run
+
+    bits, correct = run(periods=12, per_period=1, drift_steps=4, aware=False)
+    assert bits > 4.0, "the naive adversary believes it has narrowed"
+    assert not correct, "and its belief is false"
