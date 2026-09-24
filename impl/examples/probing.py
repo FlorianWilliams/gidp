@@ -66,8 +66,9 @@ def build_responder(budget: int) -> Agent:
             }
         ),
     )
-    return Agent(ref="agent:opaque:target", standing_interest=interest,
-                 query_budget=budget)
+    return Agent(
+        ref="agent:opaque:target", standing_interest=interest, query_budget=budget
+    )
 
 
 def probe(attacker: Agent, target: Agent, low: int, high: int) -> ClaimResult:
@@ -97,7 +98,9 @@ def bisect(attacker: Agent, target: Agent, lo: int, hi: int, precision: int) -> 
         # it is not. That single bit per query is all the attacker needs.
         result = probe(attacker, target, mid, mid + precision)
         queries += 1
-        trace.append(f"  [{mid / 1e6:7.1f}M .. {(mid + precision) / 1e6:7.1f}M] -> {result.value}")
+        trace.append(
+            f"  [{mid / 1e6:7.1f}M .. {(mid + precision) / 1e6:7.1f}M] -> {result.value}"
+        )
         if result is ClaimResult.DECLINED:
             trace.append("  budget exhausted; the responder stopped answering")
             break
@@ -131,17 +134,14 @@ def main() -> None:
             ),
             authority=AuthoritySpec(levels={Authority.PROBE: AuthorityValue.TRUE}),
         )
-        attacker = Agent(ref="agent:opaque:attacker",
-                         standing_interest=attacker_interest)
-        opened = attacker.open_session(
-            "probe-session", purpose="strategic_transaction"
+        attacker = Agent(
+            ref="agent:opaque:attacker", standing_interest=attacker_interest
         )
+        opened = attacker.open_session("probe-session", purpose="strategic_transaction")
         accept = target.handle_session_open(opened)
         attacker.confirm_accept(accept)
 
-        lo, hi, queries, trace = bisect(
-            attacker, target, 0, 200_000_000, precision
-        )
+        lo, hi, queries, trace = bisect(attacker, target, 0, 200_000_000, precision)
 
         print(f"query budget = {budget}")
         for line in trace[:6]:

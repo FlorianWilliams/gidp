@@ -8,18 +8,21 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "examples"))
 
+import partnership  # noqa: E402
+
 from cid.agent import Agent  # noqa: E402
 from cid.evaluation import DEPENDENCY_KEYS, evaluate_claim  # noqa: E402
 from cid.objects import Claim  # noqa: E402
-from cid.vocab import ClaimOperator, ClaimResult, Feature  # noqa: E402
-
-import partnership  # noqa: E402
+from cid.vocab import ClaimOperator, Feature  # noqa: E402
 
 
 def test_a_claim_may_name_a_dependency_primitive():
     """Section 19.1: `requires: X` on one side meets `provides: X` on the other."""
-    claim = Claim(key="provides", operator=ClaimOperator.INTERSECTS,
-                  value=["customs_clearance_eu_uk"])
+    claim = Claim(
+        key="provides",
+        operator=ClaimOperator.INTERSECTS,
+        value=["customs_clearance_eu_uk"],
+    )
     evaluation = evaluate_claim(partnership.brokerage, claim)
     assert evaluation.truth is True
     assert evaluation.evaluation_only is False  # provides is session-surface
@@ -27,8 +30,9 @@ def test_a_claim_may_name_a_dependency_primitive():
 
 def test_requires_is_answered_but_coarsened():
     """The asymmetry: what you need is the mirror of what you lack."""
-    claim = Claim(key="requires", operator=ClaimOperator.INTERSECTS,
-                  value=["last_mile_germany"])
+    claim = Claim(
+        key="requires", operator=ClaimOperator.INTERSECTS, value=["last_mile_germany"]
+    )
     evaluation = evaluate_claim(partnership.brokerage, claim)
     assert evaluation.truth is True
     assert evaluation.evaluation_only is True
@@ -36,7 +40,10 @@ def test_requires_is_answered_but_coarsened():
 
 def test_all_four_primitives_are_reserved_claim_keys():
     assert set(DEPENDENCY_KEYS) == {
-        "provides", "requires", "conditional_on", "excludes"
+        "provides",
+        "requires",
+        "conditional_on",
+        "excludes",
     }
     for key in DEPENDENCY_KEYS:
         claim = Claim(key=key, operator=ClaimOperator.INTERSECTS, value=["x"])
@@ -46,8 +53,9 @@ def test_all_four_primitives_are_reserved_claim_keys():
 
 def test_an_empty_list_answers_unknown_not_absent():
     """Silence must not reveal absence (the reasoning of Section 14.4)."""
-    claim = Claim(key="conditional_on", operator=ClaimOperator.INTERSECTS,
-                  value=["anything"])
+    claim = Claim(
+        key="conditional_on", operator=ClaimOperator.INTERSECTS, value=["anything"]
+    )
     evaluation = evaluate_claim(partnership.logistics, claim)
     assert evaluation.truth is None
 
@@ -55,10 +63,12 @@ def test_an_empty_list_answers_unknown_not_absent():
 def test_features_in_force_are_the_intersection_not_an_echo():
     """Section 14.1: SessionAccept carries the features actually supported."""
     a = Agent(ref="a", standing_interest=partnership.logistics)
-    b = Agent(ref="b", standing_interest=partnership.brokerage,
-              supported_features=set())  # implements the core only
-    opened = a.open_session("s-f", purpose="test",
-                            features=[Feature.DEPENDENCY_PRIMITIVES])
+    b = Agent(
+        ref="b", standing_interest=partnership.brokerage, supported_features=set()
+    )  # implements the core only
+    opened = a.open_session(
+        "s-f", purpose="test", features=[Feature.DEPENDENCY_PRIMITIVES]
+    )
     accept = b.handle_session_open(opened)
     assert accept.features == []
     a.confirm_accept(accept)
@@ -72,8 +82,7 @@ def test_the_partnership_session_qualifies_and_hides_both_gaps():
     assert opportunity.open_conditions == ["requires"]
 
     import json
-    on_the_wire = json.dumps(
-        [m.model_dump(mode="json") for _, m in wire.transcript]
-    )
+
+    on_the_wire = json.dumps([m.model_dump(mode="json") for _, m in wire.transcript])
     assert "capability_gap" not in on_the_wire
     assert "margin_floor" not in on_the_wire

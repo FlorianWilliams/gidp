@@ -34,21 +34,27 @@ def main() -> None:
     print("not for sale but would consider a transaction above a valuation floor")
     print("it will not state, with a management condition it will not state.")
     print()
-    print(f"Total private information at stake: {TOTAL:.2f} bits across "
-          f"{len(FACTS)} facts.")
+    print(
+        f"Total private information at stake: {TOTAL:.2f} bits across "
+        f"{len(FACTS)} facts."
+    )
     print("Leakage is measured identically for every mechanism: the reduction of")
     print("an observer's hypothesis space, in bits. See baselines/measure.py.")
     print()
 
     print(RULE)
-    print(f"{'Mechanism':<30} {'Verdict':<14} {'Q':>3} "
-          f"{'→counterpty':>12} {'→operator':>10} {'→public':>9}")
+    print(
+        f"{'Mechanism':<30} {'Verdict':<14} {'Q':>3} "
+        f"{'→counterpty':>12} {'→operator':>10} {'→public':>9}"
+    )
     print(RULE)
     for o in outcomes:
-        print(f"{o.name:<30} {o.verdict:<14} {o.queries:>3} "
-              f"{o.ledger.total(COUNTERPARTY):>11.2f}b "
-              f"{o.ledger.total(OPERATOR):>9.2f}b "
-              f"{o.ledger.total(PUBLIC):>8.2f}b")
+        print(
+            f"{o.name:<30} {o.verdict:<14} {o.queries:>3} "
+            f"{o.ledger.total(COUNTERPARTY):>11.2f}b "
+            f"{o.ledger.total(OPERATOR):>9.2f}b "
+            f"{o.ledger.total(PUBLIC):>8.2f}b"
+        )
     print(RULE)
     print()
 
@@ -57,8 +63,10 @@ def main() -> None:
     print(RULE)
     for o in outcomes:
         print(f"\n{o.name}")
-        print(f"  presupposes the parties already found each other: "
-              f"{'yes' if o.presupposes_rendezvous else 'no'}")
+        print(
+            f"  presupposes the parties already found each other: "
+            f"{'yes' if o.presupposes_rendezvous else 'no'}"
+        )
         print(f"  a third party ends up holding both secrets: {o.third_party or 'no'}")
         if o.cannot:
             for item in o.cannot:
@@ -76,32 +84,48 @@ def main() -> None:
     print()
 
     broker, listing, sealed, psi, honest, probing = outcomes
-    cp = lambda o: o.ledger.total(COUNTERPARTY)
 
-    print(f"Against a counterparty that asks what it needs and stops, CID gives up")
-    print(f"{cp(honest):.2f} bits where an ideal sealed comparison gives up {cp(sealed):.2f} and a")
-    print(f"trusted intermediary {cp(broker):.2f}. Those three are close, and the closeness")
+    def cp(outcome) -> float:
+        return outcome.ledger.total(COUNTERPARTY)
+
+    print("Against a counterparty that asks what it needs and stops, CID gives up")
+    print(
+        f"{cp(honest):.2f} bits where an ideal sealed comparison gives up {cp(sealed):.2f} and a"
+    )
+    print(
+        f"trusted intermediary {cp(broker):.2f}. Those three are close, and the closeness"
+    )
     print("is the point: what separates them is not the bit count.")
     print()
-    print(f"The intermediary leaks {broker.ledger.total(OPERATOR):.2f} bits of a possible {TOTAL:.2f} to a third")
+    print(
+        f"The intermediary leaks {broker.ledger.total(OPERATOR):.2f} bits of a possible {TOTAL:.2f} to a third"
+    )
     print("party — everything, exactly, permanently, and again for every pair it")
     print("serves. That column is the one CID empties, and emptying it is the whole")
     print("of what CID buys.")
     print()
-    print(f"The listing leaks {listing.ledger.total(PUBLIC):.2f} bits to an unbounded and permanent")
+    print(
+        f"The listing leaks {listing.ledger.total(PUBLIC):.2f} bits to an unbounded and permanent"
+    )
     print("audience. That is not a smaller number than the others, it is a")
     print("different kind of number, and for a company that is not for sale it is")
     print("the only number that matters.")
     print()
-    print(f"Private set intersection leaks the least at {cp(psi):.2f} bits and cannot decide")
+    print(
+        f"Private set intersection leaks the least at {cp(psi):.2f} bits and cannot decide"
+    )
     print("the case: the binding conditions here are a threshold and a condition,")
     print("not set membership. The sealed comparison decides it and cannot find the")
     print("counterparty in the first place. Both presuppose the rendezvous that is")
     print("the actual problem.")
     print()
-    print(f"Against a probing counterparty CID gives up {cp(probing):.2f} bits in "
-          f"{probing.queries} queries,")
-    print(f"{100 * cp(probing) / TOTAL:.0f}% of everything at stake — more than the intermediary leaks to")
+    print(
+        f"Against a probing counterparty CID gives up {cp(probing):.2f} bits in "
+        f"{probing.queries} queries,"
+    )
+    print(
+        f"{100 * cp(probing) / TOTAL:.0f}% of everything at stake — more than the intermediary leaks to"
+    )
     print("the counterparty, and the intermediary at least knows who it is trusting.")
     print("That is Section 24.3 with a number attached, and it is the strongest")
     print("argument against deploying this protocol as it stands.")

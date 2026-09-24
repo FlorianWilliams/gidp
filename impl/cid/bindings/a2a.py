@@ -35,7 +35,8 @@ extension and still decline every optional feature.
 
 from __future__ import annotations
 
-from typing import Any, Iterable
+from collections.abc import Iterable
+from typing import Any
 
 from ..objects import (
     ONE_WAY_TYPES,
@@ -65,8 +66,13 @@ ACTIVATION_HEADER = "A2A-Extensions"
 # A binding has to, or it silently cannot carry them.
 _BY_TYPE = {
     model.model_fields["type"].default: model
-    for model in (*REQUEST_TYPES, *RESPONSE_TYPES, *ONE_WAY_TYPES,
-                  SessionClose, DiscoveryProjection)
+    for model in (
+        *REQUEST_TYPES,
+        *RESPONSE_TYPES,
+        *ONE_WAY_TYPES,
+        SessionClose,
+        DiscoveryProjection,
+    )
 }
 
 
@@ -77,6 +83,7 @@ class BindingError(Exception):
 # ---------------------------------------------------------------------------
 # Declaration
 # ---------------------------------------------------------------------------
+
 
 def agent_extension(
     description: str = "Conditional Interest Discovery 0.1",
@@ -107,6 +114,7 @@ def agent_card_capabilities(**kwargs: Any) -> dict[str, Any]:
 # Activation
 # ---------------------------------------------------------------------------
 
+
 def activation_header(uris: Iterable[str] = (EXTENSION_URI,)) -> dict[str, str]:
     return {ACTIVATION_HEADER: ", ".join(uris)}
 
@@ -136,6 +144,7 @@ def is_active(response_headers: dict[str, str]) -> bool:
 # ---------------------------------------------------------------------------
 # Carriage
 # ---------------------------------------------------------------------------
+
 
 def to_message(obj: TransmittedObject, role: str = "agent") -> dict[str, Any]:
     """Wrap a CID object in an A2A Message.

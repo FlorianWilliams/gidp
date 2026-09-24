@@ -21,9 +21,9 @@ requires B to announce it has already lost, whatever it does afterwards.
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
-from typing import Any
+from datetime import UTC, datetime, timedelta
 
+from baselines.measure import Fact
 from cid.objects import (
     AuthoritySpec,
     ConditionalInterest,
@@ -33,8 +33,6 @@ from cid.objects import (
     Validity,
 )
 from cid.vocab import Authority, AuthorityValue, Gate, InterestClass, Surface
-
-from baselines.measure import Fact
 
 # --------------------------------------------------------------------------
 # Priors
@@ -78,7 +76,10 @@ A_CATEGORICAL: dict[str, list[str]] = {
     "domain": ["enterprise_software"],
     "geography": ["europe", "germany"],
     "transaction_structures": [
-        "acquisition", "majority_investment", "distribution", "joint_venture",
+        "acquisition",
+        "majority_investment",
+        "distribution",
+        "joint_venture",
     ],
     "market_access_offered": ["france"],
 }
@@ -92,7 +93,7 @@ B_CATEGORICAL: dict[str, list[str]] = {
 
 
 def _in(days: int) -> datetime:
-    return datetime.now(timezone.utc) + timedelta(days=days)
+    return datetime.now(UTC) + timedelta(days=days)
 
 
 def b_interest(

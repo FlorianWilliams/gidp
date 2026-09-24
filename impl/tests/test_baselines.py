@@ -26,8 +26,8 @@ from baselines.mechanisms import (
 from baselines.mitigations import POLICIES, discrimination, probe
 from baselines.scenario import FACTS
 
-
 # -- the yardstick itself ---------------------------------------------------
+
 
 def test_the_measure_is_zero_before_anything_is_observed():
     ledger = Ledger.over(FACTS)
@@ -59,10 +59,15 @@ def test_the_harness_refuses_an_observation_the_truth_cannot_explain():
 
 # -- what separates the mechanisms -----------------------------------------
 
+
 def test_only_the_intermediary_hands_both_secrets_to_a_third_party():
     assert trusted_broker().third_party is not None
-    for mechanism in (public_posting, sealed_one_shot,
-                      private_set_intersection, cid_honest):
+    for mechanism in (
+        public_posting,
+        sealed_one_shot,
+        private_set_intersection,
+        cid_honest,
+    ):
         assert mechanism().third_party is None
 
 
@@ -75,8 +80,13 @@ def test_the_intermediary_learns_everything():
 
 def test_only_publication_leaks_to_an_unbounded_audience():
     assert public_posting().ledger.total(PUBLIC) > 0
-    for mechanism in (trusted_broker, sealed_one_shot,
-                      private_set_intersection, cid_honest, cid_adversarial):
+    for mechanism in (
+        trusted_broker,
+        sealed_one_shot,
+        private_set_intersection,
+        cid_honest,
+        cid_adversarial,
+    ):
         assert mechanism().ledger.total(PUBLIC) == 0.0
 
 
@@ -98,6 +108,7 @@ def test_probing_extracts_substantially_more_than_asking():
 
 
 # -- the mitigation sweep ---------------------------------------------------
+
 
 def test_the_coarsening_of_section_15_4_stops_no_inference():
     """The finding that produced SPEC-ISSUES S-12.
@@ -127,9 +138,7 @@ def test_randomisation_delays_and_does_not_bound():
     late, _ = probe(POLICIES["randomised 50%"], 64)
     plain, _ = probe(POLICIES["truthful (no coarsening)"], 8)
     assert early < plain
-    assert late == pytest.approx(
-        probe(POLICIES["truthful (no coarsening)"], 64)[0]
-    )
+    assert late == pytest.approx(probe(POLICIES["truthful (no coarsening)"], 64)[0])
 
 
 def test_randomisation_costs_discrimination():
@@ -139,7 +148,7 @@ def test_randomisation_costs_discrimination():
 
 
 def test_a_budget_is_the_only_lever_that_bounds():
-    for name, policy in POLICIES.items():
+    for policy in POLICIES.values():
         small, _ = probe(policy, 4)
         large, _ = probe(policy, 64)
         assert small <= large
@@ -149,6 +158,7 @@ def test_a_budget_is_the_only_lever_that_bounds():
 
 
 # -- Section 24.4, the Sybil demonstration ---------------------------------
+
 
 def test_a_per_counterparty_budget_bounds_nothing_against_many_identities():
     """The bits track budget times identities, not the budget."""
@@ -179,18 +189,19 @@ def test_a_global_cap_bounds_and_the_price_is_the_shop():
 
 # -- Section 11.4, the projection trade-off --------------------------------
 
+
 def test_an_over_precise_projection_is_retrieved_less():
     """The result Section 11.4 does not lead a reader to expect."""
     from baselines.projection import LEVELS, population, queries, truly_relevant
 
     people, asks = population(800), queries(120)
-    matchable = sum(
-        1 for q in asks for c in people if truly_relevant(c, q)
-    )
+    matchable = sum(1 for q in asks for c in people if truly_relevant(c, q))
 
     def recall(level) -> float:
         found = sum(
-            1 for q in asks for c in people
+            1
+            for q in asks
+            for c in people
             if level.matches(c, q) and truly_relevant(c, q)
         )
         return found / matchable
@@ -202,13 +213,15 @@ def test_an_over_precise_projection_is_retrieved_less():
 
 def test_the_coarsest_projection_drains_the_publisher():
     from baselines.projection import (
-        LEVELS, PRIVATE_BITS, SESSION_BITS, population, queries,
+        LEVELS,
+        PRIVATE_BITS,
+        SESSION_BITS,
+        population,
+        queries,
     )
 
     people, asks = population(800), queries(120)
-    retrievals = sum(
-        1 for q in asks for c in people if LEVELS[-1].matches(c, q)
-    )
+    retrievals = sum(1 for q in asks for c in people if LEVELS[-1].matches(c, q))
     sessions = retrievals / len(people)
     assert sessions * SESSION_BITS > PRIVATE_BITS, (
         "publishing only a category should expose the publisher to more "
@@ -220,17 +233,26 @@ def test_resolving_one_hierarchy_removes_the_recall_penalty():
     """The recall cost of a precise projection is the provider's, not the
     protocol's: it disappears with one hierarchy and no ontology."""
     from baselines.projection import (
-        LEVELS, population, queries, resolving, truly_relevant,
+        LEVELS,
+        population,
+        queries,
+        resolving,
+        truly_relevant,
     )
 
     people, asks = population(800), queries(120)
     matchable = sum(1 for q in asks for c in people if truly_relevant(c, q))
 
     def recall(level) -> float:
-        return sum(
-            1 for q in asks for c in people
-            if level.matches(c, q) and truly_relevant(c, q)
-        ) / matchable
+        return (
+            sum(
+                1
+                for q in asks
+                for c in people
+                if level.matches(c, q) and truly_relevant(c, q)
+            )
+            / matchable
+        )
 
     plain = recall(LEVELS[0])
     resolved = recall(resolving(LEVELS[0]))
@@ -241,6 +263,7 @@ def test_resolving_one_hierarchy_removes_the_recall_penalty():
 
 
 # -- simulatability, in the sense of [KMN2005] -----------------------------
+
 
 def test_the_policy_the_specification_illustrates_is_the_only_leaky_decision():
     """Section 15.4's coarsening consults the secret to decide; the others

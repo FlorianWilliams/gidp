@@ -7,11 +7,41 @@ dependencies = ["pydantic>=2.0"]
 license = { text = "Apache-2.0" }
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0", "hypothesis>=6.0", "jsonschema>=4.0"]
+dev = [
+  "pytest>=8.0",
+  "pytest-cov>=5.0",
+  "hypothesis>=6.0",
+  "jsonschema>=4.0",
+  "ruff>=0.6",
+  "mypy>=1.10",
+]
 
 [build-system]
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
+[project.urls]
+Specification = "{{CANONICAL_URL}}"
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B"]
+# UP042 would replace `class X(str, Enum)` with `StrEnum`. The two differ in
+# what `str(member)` returns, which is the text of several error messages the
+# conformance tests match on and the specification quotes. The gain is
+# cosmetic and the change is not; left as is, deliberately.
+# E501 is left to the formatter, which wraps code at line-length and cannot
+# split a long string or comment. Flagging what the formatter deliberately
+# left alone is noise; `ruff format --check` is the real gate.
+ignore = ["UP042", "E501"]
+
+[tool.mypy]
+python_version = "3.11"
+packages = ["cid"]
+ignore_missing_imports = true

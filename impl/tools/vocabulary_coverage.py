@@ -29,35 +29,24 @@ import cid.vocab as vocab  # noqa: E402
 #: next release should remove or demonstrate; the test fails until someone
 #: has written a line here saying which.
 KEPT_WITHOUT_A_DEMONSTRATION = {
-    "CloseReason.EXPIRED":
-        "reachable when a Standing Interest or session outlives its validity; "
-        "no example waits long enough to show it",
-    "ConsentAction.DISCLOSE_ATTRIBUTES":
-        "a deployment may seek consent for an attribute set rather than for "
-        "identity; the worked domains all seek identity",
-    "ConsentAction.ESTABLISH_DIRECT_CONTACT":
-        "the consent a Handoff to a human needs when the parties will speak "
-        "outside any protocol",
-    "DisclosureStatus.GRANTED_IF_RECIPROCAL":
-        "the reciprocity lever; LIMITS L-3 showed it inverts under asymmetric "
-        "exposure, so it is deliberately not demonstrated as a good idea",
-    "Feature.MULTI_PARTY":
-        "Section 19.2 is experimental and this implementation does not "
-        "implement it, by the implementation plan's own rule",
-    "HandoffKind.WORKFLOW":
-        "a handoff target that is neither a human nor a protocol; plausible "
-        "and unexercised",
-    "IdentityStatus.DECLINED":
-        "an Opportunity whose counterparty refused identity; the worked "
-        "domains consent",
-    "IdentityStatus.PENDING_PRINCIPAL_APPROVAL":
-        "the provisional case of Section 14, on the identity axis",
-    "IntendedUse.HANDOFF_PREPARATION":
-        "declared purpose for a disclosure sought after qualification",
-    "IntendedUse.IDENTITY_VERIFICATION":
-        "declared purpose for a disclosure sought to verify a counterparty",
-    "Retention.UNTIL_HANDOFF":
-        "between session-only and unrestricted; unexercised",
+    "CloseReason.EXPIRED": "reachable when a Standing Interest or session outlives its validity; "
+    "no example waits long enough to show it",
+    "ConsentAction.DISCLOSE_ATTRIBUTES": "a deployment may seek consent for an attribute set rather than for "
+    "identity; the worked domains all seek identity",
+    "ConsentAction.ESTABLISH_DIRECT_CONTACT": "the consent a Handoff to a human needs when the parties will speak "
+    "outside any protocol",
+    "DisclosureStatus.GRANTED_IF_RECIPROCAL": "the reciprocity lever; LIMITS L-3 showed it inverts under asymmetric "
+    "exposure, so it is deliberately not demonstrated as a good idea",
+    "Feature.MULTI_PARTY": "Section 19.2 is experimental and this implementation does not "
+    "implement it, by the implementation plan's own rule",
+    "HandoffKind.WORKFLOW": "a handoff target that is neither a human nor a protocol; plausible "
+    "and unexercised",
+    "IdentityStatus.DECLINED": "an Opportunity whose counterparty refused identity; the worked "
+    "domains consent",
+    "IdentityStatus.PENDING_PRINCIPAL_APPROVAL": "the provisional case of Section 14, on the identity axis",
+    "IntendedUse.HANDOFF_PREPARATION": "declared purpose for a disclosure sought after qualification",
+    "IntendedUse.IDENTITY_VERIFICATION": "declared purpose for a disclosure sought to verify a counterparty",
+    "Retention.UNTIL_HANDOFF": "between session-only and unrestricted; unexercised",
 }
 
 BUCKETS = {
@@ -72,11 +61,17 @@ def _members() -> dict[str, tuple[str, str, object]]:
     found = {}
     for name in dir(vocab):
         obj = getattr(vocab, name)
-        if isinstance(obj, type) and issubclass(obj, Enum) \
-                and obj.__module__ == vocab.__name__:
+        if (
+            isinstance(obj, type)
+            and issubclass(obj, Enum)
+            and obj.__module__ == vocab.__name__
+        ):
             for member in obj:
                 found[f"{obj.__name__}.{member.name}"] = (
-                    obj.__name__, member.name, member.value)
+                    obj.__name__,
+                    member.name,
+                    member.value,
+                )
     return found
 
 
@@ -92,7 +87,8 @@ def coverage() -> dict[str, list[str]]:
     result = {}
     for key, (cls, member, value) in _members().items():
         where = [
-            bucket for bucket, text in sources.items()
+            bucket
+            for bucket, text in sources.items()
             if re.search(rf"\b{cls}\.{member}\b", text)
             or re.search(rf'"{re.escape(str(value))}"', text)
         ]
@@ -108,7 +104,8 @@ def undemonstrated() -> list[str]:
     """Referenced only where the protocol is defined or tested, never by a
     worked domain."""
     return sorted(
-        key for key, where in coverage().items()
+        key
+        for key, where in coverage().items()
         if where and set(where) <= {"core", "tests"}
     )
 
@@ -123,12 +120,15 @@ def main() -> int:
     missing = unreferenced()
     undocumented = [k for k in missing if k not in KEPT_WITHOUT_A_DEMONSTRATION]
     print()
-    print(f"{len(seen)} values; {len(missing)} reached by nothing; "
-          f"{len(undemonstrated())} never reached by a worked domain.")
+    print(
+        f"{len(seen)} values; {len(missing)} reached by nothing; "
+        f"{len(undemonstrated())} never reached by a worked domain."
+    )
     if undocumented:
         print()
-        print("Reached by nothing and unregistered — remove, or write down why "
-              "they stay:")
+        print(
+            "Reached by nothing and unregistered — remove, or write down why they stay:"
+        )
         for key in undocumented:
             print(f"  {key}")
         return 1

@@ -14,10 +14,11 @@ to give them a number rather than an intuition.
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from itertools import count
-from typing import Any, Iterable
+from typing import Any
 
 from .evaluation import LocalEvaluation, choose_result, evaluate_claim
 from .objects import (
@@ -40,6 +41,7 @@ from .objects import (
 from .policy import SessionConsents, effective_depth, evaluate_disclosure
 from .session import ProtocolError, Session
 from .vocab import (
+    CONSENT_ACTION_AUTHORITY,
     PROFILE_CORE,
     Authority,
     AuthorityValue,
@@ -47,7 +49,6 @@ from .vocab import (
     CloseReason,
     ConsentAction,
     ConsentStatus,
-    CONSENT_ACTION_AUTHORITY,
     DisclosureStatus,
     Feature,
     Gate,
@@ -60,7 +61,7 @@ from .vocab import (
 
 
 def _now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def _soon(minutes: int = 15) -> datetime:
@@ -200,7 +201,9 @@ class Agent:
 
     def confirm_accept(self, accept: SessionAccept) -> None:
         assert self.session is not None
-        self.session.max_depth = effective_depth(self.session.max_depth, accept.max_depth)
+        self.session.max_depth = effective_depth(
+            self.session.max_depth, accept.max_depth
+        )
         self.session.features = set(accept.features)
         self.session.accept(accept)
         self._log("session_confirmed", f"depth in force={self.session.max_depth.value}")
@@ -291,7 +294,9 @@ class Agent:
         return choose_result(evaluation, coarsen=coarsen)
 
     def receive_compatibility_response(
-        self, response: CompatibilityResponse, request: CompatibilityRequest | None = None
+        self,
+        response: CompatibilityResponse,
+        request: CompatibilityRequest | None = None,
     ) -> None:
         assert self.session is not None
         self.session.record_compatibility(response)
@@ -301,7 +306,10 @@ class Agent:
         # unresolved for both sides (Section 14.6).
         by_key = {claim.key: claim for claim in request.claims}
         for outcome in response.results:
-            if outcome.key == "conditional_on" and outcome.result is ClaimResult.COMPATIBLE:
+            if (
+                outcome.key == "conditional_on"
+                and outcome.result is ClaimResult.COMPATIBLE
+            ):
                 claim = by_key.get("conditional_on")
                 if claim is None:
                     continue
@@ -361,6 +369,26 @@ class Agent:
             # never as the operational outcome 'unauthorized'.
             return self._declined(request, "DISCLOSE authority is false")
 
+        # Section 16.2: where a level is `approval_required`, the response
+        # MUST be `pending_principal_approval`. Authority and the Disclosure
+        # Policy are different axes -- authority says whether this Agent may
+        # perform a category of action at all, the gate says which attributes
+        # need a decision -- and an Agent that consulted only the gate would
+        # silently ignore a Principal who said "ask me every time", for every
+        # attribute that happens to carry no gate of its own.
+        if (
+            self._authority(Authority.DISCLOSE) is AuthorityValue.APPROVAL_REQUIRED
+            and request.attribute not in self.pre_approved
+        ):
+            self._log("disclosure_pending", f"{request.attribute} (authority)")
+            return DisclosureResponse(
+                session_id=self.session.session_id,
+                request_ref=request.request_id,
+                attribute=request.attribute,
+                status=DisclosureStatus.PENDING_PRINCIPAL_APPROVAL,
+                expires_at=_soon(),
+            )
+
         decision = evaluate_disclosure(
             self.standing_interest,
             request.attribute,
@@ -397,14 +425,16 @@ class Agent:
             return self._declined(request, "no value held")
 
         self._log("disclosure_granted", f"{request.attribute} ({decision.reason})")
-        return self._advance(DisclosureResponse(
-            session_id=self.session.session_id,
-            request_ref=request.request_id,
-            attribute=request.attribute,
-            status=DisclosureStatus.GRANTED,
-            value=value,
-            expires_at=_soon(),
-        ))
+        return self._advance(
+            DisclosureResponse(
+                session_id=self.session.session_id,
+                request_ref=request.request_id,
+                attribute=request.attribute,
+                status=DisclosureStatus.GRANTED,
+                value=value,
+                expires_at=_soon(),
+            )
+        )
 
     def _declined(self, request: DisclosureRequest, why: str) -> DisclosureResponse:
         self._log("disclosure_declined", f"{request.attribute} ({why})")
@@ -458,7 +488,8 @@ class Agent:
         gated = [
             attribute
             for attribute in request.scope
-            if self.standing_interest.class_of(attribute).gate is Gate.PRINCIPAL_APPROVAL
+            if self.standing_interest.class_of(attribute).gate
+            is Gate.PRINCIPAL_APPROVAL
         ]
 
         if self._authority(level) is not AuthorityValue.TRUE or gated:

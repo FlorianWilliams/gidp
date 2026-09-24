@@ -9,7 +9,7 @@ activation round trip, and that every CID object can in fact be carried.
 from __future__ import annotations
 
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -37,10 +37,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "examples"))
 
 
 def _soon():
-    return datetime.now(timezone.utc) + timedelta(minutes=10)
+    return datetime.now(UTC) + timedelta(minutes=10)
 
 
 # -- declaration ------------------------------------------------------------
+
 
 def test_the_declaration_uses_the_four_fields_a2a_defines():
     entry = agent_extension(params={"profiles": ["core"]})
@@ -58,6 +59,7 @@ def test_the_extension_is_never_declared_required():
 
 
 # -- activation -------------------------------------------------------------
+
 
 def test_declaration_is_not_activation():
     """The step the specification's sketch omitted entirely."""
@@ -82,9 +84,11 @@ def test_a_peer_may_activate_some_extensions_and_not_this_one():
 
 # -- carriage ---------------------------------------------------------------
 
+
 def test_a_cid_object_round_trips_through_an_a2a_message():
-    close = SessionClose(session_id="s-1", reason=CloseReason.COMPLETED,
-                         expires_at=_soon())
+    close = SessionClose(
+        session_id="s-1", reason=CloseReason.COMPLETED, expires_at=_soon()
+    )
     message = to_message(close)
     assert OBJECT_KEY in message["metadata"]
     assert message["parts"] == []
@@ -116,6 +120,7 @@ def test_an_unknown_object_type_is_refused():
 
 # -- the two handshakes -----------------------------------------------------
 
+
 def test_activating_the_extension_says_nothing_about_cid_features():
     """Two negotiations, and the second is not derivable from the first.
 
@@ -123,17 +128,19 @@ def test_activating_the_extension_says_nothing_about_cid_features():
     optional CID features are in force*. A peer may activate and still
     support no optional feature at all.
     """
+    from baselines.scenario import b_interest
     from cid.agent import Agent
     from cid.vocab import Feature
-    from baselines.scenario import b_interest
 
     assert is_active(echo_activation(activation_header()))
 
     initiator = Agent(ref="agent:opaque:a", standing_interest=b_interest())
-    responder = Agent(ref="agent:opaque:b", standing_interest=b_interest(),
-                      supported_features=set())
-    opened = initiator.open_session("s", purpose="test",
-                                    features=[Feature.DEPENDENCY_PRIMITIVES])
+    responder = Agent(
+        ref="agent:opaque:b", standing_interest=b_interest(), supported_features=set()
+    )
+    opened = initiator.open_session(
+        "s", purpose="test", features=[Feature.DEPENDENCY_PRIMITIVES]
+    )
     accept = responder.handle_session_open(opened)
     assert Feature.DEPENDENCY_PRIMITIVES in (opened.features or [])
     assert Feature.DEPENDENCY_PRIMITIVES not in (accept.features or [])

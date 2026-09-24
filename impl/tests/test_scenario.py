@@ -24,6 +24,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "examples"))
 
+from cross_border import _in, a_interest, b_interest  # noqa: E402
+
 from cid.agent import Agent  # noqa: E402
 from cid.objects import Claim  # noqa: E402
 from cid.transport import Wire  # noqa: E402
@@ -38,15 +40,19 @@ from cid.vocab import (  # noqa: E402
     Surface,
 )
 
-from cross_border import a_interest, b_interest, _in  # noqa: E402
-
 
 def _run() -> tuple[Agent, Agent, Wire]:
     wire = Wire()
-    a = Agent(ref="agent:opaque:a", standing_interest=a_interest,
-              pre_approved={"principal_name"})
-    b = Agent(ref="agent:opaque:b", standing_interest=b_interest,
-              pre_approved={"principal_name"})
+    a = Agent(
+        ref="agent:opaque:a",
+        standing_interest=a_interest,
+        pre_approved={"principal_name"},
+    )
+    b = Agent(
+        ref="agent:opaque:b",
+        standing_interest=b_interest,
+        pre_approved={"principal_name"},
+    )
 
     opened = wire.send("A", a.open_session("s-c1", purpose="strategic_transaction"))
     accept = wire.send("B", b.handle_session_open(opened))
@@ -54,13 +60,22 @@ def _run() -> tuple[Agent, Agent, Wire]:
 
     claims = [
         Claim(key="geography", operator=ClaimOperator.INTERSECTS, value=["germany"]),
-        Claim(key="transaction_structures", operator=ClaimOperator.INTERSECTS,
-              value=["majority_investment", "distribution"]),
+        Claim(
+            key="transaction_structures",
+            operator=ClaimOperator.INTERSECTS,
+            value=["majority_investment", "distribution"],
+        ),
         Claim(key="market_access", operator=ClaimOperator.EQUALS, value="france"),
-        Claim(key="valuation_class", operator=ClaimOperator.WITHIN,
-              value={"min": 50_000_000, "max": 100_000_000}),
-        Claim(key="management_condition", operator=ClaimOperator.EQUALS,
-              value="founder_operational"),
+        Claim(
+            key="valuation_class",
+            operator=ClaimOperator.WITHIN,
+            value={"min": 50_000_000, "max": 100_000_000},
+        ),
+        Claim(
+            key="management_condition",
+            operator=ClaimOperator.EQUALS,
+            value="founder_operational",
+        ),
     ]
     request = wire.send("A", a.ask(claims))
     response = wire.send("B", b.handle_compatibility_request(request))
@@ -75,13 +90,16 @@ def _run() -> tuple[Agent, Agent, Wire]:
     opportunity = a.session.build_opportunity(
         structure="minority investment + distribution agreement",
         expires_at=_in(7),
-        identity_status={"initiator": IdentityStatus.NOT_REQUESTED,
-                         "responder": IdentityStatus.NOT_REQUESTED},
+        identity_status={
+            "initiator": IdentityStatus.NOT_REQUESTED,
+            "responder": IdentityStatus.NOT_REQUESTED,
+        },
     )
     wire.send("A", opportunity)
 
-    creq = wire.send("A", a.request_consent(ConsentAction.REVEAL_IDENTITY,
-                                            ["principal_name"]))
+    creq = wire.send(
+        "A", a.request_consent(ConsentAction.REVEAL_IDENTITY, ["principal_name"])
+    )
     cresp = wire.send("B", b.handle_consent_request(creq))
     a.session.record_consent(cresp)
     b.session.record_consent(cresp, discharge=False)
@@ -146,16 +164,19 @@ def test_direction_is_never_stated():
     on_the_wire = json.dumps(
         [message.model_dump(mode="json") for _, message in wire.transcript]
     ).lower()
-    for word in ("acquire", "for_sale", "consider_strategic_transaction",
-                 "explore_strategic_transaction", "own_company"):
+    for word in (
+        "acquire",
+        "for_sale",
+        "consider_strategic_transaction",
+        "explore_strategic_transaction",
+        "own_company",
+    ):
         assert word not in on_the_wire
 
 
 def test_the_session_qualifies_with_the_counts_of_appendix_c1():
     a, b, wire = _run()
-    opportunity = next(
-        m for _, m in wire.transcript if m.type == "Opportunity"
-    )
+    opportunity = next(m for _, m in wire.transcript if m.type == "Opportunity")
     assert opportunity.evaluated_dimensions == 5
     assert opportunity.compatible_dimensions == 3
     assert sorted(opportunity.open_conditions) == [

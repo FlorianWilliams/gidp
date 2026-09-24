@@ -31,9 +31,10 @@ learns is permanent and unbounded in audience.
 
 from __future__ import annotations
 
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from math import log2
-from typing import Any, Callable, Iterable
+from typing import Any
 
 COUNTERPARTY = "counterparty"
 OPERATOR = "operator"
@@ -72,7 +73,7 @@ class Ledger:
     notes: list[str] = field(default_factory=list)
 
     @classmethod
-    def over(cls, facts: Iterable[Fact]) -> "Ledger":
+    def over(cls, facts: Iterable[Fact]) -> Ledger:
         indexed = {f.key: f for f in facts}
         return cls(
             facts=indexed,
@@ -85,7 +86,10 @@ class Ledger:
     # -- the two ways knowledge changes ------------------------------------
 
     def observe(
-        self, audience: str, key: tuple[str, str], consistent: Callable[[Any], bool],
+        self,
+        audience: str,
+        key: tuple[str, str],
+        consistent: Callable[[Any], bool],
         note: str = "",
     ) -> None:
         """The audience saw something. Keep only candidates that explain it."""

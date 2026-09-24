@@ -17,7 +17,7 @@ to a potential partner is admitting it to a potential competitor.
 from __future__ import annotations
 
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -50,7 +50,7 @@ LINE = "-" * 78
 
 
 def _in(days: int = 30) -> datetime:
-    return datetime.now(timezone.utc) + timedelta(days=days)
+    return datetime.now(UTC) + timedelta(days=days)
 
 
 def say(who: str, what: str) -> None:
@@ -212,15 +212,24 @@ def _claims_for(mine: StandingInterest) -> list[Claim]:
 
 def run(verbose: bool = True) -> tuple[Agent, Agent, Wire]:
     wire = Wire()
-    a = Agent(ref="agent:opaque:logistics", standing_interest=logistics,
-              pre_approved={"principal_name"})
-    b = Agent(ref="agent:opaque:brokerage", standing_interest=brokerage,
-              pre_approved={"principal_name"})
+    a = Agent(
+        ref="agent:opaque:logistics",
+        standing_interest=logistics,
+        pre_approved={"principal_name"},
+    )
+    b = Agent(
+        ref="agent:opaque:brokerage",
+        standing_interest=brokerage,
+        pre_approved={"principal_name"},
+    )
 
     opened = wire.send(
         "Logis.",
-        a.open_session("partnership-1", purpose="commercial_partnership",
-                       features=[Feature.DEPENDENCY_PRIMITIVES]),
+        a.open_session(
+            "partnership-1",
+            purpose="commercial_partnership",
+            features=[Feature.DEPENDENCY_PRIMITIVES],
+        ),
     )
     accept = wire.send("Broker", b.handle_session_open(opened))
     a.confirm_accept(accept)
@@ -228,8 +237,11 @@ def run(verbose: bool = True) -> tuple[Agent, Agent, Wire]:
     if verbose:
         show("A -> B", opened)
         show("B -> A", accept)
-        say("", f"features in force: "
-                f"{', '.join(f.value for f in a.session.features) or 'core only'}")
+        say(
+            "",
+            f"features in force: "
+            f"{', '.join(f.value for f in a.session.features) or 'core only'}",
+        )
 
     request = wire.send("Logis.", a.ask(_claims_for(logistics)))
     response = wire.send("Broker", b.handle_compatibility_request(request))
@@ -253,8 +265,9 @@ def run(verbose: bool = True) -> tuple[Agent, Agent, Wire]:
         if verbose:
             show("A -> B", opportunity)
 
-    creq = wire.send("Logis.", a.request_consent(ConsentAction.REVEAL_IDENTITY,
-                                                 ["principal_name"]))
+    creq = wire.send(
+        "Logis.", a.request_consent(ConsentAction.REVEAL_IDENTITY, ["principal_name"])
+    )
     cresp = wire.send("Broker", b.handle_consent_request(creq))
     a.session.record_consent(cresp)
     b.session.record_consent(cresp, discharge=False)
@@ -281,13 +294,19 @@ def main() -> None:
     print(LINE)
     print("What the dependency primitives did")
     print(LINE)
-    say("Logis.", f"requires {logistics.interest.requires} — "
-                  f"provides {logistics.interest.provides}")
-    say("Broker", f"requires {brokerage.interest.requires} — "
-                  f"provides {brokerage.interest.provides}")
+    say(
+        "Logis.",
+        f"requires {logistics.interest.requires} — "
+        f"provides {logistics.interest.provides}",
+    )
+    say(
+        "Broker",
+        f"requires {brokerage.interest.requires} — "
+        f"provides {brokerage.interest.provides}",
+    )
     say("", "the match is exact and neither side named its own gap on the wire:")
-    for name, interest in (("Logis.", logistics), ("Broker", brokerage)):
-        say(name, f"never transmitted: capability_gap, margin_floor")
+    for name, _unused in (("Logis.", logistics), ("Broker", brokerage)):
+        say(name, "never transmitted: capability_gap, margin_floor")
 
     print()
     print(LINE)

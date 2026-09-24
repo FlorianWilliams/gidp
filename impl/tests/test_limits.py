@@ -16,6 +16,8 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "examples"))
 
+import limits  # noqa: E402
+
 from cid.agent import Agent  # noqa: E402
 from cid.objects import (  # noqa: E402
     AuthoritySpec,
@@ -34,8 +36,6 @@ from cid.vocab import (  # noqa: E402
     Surface,
 )
 
-import limits  # noqa: E402
-
 
 def test_l1_the_policy_cannot_express_an_obligation_to_publish():
     """L-1: every disclosure class is a ceiling, none is a floor."""
@@ -45,7 +45,9 @@ def test_l1_the_policy_cannot_express_an_obligation_to_publish():
         assert set(type(cls).model_fields) == {"surface", "gate"}
         assert cls.gate in set(Gate)
     # And nothing anywhere obliges an Agent to publish a projection.
-    authority = AuthoritySpec(levels={Authority.PUBLISH_PROJECTION: AuthorityValue.FALSE})
+    authority = AuthoritySpec(
+        levels={Authority.PUBLISH_PROJECTION: AuthorityValue.FALSE}
+    )
     assert authority.permits(Authority.PUBLISH_PROJECTION) is False
 
 
@@ -88,7 +90,7 @@ def test_l4_identity_cannot_precede_probing():
     opened = a.open_session("s-kyc", purpose="regulated")
     a.confirm_accept(b.handle_session_open(opened))
 
-    with pytest.raises(ProtocolError):
+    with pytest.raises(ProtocolError, match="ConsentRequest"):
         a.request_consent(ConsentAction.REVEAL_IDENTITY, ["principal_name"])
 
 

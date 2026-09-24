@@ -18,10 +18,9 @@ Run a longer search than the default when it matters:
 from __future__ import annotations
 
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
-import pytest
 from hypothesis import HealthCheck, assume, given, settings
 from hypothesis import strategies as st
 
@@ -63,6 +62,7 @@ TOKENS = ("one", "two", "three", "four", "five")
 # Generators
 # ---------------------------------------------------------------------------
 
+
 @st.composite
 def ranges(draw):
     low = draw(st.integers(min_value=0, max_value=1_000))
@@ -72,12 +72,14 @@ def ranges(draw):
 
 @st.composite
 def condition_values(draw):
-    return draw(st.one_of(
-        st.lists(st.sampled_from(TOKENS), min_size=1, max_size=3, unique=True),
-        ranges(),
-        st.sampled_from(TOKENS),
-        st.integers(min_value=0, max_value=2_000),
-    ))
+    return draw(
+        st.one_of(
+            st.lists(st.sampled_from(TOKENS), min_size=1, max_size=3, unique=True),
+            ranges(),
+            st.sampled_from(TOKENS),
+            st.integers(min_value=0, max_value=2_000),
+        )
+    )
 
 
 @st.composite
@@ -127,6 +129,7 @@ def claims(draw):
 # Section 15.5 — truthfulness
 # ---------------------------------------------------------------------------
 
+
 @SETTINGS
 @given(standing_interests(), claims(), st.booleans(), st.booleans())
 def test_no_reachable_answer_ever_contradicts_the_private_values(
@@ -147,13 +150,17 @@ def test_a_definite_answer_requires_a_definite_truth(interest, claim):
     if answer in (ClaimResult.COMPATIBLE, ClaimResult.INCOMPATIBLE):
         assert evaluation.truth is not None
     if evaluation.truth is None:
-        assert answer in (ClaimResult.UNKNOWN, ClaimResult.REQUIRES_DISCLOSURE,
-                          ClaimResult.DECLINED)
+        assert answer in (
+            ClaimResult.UNKNOWN,
+            ClaimResult.REQUIRES_DISCLOSURE,
+            ClaimResult.DECLINED,
+        )
 
 
 # ---------------------------------------------------------------------------
 # Sections 9.1 and 10 — a local value never leaves its holder
 # ---------------------------------------------------------------------------
+
 
 def _local_values(interest: StandingInterest) -> list:
     return [
@@ -207,7 +214,7 @@ def test_a_projection_never_carries_a_local_value(interest):
         interest,
         projection_id="p",
         endpoint="agent:opaque:r",
-        expires_at=datetime.now(timezone.utc) + timedelta(days=30),
+        expires_at=datetime.now(UTC) + timedelta(days=30),
         interest_ref=None,
         attributes=[RetrievalAttribute("categories", None, lambda _: ["generic"])],
     )
@@ -237,20 +244,29 @@ def test_every_event_sequence_either_advances_or_is_refused(interest, events):
     for event in events:
         try:
             if event == "ask":
-                request = a.ask([Claim(key="alpha",
-                                       operator=ClaimOperator.INTERSECTS,
-                                       value=["one"])])
+                request = a.ask(
+                    [
+                        Claim(
+                            key="alpha",
+                            operator=ClaimOperator.INTERSECTS,
+                            value=["one"],
+                        )
+                    ]
+                )
                 a.receive_compatibility_response(
-                    b.handle_compatibility_request(request), request)
+                    b.handle_compatibility_request(request), request
+                )
             elif event == "disclose":
                 a.request_disclosure("alpha", purpose="test")
             elif event == "consent":
                 from cid.vocab import ConsentAction
+
                 a.request_consent(ConsentAction.REVEAL_IDENTITY, ["alpha"])
             elif event == "handoff":
                 a.handoff("https://example.org/human/v1")
             elif event == "close":
                 from cid.vocab import CloseReason
+
                 a.session.close(CloseReason.COMPLETED)
         except ProtocolError:
             # A refusal is a defined outcome; the point is that it is raised

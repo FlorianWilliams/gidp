@@ -24,16 +24,12 @@ from __future__ import annotations
 
 import random
 import sys
+from collections.abc import Callable
 from dataclasses import dataclass
 from math import log2
 from pathlib import Path
-from typing import Callable
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-
-from cid.evaluation import LocalEvaluation, evaluate_claim  # noqa: E402
-from cid.objects import Claim  # noqa: E402
-from cid.vocab import ClaimOperator, ClaimResult  # noqa: E402
 
 from baselines.mechanisms import HONEST_CLAIMS  # noqa: E402
 from baselines.scenario import (  # noqa: E402
@@ -43,6 +39,9 @@ from baselines.scenario import (  # noqa: E402
     VALUATION_GRID,
     b_interest,
 )
+from cid.evaluation import LocalEvaluation, evaluate_claim  # noqa: E402
+from cid.objects import Claim  # noqa: E402
+from cid.vocab import ClaimOperator, ClaimResult  # noqa: E402
 
 Policy = Callable[[LocalEvaluation, bool], set[ClaimResult]]
 
@@ -59,6 +58,7 @@ PATIENCE = 12
 # Policies, each written as the set of answers it admits
 # --------------------------------------------------------------------------
 
+
 def _truthful(evaluation: LocalEvaluation) -> ClaimResult:
     if evaluation.truth is None:
         return ClaimResult.UNKNOWN
@@ -74,7 +74,9 @@ def default_policy(evaluation: LocalEvaluation, over_budget: bool) -> set[ClaimR
     return {_truthful(evaluation)}
 
 
-def coarsen_all_local(evaluation: LocalEvaluation, over_budget: bool) -> set[ClaimResult]:
+def coarsen_all_local(
+    evaluation: LocalEvaluation, over_budget: bool
+) -> set[ClaimResult]:
     """Coarsen every local answer, affirmative or not."""
     if over_budget:
         return {ClaimResult.DECLINED}
@@ -119,8 +121,10 @@ POLICIES: dict[str, Policy] = {
 # Simulatability, in the sense of [KMN2005]
 # --------------------------------------------------------------------------
 
-def decision_of(evaluation: LocalEvaluation, policy: Policy,
-                over_budget: bool = False) -> str:
+
+def decision_of(
+    evaluation: LocalEvaluation, policy: Policy, over_budget: bool = False
+) -> str:
     """Which of the three moves of Section 15.5 the policy took.
 
     The answer a policy gives and the *decision* to give it are different
@@ -149,16 +153,18 @@ def is_simulatable(policy: Policy, claim: Claim, candidates) -> bool:
     answer it was supposed to replace.
     """
     decisions = {
-        decision_of(evaluate_claim(build(), claim), policy)
-        for build in candidates
+        decision_of(evaluate_claim(build(), claim), policy) for build in candidates
     }
     return len(decisions) == 1
 
 
 def simulatability_report() -> dict[str, bool]:
     """Every policy in the sweep, classified."""
-    claim = Claim(key="valuation_floor", operator=ClaimOperator.WITHIN,
-                  value={"min": 40_000_000, "max": 60_000_000})
+    claim = Claim(
+        key="valuation_floor",
+        operator=ClaimOperator.WITHIN,
+        value={"min": 40_000_000, "max": 60_000_000},
+    )
     candidates = [
         (lambda v=v: b_interest(valuation_floor=v))
         for v in (0, 45_000_000, 200_000_000)
@@ -172,6 +178,7 @@ def simulatability_report() -> dict[str, bool]:
 # --------------------------------------------------------------------------
 # The probing counterparty
 # --------------------------------------------------------------------------
+
 
 def _ask(interest, claim: Claim, policy: Policy, over_budget: bool) -> set[ClaimResult]:
     return policy(evaluate_claim(interest, claim), over_budget)
@@ -228,12 +235,16 @@ def probe(policy: Policy, budget: int, seed: int = 7) -> tuple[float, int]:
             # keeps every query informative; getting this wrong makes the
             # adversary re-ask a question that no longer splits anything.
             threshold = ordered[(len(ordered) - 1) // 2]
-            claim = Claim(key="valuation_floor", operator=ClaimOperator.WITHIN,
-                          value={"min": threshold, "max": threshold})
+            claim = Claim(
+                key="valuation_floor",
+                operator=ClaimOperator.WITHIN,
+                value={"min": threshold, "max": threshold},
+            )
             observed = _observed(_ask(true_interest, claim, policy, False), rng)
             asked += 1
             narrowed = {
-                v for v in floors
+                v
+                for v in floors
                 if observed in _ask(b_interest(valuation_floor=v), claim, policy, False)
             }
             barren_floor = barren_floor + 1 if narrowed == floors else 0
@@ -241,13 +252,16 @@ def probe(policy: Policy, budget: int, seed: int = 7) -> tuple[float, int]:
             floor_stuck = barren_floor >= PATIENCE
         else:
             option = sorted(mgmts)[len(mgmts) // 2]
-            claim = Claim(key="management_condition",
-                          operator=ClaimOperator.EQUALS, value=option)
+            claim = Claim(
+                key="management_condition", operator=ClaimOperator.EQUALS, value=option
+            )
             observed = _observed(_ask(true_interest, claim, policy, False), rng)
             asked += 1
             narrowed = {
-                m for m in mgmts
-                if observed in _ask(b_interest(management_condition=m), claim, policy, False)
+                m
+                for m in mgmts
+                if observed
+                in _ask(b_interest(management_condition=m), claim, policy, False)
             }
             barren_mgmt = barren_mgmt + 1 if narrowed == mgmts else 0
             mgmts = narrowed
@@ -305,7 +319,8 @@ def main() -> None:
     print()
     simulatable = simulatability_report()
     header = f"{'policy':<26}{'simulatable':>13}" + "".join(
-        f"{f'budget {b}':>20}" for b in budgets)
+        f"{f'budget {b}':>20}" for b in budgets
+    )
     print(header)
     print("-" * len(header))
     rows = {}
@@ -341,22 +356,32 @@ def main() -> None:
     print("reason behind the identical rows below, and it is a 2005 result rather")
     print("than a property of this implementation.")
     print()
-    print(f"The coarsening of Section 15.4 buys a factor, not a bound. At a budget")
+    print("The coarsening of Section 15.4 buys a factor, not a bound. At a budget")
     print(f"of eight it holds the adversary to {d8:.2f} bits where a plainly truthful")
-    print(f"oracle gives up {t8:.2f}; at an unbounded budget it gives up {d_bits:.2f} all the")
-    print(f"same, while keeping {d_tpr:.0%}/{d_tnr:.0%}. The only thing standing between a")
+    print(
+        f"oracle gives up {t8:.2f}; at an unbounded budget it gives up {d_bits:.2f} all the"
+    )
+    print(
+        f"same, while keeping {d_tpr:.0%}/{d_tnr:.0%}. The only thing standing between a"
+    )
     print("counterparty and the private value is how many questions it may ask.")
     print()
-    print(f"Coarsening every local answer leaks {c_bits:.2f} bits and scores "
-          f"{c_tpr:.0%}/{c_tnr:.0%}:")
+    print(
+        f"Coarsening every local answer leaks {c_bits:.2f} bits and scores "
+        f"{c_tpr:.0%}/{c_tnr:.0%}:"
+    )
     print("it qualifies everyone, including every counterparty that should have")
     print("been refused. Declining every local answer leaks nothing either and")
-    print(f"scores {dec[1]:.0%}/{dec[2]:.0%} — it qualifies no one. Neither is a mitigation;")
+    print(
+        f"scores {dec[1]:.0%}/{dec[2]:.0%} — it qualifies no one. Neither is a mitigation;"
+    )
     print("both are the oracle switched off, which is Section 24.3's remark about")
     print("discrimination turned into a measurement.")
     print()
     print(f"Randomising half the local answers leaks {r_bits:.2f} bits at an unbounded")
-    print(f"budget and scores {r_tpr:.0%}/{r_tnr:.0%}. It survives one question and not")
+    print(
+        f"budget and scores {r_tpr:.0%}/{r_tnr:.0%}. It survives one question and not"
+    )
     print("repetition: the adversary here re-asks whichever question still splits")
     print("its hypothesis space, and a coin flipped often enough stops hiding")
     print("anything. [RANI2026]'s policy is randomised against a passive observer")

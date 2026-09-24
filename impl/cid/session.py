@@ -13,8 +13,8 @@ having two conflicting states. ``Session`` here models one side's view.
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass, field
-from typing import Iterable
 
 from .objects import (
     ClaimOutcome,
@@ -28,11 +28,10 @@ from .objects import (
     SessionOpen,
 )
 from .vocab import (
+    PROVISIONAL_DISCLOSURE_STATUSES,
     ClaimResult,
     CloseReason,
     ConsentStatus,
-    DisclosureStatus,
-    PROVISIONAL_DISCLOSURE_STATUSES,
     SessionState,
     SessionStatus,
     Surface,
@@ -49,7 +48,7 @@ class Event(str):
 
 SESSION_OPEN = Event("SessionOpen")
 SESSION_ACCEPT = Event("SessionAccept")
-COMPATIBILITY = Event("Compatibility")           # request or response
+COMPATIBILITY = Event("Compatibility")  # request or response
 DISCLOSURE_REQUEST = Event("DisclosureRequest")
 DISCLOSURE_TERMINAL = Event("DisclosureResponse.terminal")
 DISCLOSURE_PROVISIONAL = Event("DisclosureResponse.provisional")
@@ -69,29 +68,24 @@ TRANSITIONS: dict[tuple[SessionState | None, Event], SessionState | None] = {
     (None, SESSION_OPEN): SessionState.REQUESTED,
     (SessionState.REQUESTED, SESSION_ACCEPT): SessionState.PROBING,
     (SessionState.REQUESTED, CLOSE): SessionState.CLOSED,
-
     (SessionState.PROBING, COMPATIBILITY): None,
     (SessionState.PROBING, DISCLOSURE_REQUEST): SessionState.DISCLOSURE_PENDING,
     (SessionState.DISCLOSURE_PENDING, DISCLOSURE_TERMINAL): SessionState.PROBING,
     (SessionState.DISCLOSURE_PENDING, DISCLOSURE_PROVISIONAL): None,
     (SessionState.DISCLOSURE_PENDING, COMPATIBILITY): None,
-
     (SessionState.PROBING, QUALIFY): SessionState.QUALIFIED,
     (SessionState.PROBING, INCOMPATIBLE): SessionState.CLOSED,
     (SessionState.DISCLOSURE_PENDING, INCOMPATIBLE): SessionState.CLOSED,
     (SessionState.QUALIFIED, INCOMPATIBLE): SessionState.CLOSED,
-
     (SessionState.QUALIFIED, COMPATIBILITY): None,
     (SessionState.QUALIFIED, DISCLOSURE_REQUEST): SessionState.DISCLOSURE_PENDING,
     (SessionState.QUALIFIED, CONSENT_REQUEST): SessionState.CONSENT_PENDING,
-
     (SessionState.CONSENT_PENDING, CONSENT_GRANTED): SessionState.CONSENTED,
     (SessionState.CONSENT_PENDING, CONSENT_DECLINED): SessionState.QUALIFIED,
     (SessionState.CONSENT_PENDING, CONSENT_PROVISIONAL): None,
     (SessionState.CONSENT_PENDING, COMPATIBILITY): None,
     (SessionState.CONSENTED, CONSENT_REQUEST): SessionState.CONSENT_PENDING,
     (SessionState.CONSENTED, COMPATIBILITY): None,
-
     (SessionState.QUALIFIED, HANDOFF): SessionState.HANDED_OFF,
     (SessionState.CONSENTED, HANDOFF): SessionState.HANDED_OFF,
     (SessionState.HANDED_OFF, CLOSE): SessionState.CLOSED,
@@ -152,8 +146,10 @@ class Session:
 
     def close(self, reason: CloseReason) -> None:
         if self.state is SessionState.CLOSED:
-            raise ProtocolError("CLOSED is terminal; a new interaction needs a new "
-                                "session_id (Section 17.2)")
+            raise ProtocolError(
+                "CLOSED is terminal; a new interaction needs a new "
+                "session_id (Section 17.2)"
+            )
         if self.state not in _CLOSEABLE:
             raise ProtocolError(f"cannot close from {self.state}")
         self.state = SessionState.CLOSED

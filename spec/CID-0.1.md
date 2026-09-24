@@ -315,6 +315,8 @@ CID 0.1 recognises four classes of Conditional Interest. They differ in what is 
 ### 8.4 Interdependent conditional interest
 *I will consider X if another party performs or commits to Y.* Example: an investor who participates only if a qualified lead commits; a buyer who acquires a building only if an anchor tenant signs. Established analogue: conditional co-investment subject to a lead investor, and contingent real-estate transactions. This class uses the dependency primitives of Section 19 and is the entry point to multi-party discovery.
 
+> *The classification is descriptive.* An Agent's behaviour MUST NOT depend on which of the four classes a Conditional Interest declares: the classes exist to help a Principal and an implementer think about what they are expressing, and the protocol's mechanics — disclosure, compatibility, authority, state — are identical across all four. The class is held locally and never transmitted, so nothing else could depend on it either; stating the rule keeps two implementations from diverging by inventing behaviour it does not have.
+
 ## 9. Standing Interest
 
 A Standing Interest SHOULD contain sufficient information for an Agent to determine whether an Opportunity is worth exploring without the complete Standing Interest ever leaving the Agent's trust boundary.
@@ -906,6 +908,10 @@ A responder MAY answer `declined` rather than `incompatible` whenever distinguis
 
 ### 19.1 Dependency primitives (core)
 A Standing Interest MAY carry four generic relationship lists: `provides` (what the Principal can bring), `requires` (what it needs from others), `conditional_on` (events or commitments that must hold), `excludes` (counterparties, structures or conditions ruled out). They are part of the core Standing Interest model and MAY be used in bilateral sessions (e.g. `requires: capability X` ↔ `provides: capability X`, Appendix C.3). Only `excludes` MUST be supported by every implementation; the other three MUST be supported by implementations that declare the `dependency_primitives` feature (Section 14.1).
+
+None of the four is self-enforcing, and `excludes` is the one where that matters. An Agent that declares `excludes: X` has recorded a disqualifying property; it has not caused anything to test for it. A counterparty that never asks never learns, and a session in which nobody asked can qualify and produce an Opportunity between two parties one of which excludes a property the other has. This is the same shape as the contingency gap of Section 14.6, and it is left as a duty on the Agent rather than a mechanism: an Agent holding `excludes` SHOULD ask the corresponding claim before qualifying, and an Opportunity asserts nothing about exclusions no claim tested.
+
+Nor is `excludes` the negation of `requires`. *Requires X* says the Principal needs X present; *excludes X* says X is disqualifying whoever supplies it. The negation of the first is "does not need X", which is not the second, and a profile that collapses them will produce Opportunities its Principal would refuse.
 
 The four names are **reserved claim keys**: a claim (Section 14.2) naming one of them is resolved against the corresponding list rather than against the Conditional Interest's conditions, which is what makes the bilateral use above reachable. The Disclosure Policy classifies them like any other attribute (Section 10), and the expected pattern is asymmetric, deliberately so. What a Principal *provides* is ordinarily disclosable — it is what makes it findable at all. What it *requires* is the mirror image of what it lacks, and a capability gap admitted to a prospective partner is admitted to a prospective competitor; a Principal will therefore commonly classify `requires` as `evaluation_only`, so that "do you require X?" is answered truthfully but coarsened (Section 15.5) while "do you provide X?" is answered plainly.
 

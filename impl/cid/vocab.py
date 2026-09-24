@@ -12,12 +12,13 @@ Every name below is spelled exactly as the specification spells it.
 from __future__ import annotations
 
 from enum import Enum
+from typing import Final
 
 #: Object version token. The short form is ``cidisc`` rather than ``cid``
 #: because ``cid`` is the established abbreviation of the IPFS Content
 #: Identifier and would be misread in the ecosystems this protocol sits in
 #: (CID 0.1 Section 14).
-VERSION = "cidisc/0.1"
+VERSION: Final = "cidisc/0.1"
 
 PROFILE_CORE = "core"
 
@@ -42,7 +43,7 @@ class Surface(str, Enum):
         """Position in the ordering; larger means less exposed, i.e. deeper."""
         return _SURFACE_DEPTH[self]
 
-    def deeper_than(self, other: "Surface") -> bool:
+    def deeper_than(self, other: Surface) -> bool:
         return self.depth > other.depth
 
 

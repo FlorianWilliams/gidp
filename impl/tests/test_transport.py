@@ -3,19 +3,18 @@
 from __future__ import annotations
 
 import sys
-from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from test_conformance import _interest, _soon  # noqa: E402
+
 from cid.agent import Agent
 from cid.objects import Claim, SessionClose
 from cid.transport import Wire, WireError
 from cid.vocab import ClaimOperator, CloseReason, DisclosureStatus
-
-from test_conformance import _interest, _soon  # noqa: E402
 
 
 def _wired() -> tuple[Agent, Agent, Wire]:
@@ -32,8 +31,15 @@ def test_a_conforming_exchange_leaves_nothing_outstanding():
     a, b, wire = _wired()
     request = wire.send(
         "A",
-        a.ask([Claim(key="domain", operator=ClaimOperator.INTERSECTS,
-                     value=["enterprise_software"])]),
+        a.ask(
+            [
+                Claim(
+                    key="domain",
+                    operator=ClaimOperator.INTERSECTS,
+                    value=["enterprise_software"],
+                )
+            ]
+        ),
     )
     response = wire.send("B", b.handle_compatibility_request(request))
     a.receive_compatibility_response(response)
@@ -52,8 +58,9 @@ def test_a_provisional_response_does_not_discharge_the_request():
 
 def test_answering_an_unknown_request_is_rejected():
     a, b, wire = _wired()
-    request = a.ask([Claim(key="domain", operator=ClaimOperator.INTERSECTS,
-                           value=["x"])])  # never put on the wire
+    request = a.ask(
+        [Claim(key="domain", operator=ClaimOperator.INTERSECTS, value=["x"])]
+    )  # never put on the wire
     response = b.handle_compatibility_request(request)
     with pytest.raises(WireError):
         wire.send("B", response)

@@ -25,7 +25,7 @@ this paragraph.
 from __future__ import annotations
 
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -57,7 +57,7 @@ LINE = "-" * 78
 
 
 def _in(days: int = 30) -> datetime:
-    return datetime.now(timezone.utc) + timedelta(days=days)
+    return datetime.now(UTC) + timedelta(days=days)
 
 
 def say(who: str, what: str) -> None:
@@ -199,13 +199,20 @@ def run(verbose: bool = True) -> tuple[Agent, Agent, Wire]:
     wire = Wire()
     # The board initiates: it is the side that is actually searching, and the
     # side that must not publish a projection to do so.
-    b = Agent(ref="agent:opaque:board", standing_interest=board,
-              pre_approved={"principal_name"})
-    c = Agent(ref="agent:opaque:candidate", standing_interest=candidate,
-              pre_approved={"principal_name"})
+    b = Agent(
+        ref="agent:opaque:board",
+        standing_interest=board,
+        pre_approved={"principal_name"},
+    )
+    c = Agent(
+        ref="agent:opaque:candidate",
+        standing_interest=candidate,
+        pre_approved={"principal_name"},
+    )
 
-    opened = wire.send("Board", b.open_session("succession-1",
-                                               purpose="executive_role"))
+    opened = wire.send(
+        "Board", b.open_session("succession-1", purpose="executive_role")
+    )
     accept = wire.send("Cand.", c.handle_session_open(opened))
     b.confirm_accept(accept)
 
@@ -233,8 +240,9 @@ def run(verbose: bool = True) -> tuple[Agent, Agent, Wire]:
         if verbose:
             show("B -> C", opportunity)
 
-    creq = wire.send("Board", b.request_consent(ConsentAction.REVEAL_IDENTITY,
-                                                ["principal_name"]))
+    creq = wire.send(
+        "Board", b.request_consent(ConsentAction.REVEAL_IDENTITY, ["principal_name"])
+    )
     cresp = wire.send("Cand.", c.handle_consent_request(creq))
     b.session.record_consent(cresp)
     c.session.record_consent(cresp, discharge=False)

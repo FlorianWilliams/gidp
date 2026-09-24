@@ -14,7 +14,7 @@ Neither company ever states "we want to buy" or "we might sell". Run it:
 from __future__ import annotations
 
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -49,7 +49,7 @@ LINE = "-" * 78
 
 
 def _in(days: int = 30) -> datetime:
-    return datetime.now(timezone.utc) + timedelta(days=days)
+    return datetime.now(UTC) + timedelta(days=days)
 
 
 def say(who: str, what: str) -> None:
@@ -76,7 +76,12 @@ a_interest = StandingInterest(
         interest_class=InterestClass.CONFIDENTIAL_ACTIVE_DEMAND,
         action="explore_strategic_transaction",
         object="german_enterprise_software",
-        structures=["acquisition", "majority_investment", "distribution", "joint_venture"],
+        structures=[
+            "acquisition",
+            "majority_investment",
+            "distribution",
+            "joint_venture",
+        ],
         conditions={
             "domain": ["enterprise_software"],
             "geography": ["europe", "germany"],
@@ -169,10 +174,16 @@ b_interest = StandingInterest(
 
 
 def main() -> None:
-    a = Agent(ref="agent:opaque:a", standing_interest=a_interest,
-              pre_approved={"principal_name"})
-    b = Agent(ref="agent:opaque:b", standing_interest=b_interest,
-              pre_approved={"principal_name"})
+    a = Agent(
+        ref="agent:opaque:a",
+        standing_interest=a_interest,
+        pre_approved={"principal_name"},
+    )
+    b = Agent(
+        ref="agent:opaque:b",
+        standing_interest=b_interest,
+        pre_approved={"principal_name"},
+    )
 
     print(LINE)
     print("Stage 1-2  Projection and candidate retrieval (Sections 11, 12)")
@@ -196,7 +207,7 @@ def main() -> None:
             symmetric,
         ],
     )
-    ref = provider.publish_projection(b_projection)
+    provider.publish_projection(b_projection)
     published = b_projection.model_dump(
         include={"categories", "domains", "geographies", "relation"}, mode="json"
     )
@@ -227,8 +238,9 @@ def main() -> None:
     print("Stage 3  Session initiation (Section 14.1)")
     print(LINE)
 
-    open_msg = wire.send("A", a.open_session("opaque-session-1",
-                                             purpose="strategic_transaction"))
+    open_msg = wire.send(
+        "A", a.open_session("opaque-session-1", purpose="strategic_transaction")
+    )
     show("A -> B", open_msg)
     accept = wire.send("B", b.handle_session_open(open_msg))
     show("B -> A", accept)
@@ -309,8 +321,9 @@ def main() -> None:
     print("Stage 7  Consent to reveal identity (Section 14.5)")
     print(LINE)
 
-    creq = wire.send("A", a.request_consent(ConsentAction.REVEAL_IDENTITY,
-                                            ["principal_name"]))
+    creq = wire.send(
+        "A", a.request_consent(ConsentAction.REVEAL_IDENTITY, ["principal_name"])
+    )
     show("A -> B", creq)
     cresp = wire.send("B", b.handle_consent_request(creq))
     show("B -> A", cresp)
@@ -325,8 +338,9 @@ def main() -> None:
     print("Stage 8  Handoff (Section 14.7)")
     print(LINE)
 
-    handoff = wire.send("A", a.handoff(
-        protocol_ref="https://example.org/negotiation/v1"))
+    handoff = wire.send(
+        "A", a.handoff(protocol_ref="https://example.org/negotiation/v1")
+    )
     show("A -> B", handoff)
     b.session.record_handoff(handoff)
     a.session.close(CloseReason.COMPLETED)

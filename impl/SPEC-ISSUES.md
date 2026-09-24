@@ -8,7 +8,7 @@ carefully.
 Each entry states what the specification says, what a reader cannot determine
 from it, what this implementation decided, and whether CID 0.1 should change.
 
-**Status: all eighteen were applied to CID 0.1 on 23 September 2026**, before the
+**Status: eighteen of nineteen were applied to CID 0.1 on 23 September 2026**, before the
 specification was frozen for publication. The entries are kept because the
 record of what an implementation found is worth more than a clean file: it is
 the evidence that the draft was tested rather than merely written.
@@ -565,3 +565,46 @@ stating a retention the requester cannot discharge and requires omission
 instead; Section 25.4's "recipients SHOULD honour them" becomes a MUST for a
 recipient that stated one. The specification also says plainly that CID cannot
 verify discharge and does not pretend to.
+
+---
+
+## S-19 — `approval_required` authority was obeyed for consent and ignored for disclosure
+
+**Found.** 2026-09-24, while testing whether `AuthorityValue.approval_required`
+and `Gate.principal_approval` were redundant. They are not — they are
+different axes — but the implementation consulted only one of them on the
+path that matters.
+
+**Spec.** Section 16.2: "Where a level is `approval_required`, the
+corresponding `ConsentResponse` or `DisclosureResponse` MUST be
+`pending_principal_approval`." Section 10.6 adds that authority states whether
+an Agent may perform a *category* of action while the Disclosure Policy states
+what may be disclosed *per attribute*, and that a disclosure happens only if
+both permit.
+
+**The defect.** `handle_disclosure_request` checked `DISCLOSE` only for
+`false`, then deferred entirely to the attribute's gate. A Principal who set
+`DISCLOSE: approval_required` — "ask me before disclosing anything" — was
+obeyed for attributes that happened to carry `principal_approval` and silently
+ignored for every attribute that carried no gate of its own. The consent path
+had it right; the disclosure path did not. The reference implementation was
+therefore violating a MUST of the section it implements, on the axis a
+Principal is most likely to care about.
+
+The two mechanisms look redundant, which is probably why this survived: both
+say "ask the human". They are not. Authority is per category of action and
+belongs to the delegation; the gate is per attribute and belongs to the
+policy. Either alone leaves a case uncovered, and an implementer who reads
+them as alternatives will implement one.
+
+**Decided here.** `approval_required` on `DISCLOSE` returns
+`pending_principal_approval` regardless of the attribute's gate, unless the
+Principal has pre-approved that attribute.
+
+**Spec should change.** No — the specification was already correct and
+explicit. This is an implementation defect, recorded because the register
+should show what the code got wrong as well as what the text did, and because
+the near-redundancy that produced it is worth naming for the next implementer.
+
+**Resolution — applied to the reference implementation on 2026-09-24**, with a
+conformance test and a mutation that fails without it.

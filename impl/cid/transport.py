@@ -47,7 +47,7 @@ class Wire:
 
     def _check(self, sender: str, message: TransmittedObject) -> None:
         if isinstance(message, REQUEST_TYPES):
-            request_id = getattr(message, "request_id")
+            request_id = message.request_id
             if request_id in self.outstanding:
                 raise WireError(
                     f"{sender} reused request_id {request_id!r} while it was "
@@ -57,7 +57,7 @@ class Wire:
             return
 
         if isinstance(message, RESPONSE_TYPES):
-            ref = getattr(message, "request_ref")
+            ref = message.request_ref
             if ref not in self.outstanding:
                 raise WireError(
                     f"{sender} answered {ref!r}, which is not outstanding; every "

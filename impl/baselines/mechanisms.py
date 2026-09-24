@@ -14,10 +14,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from cid.evaluation import choose_result, evaluate_claim
-from cid.objects import Claim
-from cid.vocab import ClaimOperator, ClaimResult
-
 from baselines.measure import COUNTERPARTY, OPERATOR, PUBLIC, Ledger
 from baselines.scenario import (
     A_ACCEPTS_MANAGEMENT,
@@ -34,6 +30,9 @@ from baselines.scenario import (
     b_interest,
     truly_compatible,
 )
+from cid.evaluation import choose_result, evaluate_claim
+from cid.objects import Claim
+from cid.vocab import ClaimOperator, ClaimResult
 
 #: The ground truth every mechanism is trying to reach.
 TRUTH = truly_compatible()
@@ -69,6 +68,7 @@ def _answer(interest, claim: Claim, over_budget: bool = False) -> ClaimResult:
 # 1. The status quo: a trusted intermediary
 # ---------------------------------------------------------------------------
 
+
 def trusted_broker() -> Outcome:
     """A banker, a headhunter, a corporate development team.
 
@@ -85,12 +85,24 @@ def trusted_broker() -> Outcome:
     if TRUTH:
         ledger.reveal(COUNTERPARTY, B_EXISTS, "revealed by the introduction")
         ledger.reveal(COUNTERPARTY, A_EXISTS, "revealed by the introduction")
-        ledger.observe(COUNTERPARTY, B_FLOOR, lambda v: v <= A_BUDGET_CEILING,
-                       "the introduction implies the floor is within budget")
-        ledger.observe(COUNTERPARTY, B_MGMT, lambda m: m in A_ACCEPTS_MANAGEMENT,
-                       "the introduction implies an acceptable condition")
-        ledger.observe(COUNTERPARTY, A_BUDGET, lambda b: b >= 45_000_000,
-                       "the introduction implies the budget clears the floor")
+        ledger.observe(
+            COUNTERPARTY,
+            B_FLOOR,
+            lambda v: v <= A_BUDGET_CEILING,
+            "the introduction implies the floor is within budget",
+        )
+        ledger.observe(
+            COUNTERPARTY,
+            B_MGMT,
+            lambda m: m in A_ACCEPTS_MANAGEMENT,
+            "the introduction implies an acceptable condition",
+        )
+        ledger.observe(
+            COUNTERPARTY,
+            A_BUDGET,
+            lambda b: b >= 45_000_000,
+            "the introduction implies the budget clears the floor",
+        )
 
     return Outcome(
         name="Trusted intermediary",
@@ -113,6 +125,7 @@ def trusted_broker() -> Outcome:
 # 2. Publishing: the listing, the teaser, the job board
 # ---------------------------------------------------------------------------
 
+
 def public_posting() -> Outcome:
     """B states its conditions publicly and waits.
 
@@ -121,8 +134,12 @@ def public_posting() -> Outcome:
     """
     ledger = _ledger()
     ledger.reveal(PUBLIC, B_EXISTS, "a listing exists, therefore the interest exists")
-    ledger.observe(PUBLIC, B_FLOOR, lambda v: 40_000_000 <= v <= 85_000_000,
-                   "the published asking band")
+    ledger.observe(
+        PUBLIC,
+        B_FLOOR,
+        lambda v: 40_000_000 <= v <= 85_000_000,
+        "the published asking band",
+    )
     ledger.reveal(PUBLIC, B_MGMT, "listings state the management condition")
     # A approaches B, so B learns A exists; A published nothing.
     ledger.reveal(COUNTERPARTY, A_EXISTS, "the approach reveals the buyer's interest")
@@ -155,6 +172,7 @@ def public_posting() -> Outcome:
 # 3. The strongest cryptographic baseline: one-shot secure comparison
 # ---------------------------------------------------------------------------
 
+
 def sealed_one_shot() -> Outcome:
     """An ideal secure two-party computation of an agreed predicate.
 
@@ -166,14 +184,18 @@ def sealed_one_shot() -> Outcome:
     ledger = _ledger()
     # Agreeing a predicate and connecting to compute it reveals that each
     # side has an interest. There is no anonymous way to co-compute.
-    ledger.reveal(COUNTERPARTY, B_EXISTS, "you cannot co-compute with someone anonymously")
+    ledger.reveal(
+        COUNTERPARTY, B_EXISTS, "you cannot co-compute with someone anonymously"
+    )
     ledger.reveal(COUNTERPARTY, A_EXISTS, "likewise")
 
     # Both observe one bit. The marginal posterior of each fact is its
     # projection of the joint set of assignments consistent with that bit.
     def consistent_floor(v: int) -> bool:
-        return any(truly_compatible(v, m, A_BUDGET_CEILING) is TRUTH
-                   for m in MANAGEMENT_OPTIONS)
+        return any(
+            truly_compatible(v, m, A_BUDGET_CEILING) is TRUTH
+            for m in MANAGEMENT_OPTIONS
+        )
 
     def consistent_mgmt(m: str) -> bool:
         return truly_compatible(45_000_000, m, A_BUDGET_CEILING) is TRUTH
@@ -183,7 +205,9 @@ def sealed_one_shot() -> Outcome:
 
     ledger.observe(COUNTERPARTY, B_FLOOR, consistent_floor, "implied by the output bit")
     ledger.observe(COUNTERPARTY, B_MGMT, consistent_mgmt, "implied by the output bit")
-    ledger.observe(COUNTERPARTY, A_BUDGET, consistent_budget, "implied by the output bit")
+    ledger.observe(
+        COUNTERPARTY, A_BUDGET, consistent_budget, "implied by the output bit"
+    )
 
     return Outcome(
         name="Ideal sealed comparison",
@@ -210,6 +234,7 @@ def sealed_one_shot() -> Outcome:
 # ---------------------------------------------------------------------------
 # 4. Private set intersection over the categorical dimensions
 # ---------------------------------------------------------------------------
+
 
 def private_set_intersection() -> Outcome:
     """Real intersection of the categorical attributes, honestly scored.
@@ -253,17 +278,28 @@ def private_set_intersection() -> Outcome:
 # ---------------------------------------------------------------------------
 
 HONEST_CLAIMS = [
-    Claim(key="domain", operator=ClaimOperator.INTERSECTS, value=["enterprise_software"]),
+    Claim(
+        key="domain", operator=ClaimOperator.INTERSECTS, value=["enterprise_software"]
+    ),
     Claim(key="geography", operator=ClaimOperator.INTERSECTS, value=["germany"]),
-    Claim(key="transaction_structures", operator=ClaimOperator.INTERSECTS,
-          value=["acquisition", "majority_investment", "distribution", "joint_venture"]),
+    Claim(
+        key="transaction_structures",
+        operator=ClaimOperator.INTERSECTS,
+        value=["acquisition", "majority_investment", "distribution", "joint_venture"],
+    ),
     Claim(key="market_access", operator=ClaimOperator.EQUALS, value="france"),
-    Claim(key="valuation_floor", operator=ClaimOperator.WITHIN,
-          value={"min": 0, "max": A_BUDGET_CEILING}),
+    Claim(
+        key="valuation_floor",
+        operator=ClaimOperator.WITHIN,
+        value={"min": 0, "max": A_BUDGET_CEILING},
+    ),
     # A can live with either of two conditions, so it asks for both rather
     # than guessing one -- an honest querent states its whole acceptance set.
-    Claim(key="management_condition", operator=ClaimOperator.INTERSECTS,
-          value=["founder_operational", "founder_advisory"]),
+    Claim(
+        key="management_condition",
+        operator=ClaimOperator.INTERSECTS,
+        value=["founder_operational", "founder_advisory"],
+    ),
 ]
 
 
@@ -274,15 +310,20 @@ def _replay(ledger: Ledger, claims: list[Claim], note: str) -> None:
         observed = _answer(true_interest, claim)
         if claim.key == "valuation_floor":
             ledger.observe(
-                COUNTERPARTY, B_FLOOR,
-                lambda v, c=claim, o=observed: _answer(b_interest(valuation_floor=v), c) is o,
+                COUNTERPARTY,
+                B_FLOOR,
+                lambda v, c=claim, o=observed: (
+                    _answer(b_interest(valuation_floor=v), c) is o
+                ),
                 note,
             )
         elif claim.key == "management_condition":
             ledger.observe(
-                COUNTERPARTY, B_MGMT,
-                lambda m, c=claim, o=observed: _answer(
-                    b_interest(management_condition=m), c) is o,
+                COUNTERPARTY,
+                B_MGMT,
+                lambda m, c=claim, o=observed: (
+                    _answer(b_interest(management_condition=m), c) is o
+                ),
                 note,
             )
 
@@ -332,8 +373,13 @@ def cid_adversarial(budget: int = 40) -> Outcome:
     lo, hi = 0, 200_000_000
     while hi - lo > 5_000_000 and len(claims) < budget:
         mid = ((lo + hi) // 2 // 5_000_000) * 5_000_000
-        claims.append(Claim(key="valuation_floor", operator=ClaimOperator.WITHIN,
-                            value={"min": mid, "max": mid + 5_000_000}))
+        claims.append(
+            Claim(
+                key="valuation_floor",
+                operator=ClaimOperator.WITHIN,
+                value={"min": mid, "max": mid + 5_000_000},
+            )
+        )
         if _answer(b_interest(), claims[-1]) is ClaimResult.INCOMPATIBLE:
             lo = mid + 5_000_000
         else:
@@ -341,8 +387,11 @@ def cid_adversarial(budget: int = 40) -> Outcome:
     for option in MANAGEMENT_OPTIONS:
         if len(claims) >= budget:
             break
-        claims.append(Claim(key="management_condition",
-                            operator=ClaimOperator.EQUALS, value=option))
+        claims.append(
+            Claim(
+                key="management_condition", operator=ClaimOperator.EQUALS, value=option
+            )
+        )
 
     _replay(ledger, claims, "answered in session")
     return Outcome(

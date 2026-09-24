@@ -123,12 +123,11 @@ class AuthoritySpec(Strict):
     evidence_ref: str | None = None
 
     @model_validator(mode="after")
-    def _commit_is_false(self) -> "AuthoritySpec":
+    def _commit_is_false(self) -> AuthoritySpec:
         value = self.levels.get(Authority.COMMIT, AuthorityValue.FALSE)
         if value is not AuthorityValue.FALSE:
             raise ValueError(
-                "COMMIT MUST be false in CID 0.1 (Section 16.1); "
-                f"got {value.value!r}"
+                f"COMMIT MUST be false in CID 0.1 (Section 16.1); got {value.value!r}"
             )
         self.levels[Authority.COMMIT] = AuthorityValue.FALSE
         return self
@@ -223,7 +222,7 @@ class DiscoveryProjection(TransmittedObject):
     relation: list[str] = Field(default_factory=list)
 
     @model_validator(mode="after")
-    def _at_least_one_retrieval_attribute(self) -> "DiscoveryProjection":
+    def _at_least_one_retrieval_attribute(self) -> DiscoveryProjection:
         if not (self.categories or self.domains or self.geographies or self.relation):
             raise ValueError(
                 "a projection MUST carry at least one retrieval attribute "
@@ -244,7 +243,7 @@ class SessionOpen(Request):
     trust_context: dict[str, Any] | None = None
 
     @model_validator(mode="after")
-    def _depth_is_permitted(self) -> "SessionOpen":
+    def _depth_is_permitted(self) -> SessionOpen:
         if self.max_depth not in (Surface.NETWORK, Surface.SESSION):
             raise ValueError(
                 "max_depth MUST be 'network' or 'session' (Section 14.1); "
@@ -313,7 +312,7 @@ class DisclosureResponse(Response):
     verification_required: list[str] | None = None
 
     @model_validator(mode="after")
-    def _status_consistency(self) -> "DisclosureResponse":
+    def _status_consistency(self) -> DisclosureResponse:
         if self.status is DisclosureStatus.GRANTED and self.value is None:
             raise ValueError("a granted DisclosureResponse carries a value (14.4)")
         if self.status is not DisclosureStatus.GRANTED and self.value is not None:
@@ -347,9 +346,11 @@ class ConsentResponse(Response):
     granted_scope: list[str] = Field(default_factory=list)
 
     @model_validator(mode="after")
-    def _scope_empty_unless_granted(self) -> "ConsentResponse":
+    def _scope_empty_unless_granted(self) -> ConsentResponse:
         if self.status is not ConsentStatus.GRANTED and self.granted_scope:
-            raise ValueError("granted_scope is empty when consent is not granted (14.5)")
+            raise ValueError(
+                "granted_scope is empty when consent is not granted (14.5)"
+            )
         return self
 
 
@@ -375,7 +376,7 @@ class HandoffTarget(Strict):
     protocol_ref: str | None = None
 
     @model_validator(mode="after")
-    def _protocol_ref_required(self) -> "HandoffTarget":
+    def _protocol_ref_required(self) -> HandoffTarget:
         if self.kind is HandoffKind.PROTOCOL and not self.protocol_ref:
             raise ValueError("protocol_ref is REQUIRED when kind is 'protocol' (14.7)")
         return self
@@ -390,7 +391,7 @@ class Handoff(SessionScoped):
     requires_principal_presence: bool = True
 
     @model_validator(mode="after")
-    def _never_commit(self) -> "Handoff":
+    def _never_commit(self) -> Handoff:
         if Authority.COMMIT in self.authorized_scope:
             raise ValueError(
                 "authorized_scope never includes COMMIT in CID 0.1 (Section 14.7)"

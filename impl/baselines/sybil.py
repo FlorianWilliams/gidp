@@ -23,19 +23,20 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from cid.objects import Claim  # noqa: E402
-from cid.vocab import ClaimOperator, ClaimResult  # noqa: E402
-
 from baselines.mitigations import POLICIES, Policy, _ask, _observed  # noqa: E402
 from baselines.scenario import (  # noqa: E402
-    A_ACCEPTS_MANAGEMENT,
     B_MANAGEMENT as B_TRUE_MGMT,
+)
+from baselines.scenario import (
     B_VALUATION_FLOOR as B_TRUE_FLOOR,
-    A_BUDGET_CEILING,
+)
+from baselines.scenario import (
     MANAGEMENT_OPTIONS,
     VALUATION_GRID,
     b_interest,
 )
+from cid.objects import Claim  # noqa: E402
+from cid.vocab import ClaimOperator, ClaimResult  # noqa: E402
 
 
 @dataclass
@@ -104,14 +105,17 @@ def probe_with_identities(
             mgmt_bits = log2(len(mgmts))
             if floor_bits >= mgmt_bits and len(floors) > 1:
                 threshold = sorted(floors)[(len(floors) - 1) // 2]
-                claim = Claim(key="valuation_floor", operator=ClaimOperator.WITHIN,
-                              value={"min": threshold, "max": threshold})
-                target = floors
+                claim = Claim(
+                    key="valuation_floor",
+                    operator=ClaimOperator.WITHIN,
+                    value={"min": threshold, "max": threshold},
+                )
             else:
-                claim = Claim(key="management_condition",
-                              operator=ClaimOperator.EQUALS,
-                              value=sorted(mgmts)[len(mgmts) // 2])
-                target = mgmts
+                claim = Claim(
+                    key="management_condition",
+                    operator=ClaimOperator.EQUALS,
+                    value=sorted(mgmts)[len(mgmts) // 2],
+                )
 
             # Freeze the oracle's state before charging for the question.
             # The filter must ask what each candidate would have answered
@@ -127,18 +131,20 @@ def probe_with_identities(
 
             if claim.key == "valuation_floor":
                 narrowed = {
-                    v for v in floors
-                    if observed in _ask(b_interest(valuation_floor=v),
-                                        claim, policy, over)
+                    v
+                    for v in floors
+                    if observed
+                    in _ask(b_interest(valuation_floor=v), claim, policy, over)
                 }
                 assert B_TRUE_FLOOR in narrowed, "the filter ruled out the truth"
                 barren = barren + 1 if narrowed == floors else 0
                 floors = narrowed
             else:
                 narrowed = {
-                    m for m in mgmts
-                    if observed in _ask(b_interest(management_condition=m),
-                                        claim, policy, over)
+                    m
+                    for m in mgmts
+                    if observed
+                    in _ask(b_interest(management_condition=m), claim, policy, over)
                 }
                 assert B_TRUE_MGMT in narrowed, "the filter ruled out the truth"
                 barren = barren + 1 if narrowed == mgmts else 0
@@ -157,7 +163,10 @@ def _bits(floors: set, mgmts: set) -> float:
 
 
 def honest_sessions_served(
-    policy: Policy, per_counterparty: int, global_budget: int | None, honest: int = 30,
+    policy: Policy,
+    per_counterparty: int,
+    global_budget: int | None,
+    honest: int = 30,
 ) -> int:
     """How many genuine counterparties the responder can still serve.
 
@@ -195,14 +204,18 @@ def main() -> None:
     print(f"{TOTAL:.2f} bits are at stake. The responder allows each counterparty a")
     print("fixed number of answered claims. The adversary mints counterparties.")
     print()
-    print(f"{'budget per counterparty':>24} {'identities':>11} {'asked':>7} "
-          f"{'answered':>9} {'bits':>7}")
+    print(
+        f"{'budget per counterparty':>24} {'identities':>11} {'asked':>7} "
+        f"{'answered':>9} {'bits':>7}"
+    )
     print("-" * 92)
     for per in (2, 4, 8):
         for identities in (1, 2, 4, 8, 16):
             attack = probe_with_identities(policy, per, identities)
-            print(f"{per:>24} {identities:>11} {attack.questions_asked:>7} "
-                  f"{attack.questions_answered:>9} {attack.bits:>7.2f}")
+            print(
+                f"{per:>24} {identities:>11} {attack.questions_asked:>7} "
+                f"{attack.questions_answered:>9} {attack.bits:>7.2f}"
+            )
     print()
     print("The bits track the product, not the budget. A counterparty allowance of")
     print("two, which looks severe, is undone by four identities. Nothing in the")
@@ -223,16 +236,21 @@ def main() -> None:
     print("counterparty allowance is set to six: the cap below is the only")
     print("thing rationing anything.")
     print()
-    print(f"{'global cap':>12} {'bits extracted':>16} {'answered':>10} "
-          f"{'honest sessions served (of 30)':>32}")
+    print(
+        f"{'global cap':>12} {'bits extracted':>16} {'answered':>10} "
+        f"{'honest sessions served (of 30)':>32}"
+    )
     print("-" * 92)
     for cap in (4, 6, 7, 12, 24, 60, None):
-        attack = probe_with_identities(policy, per_counterparty=6,
-                                       identities=64, global_budget=cap)
+        attack = probe_with_identities(
+            policy, per_counterparty=6, identities=64, global_budget=cap
+        )
         served = honest_sessions_served(policy, 6, cap)
         label = str(cap) if cap is not None else "none"
-        print(f"{label:>12} {attack.bits:>15.2f}b {attack.questions_answered:>10} "
-              f"{served:>32}")
+        print(
+            f"{label:>12} {attack.bits:>15.2f}b {attack.questions_answered:>10} "
+            f"{served:>32}"
+        )
     print()
     print("It bounds, and the price is not a tuning parameter. The adversary needs")
     print("seven answered claims to take the whole secret. An honest session costs")

@@ -14,7 +14,6 @@ change, it is in SPEC-ISSUES.md.
 from __future__ import annotations
 
 import sys
-from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -34,7 +33,6 @@ from cid.vocab import (  # noqa: E402
     Authority,
     AuthorityValue,
     ClaimOperator,
-    ClaimResult,
     ConsentAction,
     Gate,
     InterestClass,
@@ -86,6 +84,7 @@ FULL = {
 # L-1  Mandatory transparency: public procurement
 # ---------------------------------------------------------------------------
 
+
 def limit_mandatory_disclosure() -> bool:
     head(
         "L-1",
@@ -121,7 +120,9 @@ def limit_mandatory_disclosure() -> bool:
     print()
     print("So an Agent that publishes nothing at all is perfectly conformant")
     print("while its Principal is in breach of procurement law. The protocol")
-    print("has no way to say MUST publish -- `public` means 'may appear",)
+    print(
+        "has no way to say MUST publish -- `public` means 'may appear",
+    )
     print("without authentication', which is a ceiling, not a floor.")
     print()
 
@@ -137,6 +138,7 @@ def limit_mandatory_disclosure() -> bool:
 # ---------------------------------------------------------------------------
 # L-2  One-dimensional and perishable: freight capacity
 # ---------------------------------------------------------------------------
+
 
 def limit_fungible_and_perishable() -> bool:
     head(
@@ -166,17 +168,18 @@ def limit_fungible_and_perishable() -> bool:
     while hi - lo > 25:
         mid = (lo + hi) // 2
         claim = Claim(
-            key="price_floor", operator=ClaimOperator.WITHIN,
+            key="price_floor",
+            operator=ClaimOperator.WITHIN,
             value={"min": mid, "max": mid + 25},
         )
         truth = evaluate_claim(carrier, claim).truth
         queries += 1
         if truth is False:
-            lo = mid          # the floor is above mid
+            lo = mid  # the floor is above mid
         else:
-            hi = mid          # mid is at or above the floor
+            hi = mid  # mid is at or above the floor
 
-    print(f"Dimensions in the interest:  1 (price)")
+    print("Dimensions in the interest:  1 (price)")
     print(f"Queries to locate the floor: {queries}")
     print(f"Floor: 1150   recovered as: [{lo}, {hi}]")
     assert lo <= 1_150 <= hi + 25, "the bisection must bracket the floor"
@@ -203,6 +206,7 @@ def limit_fungible_and_perishable() -> bool:
 # ---------------------------------------------------------------------------
 # L-3  Power asymmetry: one employer, many candidates
 # ---------------------------------------------------------------------------
+
 
 def limit_power_asymmetry() -> bool:
     head(
@@ -237,8 +241,11 @@ def limit_power_asymmetry() -> bool:
         lo, hi = 50_000, 150_000
         for _ in range(4):
             mid = (lo + hi) // 2
-            claim = Claim(key="salary_floor", operator=ClaimOperator.WITHIN,
-                          value={"min": mid, "max": mid + 5_000})
+            claim = Claim(
+                key="salary_floor",
+                operator=ClaimOperator.WITHIN,
+                value={"min": mid, "max": mid + 5_000},
+            )
             if evaluate_claim(candidate, claim).truth is False:
                 hi = mid
             else:
@@ -247,8 +254,11 @@ def limit_power_asymmetry() -> bool:
 
         # Reciprocity: the candidate may ask the same of the employer. It
         # learns one band -- the same band every other candidate learns.
-        claim = Claim(key="salary_ceiling", operator=ClaimOperator.WITHIN,
-                      value={"min": 80_000, "max": 100_000})
+        claim = Claim(
+            key="salary_ceiling",
+            operator=ClaimOperator.WITHIN,
+            value={"min": 80_000, "max": 100_000},
+        )
         if evaluate_claim(employer, claim).truth is not None:
             learned_about_employer = 1  # not += : it is the same fact
 
@@ -276,6 +286,7 @@ def limit_power_asymmetry() -> bool:
 # L-4  Regulated inversion: identity before substance
 # ---------------------------------------------------------------------------
 
+
 def limit_identity_first() -> bool:
     head(
         "L-4",
@@ -286,9 +297,12 @@ def limit_identity_first() -> bool:
 
     both = _interest(
         conditions={"instrument": ["private_placement"]},
-        policy={"instrument": DisclosureClass(surface=Surface.SESSION),
-                "principal_name": DisclosureClass(surface=Surface.SESSION,
-                                                  gate=Gate.CONSENT)},
+        policy={
+            "instrument": DisclosureClass(surface=Surface.SESSION),
+            "principal_name": DisclosureClass(
+                surface=Surface.SESSION, gate=Gate.CONSENT
+            ),
+        },
         authority=FULL,
     )
     a = Agent(ref="agent:a", standing_interest=both)

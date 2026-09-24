@@ -19,7 +19,7 @@ specification while doing so (SPEC-ISSUES.md S-11).
 from __future__ import annotations
 
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -52,7 +52,7 @@ LINE = "-" * 78
 
 
 def _in(days: int = 30) -> datetime:
-    return datetime.now(timezone.utc) + timedelta(days=days)
+    return datetime.now(UTC) + timedelta(days=days)
 
 
 def say(who: str, what: str) -> None:
@@ -208,15 +208,24 @@ CLAIMS = [
 
 def run(verbose: bool = True) -> tuple[Agent, Agent, Wire]:
     wire = Wire()
-    co = Agent(ref="agent:opaque:company", standing_interest=company,
-               pre_approved={"principal_name"})
-    fo = Agent(ref="agent:opaque:follower", standing_interest=follower,
-               pre_approved={"principal_name"})
+    co = Agent(
+        ref="agent:opaque:company",
+        standing_interest=company,
+        pre_approved={"principal_name"},
+    )
+    fo = Agent(
+        ref="agent:opaque:follower",
+        standing_interest=follower,
+        pre_approved={"principal_name"},
+    )
 
     opened = wire.send(
         "Company",
-        co.open_session("coinvest-1", purpose="co_investment",
-                        features=[Feature.DEPENDENCY_PRIMITIVES]),
+        co.open_session(
+            "coinvest-1",
+            purpose="co_investment",
+            features=[Feature.DEPENDENCY_PRIMITIVES],
+        ),
     )
     accept = wire.send("Office", fo.handle_session_open(opened))
     co.confirm_accept(accept)
@@ -243,8 +252,9 @@ def run(verbose: bool = True) -> tuple[Agent, Agent, Wire]:
         if verbose:
             show("Co -> Of", opportunity)
 
-    creq = wire.send("Company", co.request_consent(ConsentAction.REVEAL_IDENTITY,
-                                                   ["principal_name"]))
+    creq = wire.send(
+        "Company", co.request_consent(ConsentAction.REVEAL_IDENTITY, ["principal_name"])
+    )
     cresp = wire.send("Office", fo.handle_consent_request(creq))
     co.session.record_consent(cresp)
     fo.session.record_consent(cresp, discharge=False)

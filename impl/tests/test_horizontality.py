@@ -20,12 +20,12 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "examples"))
 
-from cid.vocab import ClaimOperator, ClaimResult, Gate, Surface  # noqa: E402
-
-import executive_succession as succession  # noqa: E402
 import co_investment  # noqa: E402
+import executive_succession as succession  # noqa: E402
 import partnership  # noqa: E402
 from test_scenario import _run as run_cross_border  # noqa: E402
+
+from cid.vocab import ClaimOperator, ClaimResult, Gate, Surface  # noqa: E402
 
 
 def _all_domains():

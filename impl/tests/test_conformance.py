@@ -11,7 +11,7 @@ testable by code and is deliberately absent.
 from __future__ import annotations
 
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -62,7 +62,7 @@ from cid.vocab import (
 
 
 def _soon(minutes: int = 15) -> datetime:
-    return datetime.now(timezone.utc) + timedelta(minutes=minutes)
+    return datetime.now(UTC) + timedelta(minutes=minutes)
 
 
 def _interest(**overrides) -> StandingInterest:
@@ -114,20 +114,55 @@ def _pair() -> tuple[Agent, Agent]:
 
 # -- 1 ----------------------------------------------------------------------
 
+
 def test_criterion_1_all_four_interest_classes_representable():
-    """Verified by local inspection: the class is never transmitted."""
+    """Every class runs a full session, and none of them reaches the wire.
+
+    The earlier version of this test asserted that assigning a field stores
+    it, which is a property of Python rather than of the protocol. What the
+    criterion actually promises is that the four classes of Section 8 are all
+    representable *and* that the classification stays home, so this runs a
+    session per class and inspects everything it sends.
+    """
+    from cid.transport import Wire
+
     for interest_class in InterestClass:
         si = _interest()
         si.interest.interest_class = interest_class
-        assert si.interest.interest_class is interest_class
+        other = _interest()
 
-    transmitted_fields = set()
-    for model in (DiscoveryProjection,):
-        transmitted_fields |= set(model.model_fields)
-    assert "interest_class" not in transmitted_fields
+        wire = Wire()
+        a = Agent(ref="agent:a", standing_interest=other)
+        b = Agent(ref="agent:b", standing_interest=si)
+        # A neutral session_id: naming the session after the class would put
+        # the class on the wire by the test's own hand.
+        opened = wire.send("A", a.open_session("s-1", purpose="test"))
+        a.confirm_accept(wire.send("B", b.handle_session_open(opened)))
+        request = wire.send(
+            "A",
+            a.ask(
+                [
+                    Claim(
+                        key="domain",
+                        operator=ClaimOperator.INTERSECTS,
+                        value=["enterprise_software"],
+                    )
+                ]
+            ),
+        )
+        response = wire.send("B", b.handle_compatibility_request(request))
+        a.receive_compatibility_response(response, request)
+
+        assert wire.transcript, "nothing was sent; the check would be vacuous"
+        for _sender, message in wire.transcript:
+            serialised = message.model_dump_json()
+            assert interest_class.value not in serialised, (
+                f"{interest_class.value} reached the wire in {serialised}"
+            )
 
 
 # -- 2 ----------------------------------------------------------------------
+
 
 def test_criterion_2_local_objects_are_not_transmittable():
     """No local object may be a transmitted object, and no local attribute
@@ -149,23 +184,31 @@ def test_criterion_2_unpoliced_attribute_defaults_to_evaluation_only():
 
 # -- 3 ----------------------------------------------------------------------
 
+
 def test_criterion_3_disclosure_decisions_are_reproducible():
     """Replaying the same Standing Interest, policy and session state must
     produce the same decision. The policy engine consults nothing else."""
     si = _interest()
-    first = evaluate_disclosure(si, "open_attribute", Surface.SESSION, SessionConsents())
-    second = evaluate_disclosure(si, "open_attribute", Surface.SESSION, SessionConsents())
+    first = evaluate_disclosure(
+        si, "open_attribute", Surface.SESSION, SessionConsents()
+    )
+    second = evaluate_disclosure(
+        si, "open_attribute", Surface.SESSION, SessionConsents()
+    )
     assert (first.permitted, first.reason) == (second.permitted, second.reason)
 
 
 def test_criterion_3_session_depth_caps_disclosure():
     si = _interest()
-    decision = evaluate_disclosure(si, "open_attribute", Surface.NETWORK, SessionConsents())
+    decision = evaluate_disclosure(
+        si, "open_attribute", Surface.NETWORK, SessionConsents()
+    )
     assert decision.permitted is False
     assert "deeper than the session depth" in decision.reason
 
 
 # -- 4 ----------------------------------------------------------------------
+
 
 def test_criterion_4_projection_content_rule_is_enforced():
     si = _interest()
@@ -182,12 +225,11 @@ def test_criterion_4_projection_content_rule_is_enforced():
 
 def test_criterion_4_projection_requires_a_retrieval_attribute():
     with pytest.raises(ValidationError):
-        DiscoveryProjection(
-            projection_id="p-1", endpoint="agent:a", expires_at=_soon()
-        )
+        DiscoveryProjection(projection_id="p-1", endpoint="agent:a", expires_at=_soon())
 
 
 # -- 5 ----------------------------------------------------------------------
+
 
 def test_criterion_5_provider_withdrawal_is_observable():
     si = _interest()
@@ -209,37 +251,48 @@ def test_criterion_5_provider_withdrawal_is_observable():
 
 # -- 6 ----------------------------------------------------------------------
 
+
 def test_criterion_6_state_machine_rejects_undefined_transitions():
-    session = Session(session_id="s", is_initiator=True, profile="core",
-                      max_depth=Surface.SESSION)
-    with pytest.raises(ProtocolError):
+    session = Session(
+        session_id="s", is_initiator=True, profile="core", max_depth=Surface.SESSION
+    )
+    with pytest.raises(ProtocolError, match="no transition"):
         session.note_compatibility()  # no session has been opened yet
 
 
 def test_criterion_6_closed_is_terminal():
     a, _ = _pair()
     a.session.close(CloseReason.UNSPECIFIED)
-    with pytest.raises(ProtocolError):
+    with pytest.raises(ProtocolError, match="CLOSED is terminal"):
         a.session.close(CloseReason.COMPLETED)
 
 
 def test_criterion_6_responses_correlate_to_requests():
     a, b = _pair()
-    request = a.ask([Claim(key="domain", operator=ClaimOperator.INTERSECTS,
-                           value=["enterprise_software"])])
+    request = a.ask(
+        [
+            Claim(
+                key="domain",
+                operator=ClaimOperator.INTERSECTS,
+                value=["enterprise_software"],
+            )
+        ]
+    )
     response = b.handle_compatibility_request(request)
     assert response.request_ref == request.request_id
     a.receive_compatibility_response(response)
-    with pytest.raises(ProtocolError):
+    with pytest.raises(ProtocolError, match="unknown request"):
         a.session.record_compatibility(response)  # already discharged
 
 
 # -- 7 ----------------------------------------------------------------------
 
+
 def test_criterion_7_truthfulness_bounds():
     si = _interest()
-    claim = Claim(key="threshold", operator=ClaimOperator.WITHIN,
-                  value={"min": 200, "max": 300})
+    claim = Claim(
+        key="threshold", operator=ClaimOperator.WITHIN, value={"min": 200, "max": 300}
+    )
     evaluation = evaluate_claim(si, claim)
     assert evaluation.truth is False
 
@@ -255,8 +308,15 @@ def test_criterion_7_truthfulness_bounds():
 
 def test_criterion_7_evaluation_only_values_are_never_returned():
     a, b = _pair()
-    request = a.ask([Claim(key="threshold", operator=ClaimOperator.WITHIN,
-                           value={"min": 10, "max": 50})])
+    request = a.ask(
+        [
+            Claim(
+                key="threshold",
+                operator=ClaimOperator.WITHIN,
+                value={"min": 10, "max": 50},
+            )
+        ]
+    )
     response = b.handle_compatibility_request(request)
     serialised = response.model_dump_json()
     assert "80" not in serialised
@@ -264,6 +324,7 @@ def test_criterion_7_evaluation_only_values_are_never_returned():
 
 
 # -- 8 ----------------------------------------------------------------------
+
 
 def test_criterion_8_any_claim_may_be_declined_and_any_session_closed():
     si = _interest()
@@ -278,6 +339,7 @@ def test_criterion_8_any_claim_may_be_declined_and_any_session_closed():
 
 
 # -- 9 ----------------------------------------------------------------------
+
 
 def test_criterion_9_principal_approval_gate_is_not_satisfied_by_agent_authority():
     a, b = _pair()
@@ -300,6 +362,7 @@ def test_criterion_9_consent_is_provisional_until_the_principal_decides():
 
 
 # -- 10 ---------------------------------------------------------------------
+
 
 def test_criterion_10_commit_is_false():
     with pytest.raises(ValidationError):
@@ -330,6 +393,7 @@ def test_criterion_10_disclose_false_is_reported_as_declined_not_unauthorized():
 
 # -- 11 ---------------------------------------------------------------------
 
+
 def test_criterion_11_withdrawal_follows_revocation():
     """A revoked Standing Interest's projections must go (Section 17.1)."""
     si = _interest()
@@ -348,6 +412,7 @@ def test_criterion_11_withdrawal_follows_revocation():
 
 
 # -- 12 ---------------------------------------------------------------------
+
 
 def test_criterion_12_handoff_never_carries_commit():
     with pytest.raises(ValidationError):
@@ -382,11 +447,12 @@ def test_criterion_12_handoff_before_qualification_is_refused():
         target=HandoffTarget(kind=HandoffKind.HUMAN),
         expires_at=_soon(),
     )
-    with pytest.raises(ProtocolError):
+    with pytest.raises(ProtocolError, match="unsupported"):
         b.session.record_handoff(handoff)
 
 
 # -- 13 ---------------------------------------------------------------------
+
 
 def test_criterion_13_vocabularies_are_closed():
     with pytest.raises(ValidationError):
@@ -406,6 +472,7 @@ def test_criterion_13_unknown_fields_are_rejected():
 
 
 # -- 15.2, as revised ------------------------------------------------------
+
 
 def test_declined_result_prevents_qualification():
     """Section 15.2 as revised: an Opportunity never rests on silence.
@@ -448,13 +515,14 @@ def test_only_the_initiator_emits_the_opportunity():
     _, b = _pair()
     b.session.results["domain"] = ClaimResult.COMPATIBLE
     b.session.qualify()
-    with pytest.raises(ProtocolError):
+    with pytest.raises(ProtocolError, match="initiator emits"):
         b.session.build_opportunity(
             structure="test", expires_at=_soon(), identity_status={}
         )
 
 
 # -- the Principal's decision reaches the wire ------------------------------
+
 
 def test_a_principal_may_refuse_consent_and_the_request_is_discharged():
     """The `principal_approval` gate is only a gate if a refusal is possible.
@@ -472,8 +540,9 @@ def test_a_principal_may_refuse_consent_and_the_request_is_discharged():
     b.session.state = SessionState.QUALIFIED
 
     wire = Wire()
-    request = wire.send("A", a.request_consent(ConsentAction.REVEAL_IDENTITY,
-                                               ["identity"]))
+    request = wire.send(
+        "A", a.request_consent(ConsentAction.REVEAL_IDENTITY, ["identity"])
+    )
     provisional = wire.send("B", b.handle_consent_request(request))
     assert provisional.status is ConsentStatus.PENDING_PRINCIPAL_APPROVAL
     assert wire.unanswered(), "a provisional response must not discharge (14)"
@@ -542,14 +611,19 @@ def test_a_stated_retention_is_an_obligation_not_advice():
 
     a, _ = _pair()
     assert a.dischargeable_retention == {Retention.SESSION_ONLY}
-
-    permitted = a.request_disclosure("open_attribute", purpose="test",
-                                     retention=Retention.SESSION_ONLY)
+    permitted = a.request_disclosure(
+        "open_attribute", purpose="test", retention=Retention.SESSION_ONLY
+    )
     assert permitted.retention is Retention.SESSION_ONLY
 
-    with pytest.raises(ProtocolError):
-        a.request_disclosure("open_attribute", purpose="test",
-                             retention=Retention.UNRESTRICTED)
+    # A fresh session: a second DisclosureRequest on the same one is refused
+    # by the state machine, which would let this test pass for a reason that
+    # has nothing to do with retention. The mutation check found exactly that.
+    b, _ = _pair()
+    with pytest.raises(ProtocolError, match="discharge retention"):
+        b.request_disclosure(
+            "open_attribute", purpose="test", retention=Retention.UNRESTRICTED
+        )
 
 
 def test_an_agent_that_can_discharge_nothing_states_nothing():
@@ -559,9 +633,38 @@ def test_an_agent_that_can_discharge_nothing_states_nothing():
 
     a, _ = _pair()
     a.dischargeable_retention = set()
-    request = a.request_disclosure("open_attribute", purpose="test",
-                                   retention=None)
+    request = a.request_disclosure("open_attribute", purpose="test", retention=None)
     assert request.retention is None
-    with pytest.raises(ProtocolError):
-        a.request_disclosure("open_attribute", purpose="test",
-                             retention=Retention.SESSION_ONLY)
+
+    b, _ = _pair()
+    b.dischargeable_retention = set()
+    with pytest.raises(ProtocolError, match="discharge retention"):
+        b.request_disclosure(
+            "open_attribute", purpose="test", retention=Retention.SESSION_ONLY
+        )
+
+
+def test_approval_required_authority_is_not_silently_ignored():
+    """Section 16.2: where a level is `approval_required`, the response MUST
+    be `pending_principal_approval`.
+
+    Authority and the Disclosure Policy are different axes — the first says
+    whether the Agent may perform a category of action, the second which
+    attributes need a decision. The implementation consulted only the second,
+    so a Principal who said "ask me before disclosing anything" was obeyed for
+    gated attributes and silently ignored for every other one.
+    """
+    from cid.vocab import DisclosureStatus
+
+    interest = _interest()
+    interest.authority.levels[Authority.DISCLOSE] = AuthorityValue.APPROVAL_REQUIRED
+    a = Agent(ref="agent:a", standing_interest=_interest())
+    b = Agent(ref="agent:b", standing_interest=interest)
+    opened = a.open_session("s-auth", purpose="test")
+    a.confirm_accept(b.handle_session_open(opened))
+
+    # `open_attribute` carries no gate at all: before the fix this disclosed.
+    request = a.request_disclosure("open_attribute", purpose="test")
+    response = b.handle_disclosure_request(request)
+    assert response.status is DisclosureStatus.PENDING_PRINCIPAL_APPROVAL
+    assert response.value is None
