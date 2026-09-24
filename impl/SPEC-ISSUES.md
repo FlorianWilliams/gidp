@@ -674,16 +674,35 @@ domains have the same blind spot, which is exactly what Appendix F.2 warns its
 own threshold cannot remove, and it took two independently written profiles to
 show it.
 
-**Decided here.** The demo's profile fixes each attribute's level: conditions
-carry countries, projections carry cities. The directory still resolves the
-hierarchy, because retrieval and evaluation are different problems with the
-same cause.
+**First answer, and it was wrong.** Section 14.2 was made to require a profile
+to fix the level of every attribute. That works and it is brittle: it demands
+agreement between parties who have never met, which is what a horizontal
+protocol is supposed to avoid, and it fails the moment someone writes a
+conforming interest at a different granularity.
 
-**Spec should change.** Yes. This is the retrieval problem of Section 12.4 one
-layer down, and a reader who has just been told that a provider should resolve
-hierarchies will assume a session does too.
+The second instinct — put an interpreter at the operator — is worse. An
+operator that resolves `munich` against `germany` *inside a session* has to see
+the claims, and possibly the values behind them, which reinstates the
+confidential intermediary this protocol exists to remove.
 
-**Resolution — applied to CID 0.1 on 2026-09-24.** Section 14.2 now states the
-failure, requires a profile either to fix the level of each attribute or to
-define `compatible_with` where it cannot, and notes that the core profile
-defines no such predicate and therefore requires the first.
+**Decided here, and it is smaller than both.** A claim is always resolved by
+the party that holds the value, so only that party's own values need placing in
+a hierarchy. A Standing Interest may carry, per attribute, a mapping from each
+value to the value that contains it; the responder answers `compatible` when an
+asked value is anything a held value is part of, `unknown` when the asked value
+lies below a held one — a German company has not said which city it is in —
+and `incompatible` otherwise. Nothing is negotiated, nothing is shared, the
+hierarchy never leaves the Standing Interest, and a responder that declares
+none keeps set semantics and the false negative with them.
+
+The rule does not widen disclosure: `compatible` to `europe` says what was
+asked and not which city, and `unknown` in place of `incompatible` says
+strictly less.
+
+**Spec should change.** Yes, and differently from the first attempt.
+
+**Resolution — applied to CID 0.1 on 2026-09-24.** Section 14.2 states the
+three-way rule and its asymmetry, notes that the hierarchy is never
+transmitted, and contrasts it with Section 12.4: a provider resolves for the
+whole index because it sees only projections, while inside a session only the
+responder can, because only the responder may see its own value.

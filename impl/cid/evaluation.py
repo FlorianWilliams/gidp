@@ -71,7 +71,8 @@ def evaluate_claim(
     if value is None:
         return LocalEvaluation(None, claim.key, evaluation_only)
 
-    truth = _apply(claim.operator, value, claim.value)
+    taxonomy = standing_interest.interest.taxonomies.get(claim.key, {})
+    truth = _apply(claim.operator, value, claim.value, taxonomy)
     return LocalEvaluation(truth, claim.key, evaluation_only)
 
 
@@ -100,7 +101,37 @@ def _evaluate_dependency(
     return LocalEvaluation(truth, claim.key, evaluation_only)
 
 
-def _apply(operator: ClaimOperator, private: Any, asked: Any) -> bool | None:
+def _upward(values: Any, taxonomy: dict[str, str]) -> set:
+    """Everything a held value also is: munich is also germany, also europe."""
+    out: set = set()
+    for value in values:
+        current = value
+        seen = set()
+        while current is not None and current not in seen:
+            out.add(current)
+            seen.add(current)
+            current = taxonomy.get(current)
+    return out
+
+
+def _descends(value: Any, held: set, taxonomy: dict[str, str]) -> bool:
+    """Is the asked value somewhere *below* something held?"""
+    current = taxonomy.get(value)
+    seen = set()
+    while current is not None and current not in seen:
+        if current in held:
+            return True
+        seen.add(current)
+        current = taxonomy.get(current)
+    return False
+
+
+def _apply(
+    operator: ClaimOperator,
+    private: Any,
+    asked: Any,
+    taxonomy: dict[str, str] | None = None,
+) -> bool | None:
     """Resolve one operator against one private value.
 
     Returns ``None`` — "cannot determine" — whenever the operator does not
@@ -120,6 +151,25 @@ def _apply(operator: ClaimOperator, private: Any, asked: Any) -> bool | None:
     if operator is ClaimOperator.INTERSECTS:
         left = private if isinstance(private, (list, set, tuple)) else [private]
         right = asked if isinstance(asked, (list, set, tuple)) else [asked]
+        if taxonomy:
+            # Asymmetric on purpose, and the asymmetry is the whole point.
+            # A responder holding `munich` truthfully answers `compatible` to
+            # `germany`, because Munich *is* in Germany. A responder holding
+            # `germany`, asked about `munich`, answers `unknown`: a German
+            # company may or may not be in Munich and it has not said which.
+            # Only the responder's own values are placed in the hierarchy, so
+            # nothing is negotiated, nothing is shared and no third party is
+            # consulted.
+            if not all(isinstance(v, Hashable) for v in (*left, *right)):
+                return None
+            above = _upward(left, taxonomy)
+            if set(right) & above:
+                return True
+            held = set(left)
+            if any(_descends(value, held, taxonomy) for value in right):
+                return None
+            return False
+
         if not all(isinstance(v, Hashable) for v in (*left, *right)):
             # A range has no membership to intersect. The honest answer is
             # that this Agent cannot determine one (Section 15.1), not a

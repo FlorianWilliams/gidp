@@ -102,6 +102,12 @@ class ConditionalInterest(Strict):
     #: Attribute name -> value. Whether a value may leave the Agent is decided
     #: by the Disclosure Policy, never by this object.
     conditions: dict[str, Any] = Field(default_factory=dict)
+    #: Attribute -> {child: parent}. The hierarchy this Principal's own values
+    #: belong to, used to answer a claim expressed at a different level
+    #: (Section 14.2). It lives inside the Standing Interest, so it is never
+    #: transmitted and needs no agreement with anyone: evaluation happens on
+    #: the responder's side, so only the responder's own values need placing.
+    taxonomies: dict[str, dict[str, str]] = Field(default_factory=dict)
     # Dependency primitives (Section 19.1). Only `excludes` must be supported
     # by every implementation; the rest require the dependency_primitives
     # feature.

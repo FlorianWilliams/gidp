@@ -88,6 +88,12 @@ MUTATIONS = (
         "",
     ),
     Mutation(
+        "a held value answers for what it is part of (14.2, S-21)",
+        "cid/evaluation.py",
+        "            above = _upward(left, taxonomy)",
+        "            above = set(left)",
+    ),
+    Mutation(
         "approval_required authority forces a pending response (16.2, S-19)",
         "cid/agent.py",
         "            self._authority(Authority.DISCLOSE) is AuthorityValue.APPROVAL_REQUIRED",

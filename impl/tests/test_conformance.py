@@ -698,3 +698,94 @@ def test_approval_required_authority_is_not_silently_ignored():
     response = b.handle_disclosure_request(request)
     assert response.status is DisclosureStatus.PENDING_PRINCIPAL_APPROVAL
     assert response.value is None
+
+
+# -- Section 14.2: values at different levels of one hierarchy --------------
+
+
+def _geographic(held: list[str]) -> StandingInterest:
+    si = _interest()
+    si.interest.conditions["geography"] = held
+    si.interest.taxonomies["geography"] = {
+        "munich": "germany",
+        "berlin": "germany",
+        "paris": "france",
+        "germany": "europe",
+        "france": "europe",
+    }
+    si.disclosure_policy.attributes["geography"] = DisclosureClass(
+        surface=Surface.SESSION
+    )
+    return si
+
+
+def _ask(held: list[str], asked: list[str]):
+    from cid.evaluation import evaluate_claim
+
+    return evaluate_claim(
+        _geographic(held),
+        Claim(key="geography", operator=ClaimOperator.INTERSECTS, value=asked),
+    ).truth
+
+
+def test_a_held_value_answers_for_everything_it_is_part_of():
+    """Munich is in Germany, and in Europe. Answering `incompatible` to
+    either would assert something the responder's values contradict."""
+    assert _ask(["munich"], ["germany"]) is True
+    assert _ask(["munich"], ["europe"]) is True
+
+
+def test_a_narrower_question_than_the_value_held_is_undeterminable():
+    """The asymmetry. A German company may or may not be in Munich, and it
+    has not said which — so `unknown`, never `incompatible`."""
+    assert _ask(["germany"], ["munich"]) is None
+
+
+def test_a_genuine_mismatch_is_still_incompatible():
+    """The rule must not turn every negative into an evasion."""
+    assert _ask(["munich"], ["madrid"]) is False
+    assert _ask(["munich"], ["berlin"]) is False
+
+
+def test_without_a_taxonomy_the_old_reading_still_applies():
+    """A Principal that places none of its values gets set semantics, and
+    the false negative with them. Declaring the hierarchy is what fixes it."""
+    si = _geographic(["munich"])
+    si.interest.taxonomies.clear()
+    from cid.evaluation import evaluate_claim
+
+    assert (
+        evaluate_claim(
+            si,
+            Claim(
+                key="geography", operator=ClaimOperator.INTERSECTS, value=["germany"]
+            ),
+        ).truth
+        is False
+    )
+
+
+def test_the_hierarchy_is_never_transmitted():
+    """It lives in the Standing Interest, which Section 9.1 keeps home."""
+    from cid.transport import Wire
+
+    a = Agent(ref="agent:a", standing_interest=_interest())
+    b = Agent(ref="agent:b", standing_interest=_geographic(["munich"]))
+    wire = Wire()
+    opened = wire.send("A", a.open_session("s-tax", purpose="test"))
+    a.confirm_accept(wire.send("B", b.handle_session_open(opened)))
+    request = wire.send(
+        "A",
+        a.ask(
+            [
+                Claim(
+                    key="geography",
+                    operator=ClaimOperator.INTERSECTS,
+                    value=["germany"],
+                )
+            ]
+        ),
+    )
+    wire.send("B", b.handle_compatibility_request(request))
+    for _sender, message in wire.transcript:
+        assert "munich" not in message.model_dump_json()
