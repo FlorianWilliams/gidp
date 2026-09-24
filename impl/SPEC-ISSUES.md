@@ -8,7 +8,7 @@ carefully.
 Each entry states what the specification says, what a reader cannot determine
 from it, what this implementation decided, and whether CID 0.1 should change.
 
-**Status: nineteen of twenty were applied to CID 0.1 on 23 September 2026**, before the
+**Status: twenty of twenty-one were applied to CID 0.1 on 23 September 2026**, before the
 specification was frozen for publication. The entries are kept because the
 record of what an implementation found is worth more than a clean file: it is
 the evidence that the draft was tested rather than merely written.
@@ -647,3 +647,43 @@ objects — which is also the criterion that carries the horizontality claim of
 Appendix F.2, and which had been resting on inspection.
 
 **Resolution — applied to CID 0.1 on 2026-09-24.**
+
+---
+
+## S-21 — Two values at different levels of one hierarchy resolve `incompatible`
+
+**Found.** 2026-09-24, on the first end-to-end run of the demo branch, by the
+part of the chain no unit test covers: two participants authored separately.
+
+**Spec.** Section 14.2 defines `intersects` as set intersection. Section 21
+lets a profile define attribute vocabularies.
+
+**The defect.** A claim asking `geography intersects ["germany"]`, answered by
+a responder holding `["munich"]`, resolves `incompatible`. That is truthful —
+the sets are disjoint — and wrong, since both parties mean the same place. The
+result is a **false negative asserted as a certainty**, and Section 15.2 makes
+it block qualification, so a session between two compatible Principals ends
+because they named one thing at two granularities.
+
+`unknown` would have been survivable; `incompatible` is not, and the
+difference matters: one invites another claim, the other ends the session.
+
+Every unit test in this suite missed it because every test authors both sides
+at once and therefore uses one vocabulary by construction. The four worked
+domains have the same blind spot, which is exactly what Appendix F.2 warns its
+own threshold cannot remove, and it took two independently written profiles to
+show it.
+
+**Decided here.** The demo's profile fixes each attribute's level: conditions
+carry countries, projections carry cities. The directory still resolves the
+hierarchy, because retrieval and evaluation are different problems with the
+same cause.
+
+**Spec should change.** Yes. This is the retrieval problem of Section 12.4 one
+layer down, and a reader who has just been told that a provider should resolve
+hierarchies will assume a session does too.
+
+**Resolution — applied to CID 0.1 on 2026-09-24.** Section 14.2 now states the
+failure, requires a profile either to fix the level of each attribute or to
+define `compatible_with` where it cannot, and notes that the core profile
+defines no such predicate and therefore requires the first.
