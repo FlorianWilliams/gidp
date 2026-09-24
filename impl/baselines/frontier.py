@@ -1,0 +1,274 @@
+"""The bound-utility frontier, as an instrument rather than an opinion.
+
+Section 24.3's open problem used to be "is there a bound". There is one, and
+the question became "is there a better one": a policy that holds an adversary
+as low while refusing fewer honest counterparties. That is not a question to
+answer by argument. It is two numbers per policy, on axes everyone agrees on,
+so that any proposal can be dropped in and compared.
+
+    python -m baselines.frontier
+
+Axes. **Leak**: bits a probing counterparty extracts about the threshold,
+lower better. **Service**: honest counterparties served out of forty, higher
+better. A policy is dominated when another leaks no more and serves no fewer.
+
+Four families are measured, including one from `open-problems.md` that had
+never been tried.
+"""
+
+from __future__ import annotations
+
+import random
+import sys
+from dataclasses import dataclass, field
+from math import log2
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from baselines.auditing import GRID, STEP, TOTAL_BITS, _answer_of  # noqa: E402
+from cid.objects import Claim  # noqa: E402
+from cid.vocab import ClaimOperator, ClaimResult  # noqa: E402
+
+FLOOR = 45_000_000
+HONEST = 40
+
+
+@dataclass
+class Policy:
+    """A responder's rule for what it will answer."""
+
+    name: str
+    answered: int = 0
+    posterior: set[int] = field(default_factory=lambda: set(GRID))
+
+    def admits(self, claim: Claim) -> bool:
+        return True
+
+    def record(self, claim: Claim, answer: ClaimResult) -> None:
+        self.answered += 1
+        self.posterior = {
+            v for v in self.posterior if _answer_of(v, claim) is answer
+        } or self.posterior
+
+
+@dataclass
+class QuestionBudget(Policy):
+    """The one every earlier measurement here used."""
+
+    limit: int = 8
+
+    def admits(self, claim: Claim) -> bool:
+        return self.answered < self.limit
+
+
+@dataclass
+class BitBudget(Policy):
+    """Refuse when the worst case would cross a budget of disclosure."""
+
+    budget: float = 2.0
+
+    def admits(self, claim: Claim) -> bool:
+        for answer in (
+            ClaimResult.COMPATIBLE,
+            ClaimResult.CONDITIONALLY_COMPATIBLE,
+            ClaimResult.INCOMPATIBLE,
+        ):
+            after = {v for v in self.posterior if _answer_of(v, claim) is answer}
+            if after and TOTAL_BITS - log2(len(after)) > self.budget:
+                return False
+        return True
+
+
+@dataclass
+class GranularityFloor(Policy):
+    """`open-problems.md`'s minimum granularity, finally measured.
+
+    A bound is probed at the edge of whatever band is asked, so constraining
+    the *width* of a band achieves nothing — the edge is still wherever the
+    querent puts it. Constraining where the edges may fall is different: if
+    every bound must be a multiple of w, no sequence of questions locates the
+    value more precisely than w, however many are asked.
+
+    It holds no state at all, which is its interesting property: honest
+    traffic does not deplete it, and it cannot be drained.
+    """
+
+    width: int = 20_000_000
+
+    def admits(self, claim: Claim) -> bool:
+        asked = claim.value
+        if not isinstance(asked, dict):
+            return True
+        return all(
+            bound % self.width == 0
+            for bound in (asked.get("min"), asked.get("max"))
+            if bound is not None
+        )
+
+
+@dataclass
+class Both(BitBudget):
+    """A stateless floor for the hard bound, a budget for the rest."""
+
+    width: int = 20_000_000
+
+    def admits(self, claim: Claim) -> bool:
+        asked = claim.value
+        if isinstance(asked, dict) and not all(
+            bound % self.width == 0
+            for bound in (asked.get("min"), asked.get("max"))
+            if bound is not None
+        ):
+            return False
+        return super().admits(claim)
+
+
+# ---------------------------------------------------------------------------
+
+
+def _probe(policy: Policy, attempts: int = 40) -> float:
+    """An adversary that respects whatever the policy allows.
+
+    It bisects on the finest lattice the policy will answer on, which is the
+    honest way to measure a granularity floor: an adversary does not keep
+    asking questions it knows will be refused.
+    """
+    lattice = getattr(policy, "width", STEP)
+    alive = {v for v in GRID}
+    for _ in range(attempts):
+        if len(alive) <= 1:
+            break
+        ordered = sorted(alive)
+        raw = ordered[(len(ordered) - 1) // 2]
+        threshold = (raw // lattice) * lattice
+        claim = Claim(
+            key="valuation_floor",
+            operator=ClaimOperator.WITHIN,
+            value={"min": threshold, "max": threshold},
+        )
+        if not policy.admits(claim):
+            break
+        answer = _answer_of(FLOOR, claim)
+        policy.record(claim, answer)
+        narrowed = {v for v in alive if _answer_of(v, claim) is answer}
+        if narrowed == alive:
+            break  # this question buys nothing; stop
+        alive = narrowed
+    return TOTAL_BITS - log2(max(len(alive), 1))
+
+
+def _serve(policy: Policy, seed: int = 5) -> int:
+    """Forty counterparties, each asking once whether its ceiling clears."""
+    rng = random.Random(seed)
+    lattice = getattr(policy, "width", STEP)
+    served = 0
+    for _ in range(HONEST):
+        ceiling = rng.choice(GRID[8:])
+        ceiling = (ceiling // lattice) * lattice  # a customer rounds to fit
+        claim = Claim(
+            key="valuation_floor",
+            operator=ClaimOperator.WITHIN,
+            value={"min": 0, "max": ceiling},
+        )
+        if policy.admits(claim):
+            policy.record(claim, _answer_of(FLOOR, claim))
+            served += 1
+    return served
+
+
+def measure(build) -> tuple[float, int]:
+    return _probe(build()), _serve(build())
+
+
+def main() -> None:
+    print("=" * 88)
+    print("The bound-utility frontier")
+    print("=" * 88)
+    print()
+    print(f"A {TOTAL_BITS:.2f}-bit threshold. Leak: what a probing counterparty")
+    print(
+        f"extracts. Service: how many of {HONEST} honest counterparties are answered."
+    )
+    print()
+
+    candidates: list[tuple[str, float, int]] = []
+    candidates.append(("no defence", *measure(lambda: Policy("none"))))
+    for limit in (2, 4, 8):
+        candidates.append(
+            (
+                f"questions <= {limit}",
+                *measure(lambda n=limit: QuestionBudget("q", limit=n)),
+            )
+        )
+    for budget in (1.0, 2.0, 3.0):
+        candidates.append(
+            (
+                f"bits <= {budget:.0f}",
+                *measure(lambda b=budget: BitBudget("b", budget=b)),
+            )
+        )
+    for width in (10, 20, 40):
+        candidates.append(
+            (
+                f"granularity {width}M",
+                *measure(lambda w=width: GranularityFloor("g", width=w * 1_000_000)),
+            )
+        )
+    for width, budget in ((20, 3.0), (40, 3.0)):
+        candidates.append(
+            (
+                f"granularity {width}M + bits <= {budget:.0f}",
+                *measure(
+                    lambda w=width, b=budget: Both("x", budget=b, width=w * 1_000_000)
+                ),
+            )
+        )
+
+    print(f"{'policy':<34} {'leak':>8} {'service':>9} {'':>4}")
+    print("-" * 88)
+    for name, leak, served in candidates:
+        dominated = any(
+            other_leak <= leak
+            and other_served >= served
+            and (other_leak < leak or other_served > served)
+            for other_name, other_leak, other_served in candidates
+            if other_name != name
+        )
+        mark = "" if not dominated else "dominated"
+        print(f"{name:<34} {leak:>7.2f}b {served:>6}/{HONEST} {mark:>12}")
+
+    print()
+    print("=" * 88)
+    print("Reading it")
+    print("=" * 88)
+    print()
+    best = [
+        c
+        for c in candidates
+        if not any(
+            o[1] <= c[1] and o[2] >= c[2] and (o[1] < c[1] or o[2] > c[2])
+            for o in candidates
+            if o[0] != c[0]
+        )
+    ]
+    print("On the frontier:")
+    for name, leak, served in sorted(best, key=lambda c: c[1]):
+        print(f"  {name:<34} {leak:>6.2f}b  {served}/{HONEST}")
+    print()
+    print("The granularity floor is the result worth looking at, and it had")
+    print("never been measured. It holds no state, so honest traffic does not")
+    print("deplete it and an adversary cannot drain it; and because a bound is")
+    print("probed at the edge of whatever band is asked, constraining where the")
+    print("edges may fall caps the resolution outright at log2(range / width)")
+    print("however many questions are asked. Its cost is that a customer must")
+    print("round its question to the lattice, which is a real loss of precision")
+    print("and not a refusal.")
+    print()
+    print("This table is the instrument, not the answer. A policy that lands")
+    print("below and to the right of everything here is an improvement, and")
+    print("adding one is a subclass and a line.")
+
+
+if __name__ == "__main__":
+    main()

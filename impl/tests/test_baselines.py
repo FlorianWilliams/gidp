@@ -398,3 +398,47 @@ def test_the_refusal_does_not_depend_on_the_value():
     assert len(decisions) == 1, (
         "the decision to refuse must not be a function of the protected value"
     )
+
+
+# -- the bound-utility frontier --------------------------------------------
+
+
+def test_counting_questions_is_dominated():
+    """Every question-count budget is beaten on both axes by something else.
+
+    This is the whole argument of the last several findings, as an assertion:
+    if a question budget ever reappears on the frontier, something changed
+    and the reasoning needs revisiting.
+    """
+    from baselines.frontier import (
+        BitBudget,
+        Policy,
+        QuestionBudget,
+        measure,
+    )
+
+    question = measure(lambda: QuestionBudget("q", limit=4))
+    bits = measure(lambda: BitBudget("b", budget=2.0))
+    assert bits[0] <= question[0] and bits[1] > question[1], (
+        f"bit budget {bits} should beat question budget {question}"
+    )
+    assert measure(lambda: Policy("none"))[1] == 40
+
+
+def test_a_granularity_lattice_bounds_without_refusing_anyone():
+    """The result the earlier dismissal missed: it holds no state, so honest
+    traffic cannot deplete it."""
+    from baselines.frontier import GranularityFloor, measure
+
+    leak, served = measure(lambda: GranularityFloor("g", width=40_000_000))
+    assert served == 40, "a lattice costs precision, not service"
+    assert leak < 3.0, "and it still caps the resolution"
+
+
+def test_the_lattice_caps_resolution_however_many_questions_are_asked():
+    """Statelessness, checked: forty times the probing makes no difference."""
+    from baselines.frontier import GranularityFloor, _probe
+
+    short = _probe(GranularityFloor("g", width=40_000_000), attempts=4)
+    long = _probe(GranularityFloor("g", width=40_000_000), attempts=400)
+    assert short == pytest.approx(long)
