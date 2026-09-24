@@ -35,7 +35,6 @@ from cid.vocab import (  # noqa: E402
     AuthorityValue,
     ClaimOperator,
     ClaimResult,
-    InterestClass,
     Surface,
 )
 
@@ -49,7 +48,6 @@ def build_responder(budget: int) -> Agent:
         id="local:si-target",
         principal_ref="local:principal-target",
         interest=ConditionalInterest(
-            interest_class=InterestClass.PASSIVE_CONDITIONAL_DEMAND,
             action="consider_strategic_transaction",
             conditions={"valuation_class": {"min": 0, "max": SECRET_THRESHOLD}},
         ),
@@ -129,7 +127,6 @@ def main() -> None:
             id="local:si-attacker",
             principal_ref="local:principal-attacker",
             interest=ConditionalInterest(
-                interest_class=InterestClass.CONFIDENTIAL_ACTIVE_DEMAND,
                 action="probe",
             ),
             authority=AuthoritySpec(levels={Authority.PROBE: AuthorityValue.TRUE}),

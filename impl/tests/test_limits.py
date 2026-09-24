@@ -32,7 +32,6 @@ from cid.vocab import (  # noqa: E402
     AuthorityValue,
     ConsentAction,
     Gate,
-    InterestClass,
     Surface,
 )
 
@@ -67,7 +66,6 @@ def test_l4_identity_cannot_precede_probing():
         id="local:si",
         principal_ref="local:principal",
         interest=ConditionalInterest(
-            interest_class=InterestClass.PASSIVE_CONDITIONAL_DEMAND,
             action="consider",
             conditions={"instrument": ["private_placement"]},
         ),

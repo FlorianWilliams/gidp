@@ -218,20 +218,6 @@ class ClaimOperator(str, Enum):
     COMPATIBLE_WITH = "compatible_with"
 
 
-class InterestClass(str, Enum):
-    """The four classes of Conditional Interest (Section 8).
-
-    Never transmitted: the class lives in the Standing Interest, which stays
-    with the Agent. Conformance criterion 1 is therefore verified by local
-    inspection, not on the wire.
-    """
-
-    PASSIVE_CONDITIONAL_DEMAND = "passive_conditional_demand"
-    CONFIDENTIAL_ACTIVE_DEMAND = "confidential_active_demand"
-    PRIVATE_CONDITIONAL_SUPPLY = "private_conditional_supply"
-    INTERDEPENDENT_CONDITIONAL_INTEREST = "interdependent_conditional_interest"
-
-
 class SessionState(str, Enum):
     """States of the session state machine (Section 17.2)."""
 

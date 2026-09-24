@@ -32,7 +32,7 @@ from cid.objects import (
     StandingInterest,
     Validity,
 )
-from cid.vocab import Authority, AuthorityValue, Gate, InterestClass, Surface
+from cid.vocab import Authority, AuthorityValue, Gate, Surface
 
 # --------------------------------------------------------------------------
 # Priors
@@ -111,7 +111,6 @@ def b_interest(
         id="local:si-b",
         principal_ref="local:principal-b",
         interest=ConditionalInterest(
-            interest_class=InterestClass.PASSIVE_CONDITIONAL_DEMAND,
             action="consider_strategic_transaction",
             object="own_company",
             conditions={

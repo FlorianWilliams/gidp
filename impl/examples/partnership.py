@@ -42,7 +42,6 @@ from cid.vocab import (  # noqa: E402
     Feature,
     Gate,
     IdentityStatus,
-    InterestClass,
     Surface,
 )
 
@@ -74,7 +73,6 @@ logistics = StandingInterest(
     id="local:si-logistics",
     principal_ref="local:principal-logistics",
     interest=ConditionalInterest(
-        interest_class=InterestClass.PRIVATE_CONDITIONAL_SUPPLY,
         action="consider_commercial_partnership",
         object="distribution_partnership",
         conditions={
@@ -132,7 +130,6 @@ brokerage = StandingInterest(
     id="local:si-brokerage",
     principal_ref="local:principal-brokerage",
     interest=ConditionalInterest(
-        interest_class=InterestClass.PRIVATE_CONDITIONAL_SUPPLY,
         action="consider_commercial_partnership",
         object="distribution_partnership",
         conditions={

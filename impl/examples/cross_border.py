@@ -41,7 +41,6 @@ from cid.vocab import (  # noqa: E402
     ConsentStatus,
     Gate,
     IdentityStatus,
-    InterestClass,
     Surface,
 )
 
@@ -73,7 +72,6 @@ a_interest = StandingInterest(
     id="local:si-a",
     principal_ref="local:principal-a",
     interest=ConditionalInterest(
-        interest_class=InterestClass.CONFIDENTIAL_ACTIVE_DEMAND,
         action="explore_strategic_transaction",
         object="german_enterprise_software",
         structures=[
@@ -128,7 +126,6 @@ b_interest = StandingInterest(
     id="local:si-b",
     principal_ref="local:principal-b",
     interest=ConditionalInterest(
-        interest_class=InterestClass.PASSIVE_CONDITIONAL_DEMAND,
         action="consider_strategic_transaction",
         object="own_company",
         conditions={

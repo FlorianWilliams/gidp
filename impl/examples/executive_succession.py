@@ -49,7 +49,6 @@ from cid.vocab import (  # noqa: E402
     ConsentAction,
     Gate,
     IdentityStatus,
-    InterestClass,
     Surface,
 )
 
@@ -80,7 +79,6 @@ candidate = StandingInterest(
     id="local:si-candidate",
     principal_ref="local:principal-candidate",
     interest=ConditionalInterest(
-        interest_class=InterestClass.PASSIVE_CONDITIONAL_DEMAND,
         action="consider_executive_role",
         object="chief_executive",
         conditions={
@@ -132,7 +130,6 @@ board = StandingInterest(
     id="local:si-board",
     principal_ref="local:principal-board",
     interest=ConditionalInterest(
-        interest_class=InterestClass.CONFIDENTIAL_ACTIVE_DEMAND,
         action="explore_executive_succession",
         object="chief_executive",
         conditions={

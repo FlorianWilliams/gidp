@@ -315,7 +315,7 @@ CID 0.1 recognises four classes of Conditional Interest. They differ in what is 
 ### 8.4 Interdependent conditional interest
 *I will consider X if another party performs or commits to Y.* Example: an investor who participates only if a qualified lead commits; a buyer who acquires a building only if an anchor tenant signs. Established analogue: conditional co-investment subject to a lead investor, and contingent real-estate transactions. This class uses the dependency primitives of Section 19 and is the entry point to multi-party discovery.
 
-> *The classification is descriptive.* An Agent's behaviour MUST NOT depend on which of the four classes a Conditional Interest declares: the classes exist to help a Principal and an implementer think about what they are expressing, and the protocol's mechanics — disclosure, compatibility, authority, state — are identical across all four. The class is held locally and never transmitted, so nothing else could depend on it either; stating the rule keeps two implementations from diverging by inventing behaviour it does not have.
+> *There is no field for this.* CID defines no attribute carrying the classification, and a conforming implementation is not asked to record one. The four classes are a way of thinking about what is being expressed, and they are expressed entirely through the Disclosure Policy: which attributes are `local`, which reach a `discovery` surface, which need a gate. An Agent's behaviour cannot depend on the class because nothing in the protocol states it, and that is deliberate — a required field that no behaviour reads is a tax on every implementer for the author's convenience, and two implementations given one would eventually disagree about what it means.
 
 ## 9. Standing Interest
 
@@ -1027,7 +1027,7 @@ A CID implementation SHOULD allow Agents from independent vendors or platforms t
 ### 23.2 Conformance criteria
 An implementation claiming **CID Core 0.1** conformance MUST:
 
-1. represent all four classes of Conditional Interest inside Standing Interests (Section 8). The class is never transmitted, so this criterion is verified by local inspection of an implementation's Standing Interest representation, not on the wire;
+1. express all four situations of Section 8 and run a session for each, with the four differing only in their Disclosure Policies and producing the same sequence of protocol objects. "Verified by local inspection" is not a conformance criterion; this one is executable, and it is the criterion that carries the horizontality claim of Appendix F.2 of an implementation's Standing Interest representation, not on the wire;
 2. never transmit a Standing Interest, a Disclosure Policy, or any attribute of surface `local` (Sections 9.1, 10);
 3. enforce Disclosure Policies and Authority outside unconstrained model behaviour, such that for any transmitted object the decision to transmit it is reproducible from the Standing Interest, the Disclosure Policy and the session state alone (Section 6.10, Section 24.10);
 4. generate Discovery Projections that satisfy the required fields and the content rule of Section 11.1 and 11.2;

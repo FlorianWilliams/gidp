@@ -44,7 +44,6 @@ from cid.vocab import (
     ClaimOperator,
     ClaimResult,
     Gate,
-    InterestClass,
     Surface,
 )
 
@@ -107,7 +106,6 @@ def standing_interests(draw, identifier: str = "local:si"):
         id=identifier,
         principal_ref=f"{identifier}-principal",
         interest=ConditionalInterest(
-            interest_class=draw(st.sampled_from(list(InterestClass))),
             action="explore",
             conditions=conditions,
         ),

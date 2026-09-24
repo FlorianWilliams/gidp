@@ -35,7 +35,6 @@ from cid.vocab import (  # noqa: E402
     ClaimOperator,
     ConsentAction,
     Gate,
-    InterestClass,
     Surface,
 )
 
@@ -61,7 +60,6 @@ def _interest(conditions, policy, authority, **kw) -> StandingInterest:
         id=kw.get("id", "local:si"),
         principal_ref="local:principal",
         interest=ConditionalInterest(
-            interest_class=kw.get("cls", InterestClass.PASSIVE_CONDITIONAL_DEMAND),
             action=kw.get("action", "consider"),
             conditions=conditions,
         ),

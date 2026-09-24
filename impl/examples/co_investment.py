@@ -44,7 +44,6 @@ from cid.vocab import (  # noqa: E402
     Feature,
     Gate,
     IdentityStatus,
-    InterestClass,
     Surface,
 )
 
@@ -76,7 +75,6 @@ follower = StandingInterest(
     id="local:si-follower",
     principal_ref="local:principal-follower",
     interest=ConditionalInterest(
-        interest_class=InterestClass.INTERDEPENDENT_CONDITIONAL_INTEREST,
         action="consider_co_investment",
         object="series_b_round",
         conditions={
@@ -134,7 +132,6 @@ company = StandingInterest(
     id="local:si-company",
     principal_ref="local:principal-company",
     interest=ConditionalInterest(
-        interest_class=InterestClass.CONFIDENTIAL_ACTIVE_DEMAND,
         action="explore_round_feasibility",
         object="series_b_round",
         conditions={

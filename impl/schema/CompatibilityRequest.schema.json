@@ -42,7 +42,6 @@
         "conditionally_compatible",
         "unknown",
         "requires_disclosure",
-        "requires_principal_approval",
         "declined"
       ],
       "title": "ClaimResult",

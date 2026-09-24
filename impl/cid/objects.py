@@ -39,7 +39,6 @@ from .vocab import (
     HandoffKind,
     IdentityStatus,
     IntendedUse,
-    InterestClass,
     NextAction,
     Retention,
     SessionStatus,
@@ -97,7 +96,6 @@ class DisclosurePolicy(Strict):
 class ConditionalInterest(Strict):
     """Section 8. Held inside a Standing Interest; never transmitted."""
 
-    interest_class: InterestClass
     action: str
     object: str | None = None
     structures: list[str] = Field(default_factory=list)

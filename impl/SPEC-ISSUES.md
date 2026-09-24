@@ -8,7 +8,7 @@ carefully.
 Each entry states what the specification says, what a reader cannot determine
 from it, what this implementation decided, and whether CID 0.1 should change.
 
-**Status: eighteen of nineteen were applied to CID 0.1 on 23 September 2026**, before the
+**Status: nineteen of twenty were applied to CID 0.1 on 23 September 2026**, before the
 specification was frozen for publication. The entries are kept because the
 record of what an implementation found is worth more than a clean file: it is
 the evidence that the draft was tested rather than merely written.
@@ -608,3 +608,42 @@ the near-redundancy that produced it is worth naming for the next implementer.
 
 **Resolution — applied to the reference implementation on 2026-09-24**, with a
 conformance test and a mutation that fails without it.
+
+---
+
+## S-20 — A required field the specification never asked for
+
+**Found.** 2026-09-24, by Flo, in one sentence: if `interest_class` does
+nothing, why keep it? The right answer turned out not to be the one I was
+preparing.
+
+**Spec.** Section 8 recognises four classes of Conditional Interest and says
+they "differ in what is hidden, not in protocol mechanics", requiring a
+conforming implementation to be able to *represent* all four. Section 23.2's
+first criterion repeats that, adding that the class is never transmitted "so
+this criterion is verified by local inspection".
+
+**The defect, and it is the implementation's.** The specification never
+defines a field. It asks that four *situations* be expressible — which they
+are, through the Disclosure Policy, since what distinguishes them is which
+attribute is local and which is disclosable. The reference implementation
+invented a required `interest_class` attribute, made every Principal populate
+it, and then read it nowhere. A required field that no behaviour consults is a
+tax on every implementer, and two implementations given one will eventually
+disagree about what it means.
+
+The conformance criterion was worse. "Verified by local inspection" is not a
+criterion; it is a note saying nobody checked. The first version of the test
+proved that assigning a Python attribute stores it.
+
+**Decided here.** The field and its enumeration are removed. The four classes
+stay in Section 8, as prose, where a taxonomy that guides thinking belongs.
+
+**Spec should change.** Yes, twice. Section 8 now says plainly that no field
+carries the classification and why. Criterion 1 is now executable: express the
+four situations, run a session for each, and check that they differ only in
+their Disclosure Policies while producing the same sequence of protocol
+objects — which is also the criterion that carries the horizontality claim of
+Appendix F.2, and which had been resting on inspection.
+
+**Resolution — applied to CID 0.1 on 2026-09-24.**

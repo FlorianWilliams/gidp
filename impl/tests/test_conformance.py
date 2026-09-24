@@ -54,7 +54,6 @@ from cid.vocab import (
     DisclosureStatus,
     Gate,
     HandoffKind,
-    InterestClass,
     SessionState,
     SessionStatus,
     Surface,
@@ -70,7 +69,6 @@ def _interest(**overrides) -> StandingInterest:
         id="local:si",
         principal_ref="local:principal",
         interest=ConditionalInterest(
-            interest_class=InterestClass.PASSIVE_CONDITIONAL_DEMAND,
             action="consider",
             conditions={
                 "domain": ["enterprise_software"],
@@ -115,27 +113,56 @@ def _pair() -> tuple[Agent, Agent]:
 # -- 1 ----------------------------------------------------------------------
 
 
-def test_criterion_1_all_four_interest_classes_representable():
-    """Every class runs a full session, and none of them reaches the wire.
+def test_criterion_1_the_four_situations_of_section_8_all_run():
+    """Section 23.2, criterion 1, made testable.
 
-    The earlier version of this test asserted that assigning a field stores
-    it, which is a property of Python rather than of the protocol. What the
-    criterion actually promises is that the four classes of Section 8 are all
-    representable *and* that the classification stays home, so this runs a
-    session per class and inspects everything it sends.
+    The criterion says a conforming implementation must be able to represent
+    all four classes of Conditional Interest, and the specification adds that
+    they differ in *what is hidden*, not in protocol mechanics. The earlier
+    reading of this — verified "by local inspection", then by a field on the
+    object — was the wrong one twice over: the protocol defines no such field,
+    and inspection is not verification.
+
+    What the criterion actually promises is that the same machinery serves all
+    four situations and that the difference between them is policy. So build
+    the four, run each, and check both halves.
     """
     from cid.transport import Wire
 
-    for interest_class in InterestClass:
+    # The four classes of Section 8, expressed the way the section defines
+    # them: by which attribute is local and which is disclosable.
+    situations = {
+        "passive conditional demand": {
+            "criteria": Surface.DISCOVERY,
+            "threshold": Surface.LOCAL,
+        },
+        "confidential active demand": {
+            "criteria": Surface.SESSION,
+            "threshold": Surface.LOCAL,
+        },
+        "private conditional supply": {
+            "criteria": Surface.DISCOVERY,
+            "threshold": Surface.SESSION,
+        },
+        "interdependent interest": {
+            "criteria": Surface.SESSION,
+            "threshold": Surface.SESSION,
+        },
+    }
+
+    shapes = {}
+    for name, surfaces in situations.items():
         si = _interest()
-        si.interest.interest_class = interest_class
-        other = _interest()
+        si.disclosure_policy.attributes["domain"] = DisclosureClass(
+            surface=surfaces["criteria"]
+        )
+        si.disclosure_policy.attributes["threshold"] = DisclosureClass(
+            surface=surfaces["threshold"]
+        )
 
         wire = Wire()
-        a = Agent(ref="agent:a", standing_interest=other)
+        a = Agent(ref="agent:a", standing_interest=_interest())
         b = Agent(ref="agent:b", standing_interest=si)
-        # A neutral session_id: naming the session after the class would put
-        # the class on the wire by the test's own hand.
         opened = wire.send("A", a.open_session("s-1", purpose="test"))
         a.confirm_accept(wire.send("B", b.handle_session_open(opened)))
         request = wire.send(
@@ -153,12 +180,15 @@ def test_criterion_1_all_four_interest_classes_representable():
         response = wire.send("B", b.handle_compatibility_request(request))
         a.receive_compatibility_response(response, request)
 
-        assert wire.transcript, "nothing was sent; the check would be vacuous"
-        for _sender, message in wire.transcript:
-            serialised = message.model_dump_json()
-            assert interest_class.value not in serialised, (
-                f"{interest_class.value} reached the wire in {serialised}"
-            )
+        assert wire.transcript, f"{name} sent nothing"
+        shapes[name] = tuple(type(m).__name__ for _s, m in wire.transcript)
+
+    # One machinery, four situations: the object sequence is identical and
+    # only the policies differ. If a future change made a situation need its
+    # own message flow, the criterion would be false and this would say so.
+    assert len(set(shapes.values())) == 1, (
+        f"the four situations produced different protocol shapes: {shapes}"
+    )
 
 
 # -- 2 ----------------------------------------------------------------------
