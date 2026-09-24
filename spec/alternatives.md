@@ -198,9 +198,14 @@ attacker may mint counterparties to get around them. Measured, the two cancel
 exactly: an allowance of two claims per counterparty with four identities
 extracts precisely what an allowance of eight with one identity extracts. A
 cap on the responder's *total* answered claims cannot be diluted that way and
-does bound — but a complete extraction costs seven answered claims here and an
-honest session costs six, so no threshold separates the two populations. A
-deployment is rationing, not defending, and should say which.
+does bound. Whether it can also tell the two populations apart is a ratio, and
+the ratio is computable: an honest session costs one claim per attribute it
+asks about, an extraction costs a bisection per *private* attribute. Over this
+case's 41 candidate values the two costs coincide and no cap separates them;
+over 128 a window opens, and over a thousand it is wide
+(`impl/baselines/separability.py`). A deployment is rationing rather than
+defending, and it should compute where its own window falls instead of
+inheriting a number.
 
 **Minimising a projection reverses past a point.** Section 11.4 calls the
 trade-off fundamental and frames it as retrieval quality against inference

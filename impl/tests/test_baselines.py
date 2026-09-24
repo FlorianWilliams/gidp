@@ -284,3 +284,39 @@ def test_a_non_simulatable_decision_leaks_as_much_as_no_concealment():
     leaky, _ = probe(POLICIES["default (spec 15.4)"], 64)
     plain, _ = probe(POLICIES["truthful (no coarsening)"], 64)
     assert leaky == pytest.approx(plain)
+
+
+# -- when a budget separates an adversary from a customer ------------------
+
+
+def test_a_separating_budget_exists_once_the_secret_is_large_enough():
+    """The correction to a statement made too broadly.
+
+    The Sybil demonstration reported that no cap both stopped the attacker
+    and served the honest counterparty. That held for its own scenario — 41
+    candidate values against a five-claim session — and was stated as though
+    it held generally. It does not: the window opens as the secret grows.
+    """
+    from baselines.separability import extraction_cost
+
+    honest = 5
+    assert extraction_cost(41) <= honest, (
+        "the worked case should be the narrow one that has no window"
+    )
+    assert extraction_cost(128) > honest
+    assert extraction_cost(2048) > extraction_cost(128), (
+        "extraction should grow with the entropy of what is protected"
+    )
+
+
+def test_extraction_cost_is_measured_not_assumed():
+    """Not log2 by assertion: a bisection over a grid need not land on a
+    power of two, and the demonstration's five-question extraction over 41
+    values was one such case."""
+    from math import log2
+
+    from baselines.separability import extraction_cost
+
+    for candidates in (8, 41, 512):
+        cost = extraction_cost(candidates)
+        assert cost <= log2(candidates) + 1
