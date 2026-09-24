@@ -103,6 +103,12 @@ class Agent:
     consents: SessionConsents = field(default_factory=SessionConsents)
     audit: list[AuditEntry] = field(default_factory=list)
     queries_answered: int = 0
+    #: Retention modes this Agent can actually enforce on what it receives.
+    #: The default is the honest one for an implementation that keeps a
+    #: session in memory and nothing after it.
+    dischargeable_retention: set[Retention] = field(
+        default_factory=lambda: {Retention.SESSION_ONLY}
+    )
     _ids: Any = field(default_factory=lambda: count(1))
 
     # -- helpers -----------------------------------------------------------
@@ -314,7 +320,20 @@ class Agent:
         retention: Retention | None = Retention.SESSION_ONLY,
         reciprocal: bool = True,
     ) -> DisclosureRequest:
+        """Section 14.4.
+
+        A stated retention is an obligation on this Agent, not a courtesy to
+        the discloser (Section 10.7). An Agent may therefore only state one it
+        can discharge; stating and disregarding it would make the field
+        advice, and a limit nothing turns on is not a limit.
+        """
         assert self.session is not None
+        if retention is not None and retention not in self.dischargeable_retention:
+            raise ProtocolError(
+                f"this Agent cannot discharge retention {retention.value!r}, so "
+                "it MUST NOT state it (Section 10.7); omit the field and let "
+                "the responder decline"
+            )
         request = DisclosureRequest(
             session_id=self.session.session_id,
             request_id=self._rid(),

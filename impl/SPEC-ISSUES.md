@@ -8,7 +8,7 @@ carefully.
 Each entry states what the specification says, what a reader cannot determine
 from it, what this implementation decided, and whether CID 0.1 should change.
 
-**Status: all seventeen were applied to CID 0.1 on 23 September 2026**, before the
+**Status: all eighteen were applied to CID 0.1 on 23 September 2026**, before the
 specification was frozen for publication. The entries are kept because the
 record of what an implementation found is worth more than a clean file: it is
 the evidence that the draft was tested rather than merely written.
@@ -523,3 +523,45 @@ original request, because an implementer reading 14.5 alone will build what
 this implementation built.
 
 **Resolution — applied to CID 0.1 on 2026-09-23.**
+
+---
+
+## S-18 — `retention` was advice wearing the word "limit"
+
+**Found.** 2026-09-23, by instructing a lead that had been listed as
+promising and left uninvestigated: XACML's obligation model.
+
+**Spec.** Section 10.7 said a disclosure request "SHOULD state retention
+expectations" and that purpose restrictions enforced by the recipient are
+future work. Section 25.4 said "recipients SHOULD honour them."
+
+**The defect.** Two SHOULDs facing each other. A requester may state
+`session_only` and keep the value for ever without breaching anything, and a
+discloser reading the field has no more assurance than if the field were
+absent. The field travels on the wire, appears in the object model, and
+carries no obligation — which is a worse position than not defining it,
+because a Principal shown "retention: session_only" by an implementation will
+reasonably believe something enforces it.
+
+XACML made this distinction twenty years ago and resolved it the only way a
+protocol can. An *obligation* is an operation the enforcement point must carry
+out; *advice* may be safely ignored; and a conforming enforcement point must
+**deny access outright** when it cannot discharge an obligation attached to a
+permit. The lever is not enforcement, which no policy language has — it is
+that failing to discharge makes the implementation non-conformant rather than
+merely disappointing.
+
+**Decided here.** An Agent declares the retention modes it can discharge and
+refuses to *state* one outside that set, defaulting to `session_only` for an
+implementation that keeps a session in memory and nothing after it. An Agent
+that can discharge none omits the field, leaving the responder free to decline,
+which is the safe outcome.
+
+**Spec should change.** Yes. A limit nothing turns on should not be called a
+limit.
+
+**Resolution — applied to CID 0.1 on 2026-09-23.** Section 10.7 now forbids
+stating a retention the requester cannot discharge and requires omission
+instead; Section 25.4's "recipients SHOULD honour them" becomes a MUST for a
+recipient that stated one. The specification also says plainly that CID cannot
+verify discharge and does not pretend to.

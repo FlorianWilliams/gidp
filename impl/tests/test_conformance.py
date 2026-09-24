@@ -529,3 +529,39 @@ def test_an_opportunity_records_that_identity_was_actually_granted():
         },
     )
     assert opportunity.identity_status["responder"] is IdentityStatus.GRANTED
+
+
+def test_a_stated_retention_is_an_obligation_not_advice():
+    """Section 10.7, after XACML: an enforcement point that cannot discharge
+    an obligation must not proceed as though it had.
+
+    Before this rule the `retention` field was two SHOULDs facing each other
+    — state it, honour it — which is advice whatever it is called.
+    """
+    from cid.vocab import Retention
+
+    a, _ = _pair()
+    assert a.dischargeable_retention == {Retention.SESSION_ONLY}
+
+    permitted = a.request_disclosure("open_attribute", purpose="test",
+                                     retention=Retention.SESSION_ONLY)
+    assert permitted.retention is Retention.SESSION_ONLY
+
+    with pytest.raises(ProtocolError):
+        a.request_disclosure("open_attribute", purpose="test",
+                             retention=Retention.UNRESTRICTED)
+
+
+def test_an_agent_that_can_discharge_nothing_states_nothing():
+    """The safe outcome is an omitted field and a responder free to decline,
+    not a limit the requester intends to ignore."""
+    from cid.vocab import Retention
+
+    a, _ = _pair()
+    a.dischargeable_retention = set()
+    request = a.request_disclosure("open_attribute", purpose="test",
+                                   retention=None)
+    assert request.retention is None
+    with pytest.raises(ProtocolError):
+        a.request_disclosure("open_attribute", purpose="test",
+                             retention=Retention.SESSION_ONLY)

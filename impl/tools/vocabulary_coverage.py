@@ -56,8 +56,6 @@ KEPT_WITHOUT_A_DEMONSTRATION = {
         "declared purpose for a disclosure sought after qualification",
     "IntendedUse.IDENTITY_VERIFICATION":
         "declared purpose for a disclosure sought to verify a counterparty",
-    "Retention.UNRESTRICTED":
-        "a counterparty may ask to keep what it learns; no worked domain grants it",
     "Retention.UNTIL_HANDOFF":
         "between session-only and unrestricted; unexercised",
 }
