@@ -27,10 +27,47 @@ beyond what the policy layer withholds, and none at all against a malicious
 operator of the process. What it demonstrates is that the protocol's
 information flows are implementable and internally consistent.
 
-## Run it
+## Verify it yourself
+
+Nothing here asks to be taken on trust. The suite runs in seconds and the
+mutation check in about a minute.
+
+Python 3.11 or newer is required: the code uses `datetime.UTC`, which arrived
+in 3.11, and a 3.10 interpreter does not even collect the tests.
+`.python-version` pins 3.13, the oldest line still receiving bug fixes. On
+macOS the signed installer from python.org is the shortest route that asks you
+to trust nothing you cannot check; on Linux, your distribution's package.
 
 ```
-pip install pydantic
+cd impl
+python3.13 -m venv .venv
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
+pip install -e ".[dev]"
+```
+
+Then, in order of what each one tells you:
+
+```
+pytest -q                          # 142 passed
+ruff check .                       # All checks passed!
+mypy gidp                          # Success
+python tools/mutation_check.py     # 14 mutations, 14 killed
+```
+
+The mutation check is the one worth your minute. It breaks the implementation
+in fourteen deliberate ways, each one corresponding to a normative clause, and
+asserts that the suite notices. A test that passes for the wrong reason is
+invisible to `pytest` and obvious here — which is how S-18 was caught, after
+passing green for a week for an unrelated reason.
+
+Until someone ran `pip install -e .` on a machine that was not the author's,
+this package had never been built: the tests import the tree in place, so a
+packaging fault stayed invisible. It is fixed, and the lesson generalises —
+run the four commands above rather than believing this paragraph.
+
+## Run the examples
+
+```
 python examples/cross_border.py           # Appendix C.1, with transcript
 python examples/executive_succession.py   # Appendix C.2, a different domain
 python examples/partnership.py            # Appendix C.3, dependency primitives
@@ -38,7 +75,6 @@ python examples/co_investment.py          # Appendix C.5, a contingent Opportuni
 python examples/limits.py                 # four cases chosen because they break
 python examples/probing.py                # the attack of Section 24.3, measured
 python tools/emit_schema.py schema        # JSON Schema for every object
-pytest                                    # 61 tests; see below
 ```
 
 The suite is in four parts. `test_conformance.py` has one test per criterion of
