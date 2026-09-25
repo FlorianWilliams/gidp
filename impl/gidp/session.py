@@ -13,7 +13,7 @@ having two conflicting states. ``Session`` here models one side's view.
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 
 from .objects import (
@@ -31,6 +31,7 @@ from .vocab import (
     PROVISIONAL_DISCLOSURE_STATUSES,
     ClaimResult,
     CloseReason,
+    ConsentAction,
     ConsentStatus,
     SessionState,
     SessionStatus,
@@ -62,29 +63,44 @@ HANDOFF = Event("Handoff")
 CLOSE = Event("SessionClose")
 
 
+#: Target meaning "return to the state the pending request was sent from".
+#: A disclosure or a consent is a request inside a stage of the session, not a
+#: stage of its own; answering it must not move the session to a different
+#: stage than the one it was asked in (S-22).
+_RETURN = object()
+
 #: The normative transition table of Section 17.2. ``None`` as the target
-#: means "state unchanged".
-TRANSITIONS: dict[tuple[SessionState | None, Event], SessionState | None] = {
+#: means "state unchanged"; ``_RETURN`` means "the state the pending request
+#: was sent from".
+TRANSITIONS: dict[tuple[SessionState | None, Event], object] = {
     (None, SESSION_OPEN): SessionState.REQUESTED,
     (SessionState.REQUESTED, SESSION_ACCEPT): SessionState.PROBING,
     (SessionState.REQUESTED, CLOSE): SessionState.CLOSED,
     (SessionState.PROBING, COMPATIBILITY): None,
+    # A disclosure may be asked in any open stage and returns to it.
     (SessionState.PROBING, DISCLOSURE_REQUEST): SessionState.DISCLOSURE_PENDING,
-    (SessionState.DISCLOSURE_PENDING, DISCLOSURE_TERMINAL): SessionState.PROBING,
+    (SessionState.QUALIFIED, DISCLOSURE_REQUEST): SessionState.DISCLOSURE_PENDING,
+    (SessionState.CONSENTED, DISCLOSURE_REQUEST): SessionState.DISCLOSURE_PENDING,
+    (SessionState.DISCLOSURE_PENDING, DISCLOSURE_TERMINAL): _RETURN,
     (SessionState.DISCLOSURE_PENDING, DISCLOSURE_PROVISIONAL): None,
     (SessionState.DISCLOSURE_PENDING, COMPATIBILITY): None,
     (SessionState.PROBING, QUALIFY): SessionState.QUALIFIED,
     (SessionState.PROBING, INCOMPATIBLE): SessionState.CLOSED,
     (SessionState.DISCLOSURE_PENDING, INCOMPATIBLE): SessionState.CLOSED,
+    (SessionState.CONSENT_PENDING, INCOMPATIBLE): SessionState.CLOSED,
     (SessionState.QUALIFIED, INCOMPATIBLE): SessionState.CLOSED,
+    (SessionState.CONSENTED, INCOMPATIBLE): SessionState.CLOSED,
     (SessionState.QUALIFIED, COMPATIBILITY): None,
-    (SessionState.QUALIFIED, DISCLOSURE_REQUEST): SessionState.DISCLOSURE_PENDING,
+    # Consent to disclose attributes may be sought while probing, because a
+    # `session/consent` attribute can be what qualification needs. Every
+    # other consent action waits for qualification (Section 5, 14.5).
+    (SessionState.PROBING, CONSENT_REQUEST): SessionState.CONSENT_PENDING,
     (SessionState.QUALIFIED, CONSENT_REQUEST): SessionState.CONSENT_PENDING,
+    (SessionState.CONSENTED, CONSENT_REQUEST): SessionState.CONSENT_PENDING,
     (SessionState.CONSENT_PENDING, CONSENT_GRANTED): SessionState.CONSENTED,
-    (SessionState.CONSENT_PENDING, CONSENT_DECLINED): SessionState.QUALIFIED,
+    (SessionState.CONSENT_PENDING, CONSENT_DECLINED): _RETURN,
     (SessionState.CONSENT_PENDING, CONSENT_PROVISIONAL): None,
     (SessionState.CONSENT_PENDING, COMPATIBILITY): None,
-    (SessionState.CONSENTED, CONSENT_REQUEST): SessionState.CONSENT_PENDING,
     (SessionState.CONSENTED, COMPATIBILITY): None,
     (SessionState.QUALIFIED, HANDOFF): SessionState.HANDED_OFF,
     (SessionState.CONSENTED, HANDOFF): SessionState.HANDED_OFF,
@@ -93,6 +109,10 @@ TRANSITIONS: dict[tuple[SessionState | None, Event], SessionState | None] = {
 
 #: Every state except CLOSED may transition to CLOSED on SessionClose or on
 #: expiry (Section 17.2, final row).
+#: The token an Opportunity carries in `contingent_on` for dependencies its
+#: sender holds but may not name (Section 14.6, S-23).
+UNDISCLOSED_DEPENDENCY = "undisclosed"
+
 _CLOSEABLE = tuple(s for s in SessionState if s is not SessionState.CLOSED)
 
 
@@ -110,8 +130,17 @@ class Session:
     state: SessionState | None = None
     close_reason: CloseReason | None = None
 
-    #: Claim key -> most recent result received or sent for it.
+    #: Proposition -> its result, for every claim still standing in either
+    #: direction (S-24). A proposition is "sent:<claim_id>" or
+    #: "received:<claim_id>": the two sides number their own claims, so the
+    #: direction is part of the identity.
     results: dict[str, ClaimResult] = field(default_factory=dict)
+    #: Proposition -> the dimension (claim key) it asks about. Dimensions are
+    #: what an Opportunity counts (Section 14.6); propositions are what the
+    #: status is computed over (Section 15.2).
+    dimension_of: dict[str, str] = field(default_factory=dict)
+    #: request_id -> claim_ids that request withdraws, applied on its answer.
+    pending_supersedes: dict[str, list[str]] = field(default_factory=dict)
     #: Attribute keys whose disclosure would resolve a requires_disclosure.
     outstanding_requires: set[str] = field(default_factory=set)
     #: Dependencies named by either side that this session cannot resolve
@@ -119,6 +148,15 @@ class Session:
     #: entry; it cannot satisfy one, because the party it names is not in
     #: the session.
     unresolved_dependencies: set[str] = field(default_factory=set)
+    #: This side's own `conditional_on`, kept apart from what it learned,
+    #: because only its own is subject to its Disclosure Policy (S-23).
+    own_dependencies: set[str] = field(default_factory=set)
+    #: Asked at the moment the Opportunity is built, so that a consent
+    #: granted later in the session is taken into account: "transmit",
+    #: "withhold" (evaluation-only, or gated and not yet opened) or "never".
+    dependency_visibility: Callable[[], str] | None = None
+    #: The stage a pending disclosure or consent was asked from (S-22).
+    return_to: SessionState | None = None
     #: request_id -> True while a request is undischarged (Section 14).
     open_requests: dict[str, str] = field(default_factory=dict)
     opportunity_emitted: bool = False
@@ -133,8 +171,17 @@ class Session:
                 f"{self.state.value if self.state else 'None'} (Section 17.2)"
             )
         target = TRANSITIONS[key]
+        if event in (DISCLOSURE_REQUEST, CONSENT_REQUEST):
+            self.return_to = self.state
+        if target is _RETURN:
+            target = self.return_to
+        elif event is CONSENT_GRANTED and self.return_to is SessionState.PROBING:
+            # A grant before qualification opens a gate (Section 10.2); it
+            # does not make the session CONSENTED, which is the stage from
+            # which a Handoff may leave.
+            target = SessionState.PROBING
         if target is not None:
-            self.state = target
+            self.state = target  # type: ignore[assignment]
 
     def open(self, message: SessionOpen) -> None:
         self._fire(SESSION_OPEN)
@@ -173,12 +220,26 @@ class Session:
             )
         del self.open_requests[request_ref]
 
-    def begin_consent(self) -> None:
-        """QUALIFIED or CONSENTED + ConsentRequest -> CONSENT_PENDING."""
+    def begin_consent(self, action: ConsentAction | None = None) -> None:
+        """Enter CONSENT_PENDING.
+
+        From PROBING only `disclose_attributes` is permitted: identity,
+        direct contact and handoff remain behind qualification (Section 5).
+        """
+        if (
+            self.state is SessionState.PROBING
+            and action is not None
+            and action is not ConsentAction.DISCLOSE_ATTRIBUTES
+        ):
+            raise ProtocolError(
+                f"consent to {action.value!r} cannot be sought before "
+                "qualification; only disclose_attributes may be (Sections 5, "
+                "14.5, 17.2)"
+            )
         self._fire(CONSENT_REQUEST)
 
     def begin_disclosure(self) -> None:
-        """PROBING or QUALIFIED + DisclosureRequest -> DISCLOSURE_PENDING."""
+        """PROBING, QUALIFIED or CONSENTED + DisclosureRequest -> pending."""
         self._fire(DISCLOSURE_REQUEST)
 
     def note_compatibility(self) -> None:
@@ -188,12 +249,53 @@ class Session:
     def record_compatibility(self, response: CompatibilityResponse) -> None:
         self._fire(COMPATIBILITY)
         self._discharge(response.request_ref)
-        self.record_results(response.results)
+        self.withdraw("sent", self.pending_supersedes.pop(response.request_ref, []))
+        self.record_results(response.results, direction="sent")
         self.outstanding_requires = set(response.next.requires)
 
-    def record_results(self, outcomes: Iterable[ClaimOutcome]) -> None:
+    def record_results(
+        self, outcomes: Iterable[ClaimOutcome], *, direction: str
+    ) -> None:
         for outcome in outcomes:
-            self.results[outcome.key] = outcome.result
+            proposition = f"{direction}:{outcome.claim_id}"
+            self.results[proposition] = outcome.result
+            self.dimension_of[proposition] = outcome.key
+
+    def check_supersedes(self, direction: str, claim_ids: Iterable[str]) -> None:
+        """A claim may withdraw only an answered claim of its own sender, and
+        never one answered `incompatible` (S-24).
+
+        The second rule is the one that matters. A known contradiction closes
+        the session (Section 17.2); letting its asker withdraw it and ask a
+        neighbouring value instead would make bisection -- the attack of
+        Section 24.3 -- a supported feature of the protocol.
+        """
+        for claim_id in claim_ids:
+            proposition = f"{direction}:{claim_id}"
+            if proposition not in self.results:
+                raise ProtocolError(
+                    f"cannot supersede {claim_id!r}: a claim may supersede only "
+                    "an answered claim sent by the same side (Section 14.2)"
+                )
+            if self.results[proposition] is ClaimResult.INCOMPATIBLE:
+                raise ProtocolError(
+                    f"cannot supersede {claim_id!r}: an incompatible result is a "
+                    "known contradiction and closes the session (Sections "
+                    "14.2, 17.2)"
+                )
+
+    def withdraw(self, direction: str, claim_ids: Iterable[str]) -> None:
+        claim_ids = list(claim_ids)
+        self.check_supersedes(direction, claim_ids)
+        for claim_id in claim_ids:
+            proposition = f"{direction}:{claim_id}"
+            self.results.pop(proposition, None)
+            self.dimension_of.pop(proposition, None)
+
+    def _dimension(self, proposition: str) -> str:
+        # A result set directly, as the conformance suite does, is its own
+        # dimension.
+        return self.dimension_of.get(proposition, proposition)
 
     def record_disclosure(
         self, response: DisclosureResponse, *, discharge: bool = True
@@ -287,15 +389,45 @@ class Session:
         Section 14.6: `compatible_dimensions` plus the length of this list
         equals `evaluated_dimensions` in any session that qualifies.
         """
-        return [
-            key
-            for key, result in self.results.items()
-            if result is ClaimResult.CONDITIONALLY_COMPATIBLE
-        ]
+        return sorted(
+            {
+                self._dimension(proposition)
+                for proposition, result in self.results.items()
+                if result is ClaimResult.CONDITIONALLY_COMPATIBLE
+            }
+        )
 
     def note_dependency(self, *dependencies: str) -> None:
         """Record a dependency the session cannot resolve (Section 14.6)."""
         self.unresolved_dependencies.update(dependencies)
+
+    def note_own_dependencies(
+        self, dependencies: Iterable[str], visibility: Callable[[], str]
+    ) -> None:
+        """Record this side's own `conditional_on` and how far it may travel."""
+        self.own_dependencies.update(dependencies)
+        self.dependency_visibility = visibility
+
+    def contingent_on(self) -> list[str]:
+        """What the Opportunity may say it depends on (Sections 10.3, 14.6).
+
+        A mandatory field does not outrank the Disclosure Policy. Learned
+        dependencies were stated by the peer and travel as they are. This
+        side's own travel by name only if its policy permits it; otherwise a
+        single ``undisclosed`` marks the Opportunity as contingent without
+        saying on what -- the fact of contingency is a result derived from an
+        evaluation-only attribute, which `evaluation_only` permits. A `never`
+        dependency leaves no trace, because a flag that exists only because
+        of it would be a transmitted result produced from it.
+        """
+        visibility = self.dependency_visibility() if self.dependency_visibility else "transmit"
+        out = set(self.unresolved_dependencies)
+        own = self.own_dependencies - out
+        if own and visibility == "transmit":
+            out |= own
+        elif own and visibility == "withhold":
+            out.add(UNDISCLOSED_DEPENDENCY)
+        return sorted(out)
 
     def build_opportunity(
         self, structure: str, expires_at, identity_status: dict
@@ -304,18 +436,24 @@ class Session:
             raise ProtocolError(
                 "the session initiator emits the Opportunity (Section 14.6)"
             )
-        # Section 14.6: each claim key counts once, whatever the number of
-        # times it was asked; conditionally_compatible is not compatible.
+        # Section 14.6: each dimension counts once, however many propositions
+        # asked about it; a dimension is compatible only if every proposition
+        # on it is, and conditionally_compatible is not compatible.
+        by_dimension: dict[str, list[ClaimResult]] = {}
+        for proposition, result in self.results.items():
+            by_dimension.setdefault(self._dimension(proposition), []).append(result)
         compatible = sum(
-            1 for r in self.results.values() if r is ClaimResult.COMPATIBLE
+            1
+            for results in by_dimension.values()
+            if all(r is ClaimResult.COMPATIBLE for r in results)
         )
         return Opportunity(
             session_id=self.session_id,
             structure=structure,
-            evaluated_dimensions=len(self.results),
+            evaluated_dimensions=len(by_dimension),
             compatible_dimensions=compatible,
             open_conditions=self.open_conditions(),
-            contingent_on=sorted(self.unresolved_dependencies),
+            contingent_on=self.contingent_on(),
             identity_status=identity_status,
             expires_at=expires_at,
         )

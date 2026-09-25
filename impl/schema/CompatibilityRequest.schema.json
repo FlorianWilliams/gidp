@@ -2,7 +2,7 @@
   "$defs": {
     "Claim": {
       "additionalProperties": false,
-      "description": "One question about one dimension (Section 14.2).",
+      "description": "One question about one dimension (Section 14.2).\n\nA claim is a *proposition*, not a dimension: two claims on one key with\ndifferent values are two questions, and a result belongs to the question\nit answers (S-24). ``claim_id`` names the proposition, unique among the\nclaims its sender has sent in the session; an Agent assigns one when the\ncaller does not. ``supersedes`` withdraws earlier claims of the same\nsender, which is the only way a result leaves the session.",
       "properties": {
         "key": {
           "title": "Key",
@@ -13,12 +13,24 @@
         },
         "value": {
           "title": "Value"
+        },
+        "claim_id": {
+          "title": "Claim Id",
+          "type": "string"
+        },
+        "supersedes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Supersedes",
+          "type": "array"
         }
       },
       "required": [
         "key",
         "operator",
-        "value"
+        "value",
+        "claim_id"
       ],
       "title": "Claim",
       "type": "object"

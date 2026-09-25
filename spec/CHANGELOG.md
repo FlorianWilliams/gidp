@@ -37,8 +37,20 @@ First public draft, under the name *Graduated Interest Disclosure*.
 Consolidates three earlier internal drafts written under the working name
 *Conditional Interest Discovery*, abandoned before publication because its
 contraction collides with IPFS content identifiers inside the same layer, and incorporates two independent adversarial reviews of the consolidated
-text and twelve issues found while writing the reference implementation
-(`impl/SPEC-ISSUES.md`).
+text, twenty-one issues found while writing the reference implementation,
+and five found by the first external review of the specification, read
+without the code (`impl/SPEC-ISSUES.md`, S-01 to S-26).
+
+The external review is worth naming for what it found rather than for
+having happened. Three of its findings were normative contradictions that
+no implementation could satisfy without inventing behaviour: a consent the
+session needed could not be asked for (S-22), a required field forced the
+transmission of a dependency the Disclosure Policy protected (S-23), and a
+result named its dimension rather than its question, which let a session
+qualify on a dimension that had failed (S-24). Writing a test for each
+before fixing it showed two of them to be live defects of the reference
+implementation, not only of the text. They were corrected in both before
+publication, which is why they belong to 0.1 and not to a 0.2.
 
 The last of those, S-12, is worth naming here because it changes what the
 document claims rather than what it specifies. A comparative harness built to

@@ -42,6 +42,9 @@ class LocalEvaluation:
     #: True when the attribute consulted is evaluation-only, i.e. the value
     #: that produced this answer may never be transmitted (Section 15.4).
     evaluation_only: bool
+    #: False when the attribute is `never`: it may not produce a transmitted
+    #: result at all, so the only admissible answer is `declined` (S-23).
+    permitted: bool = True
 
 
 #: The dependency primitives of Section 19.1. They are reserved claim keys:
@@ -67,6 +70,8 @@ def evaluate_claim(
     value = standing_interest.value_of(claim.key)
     cls = standing_interest.class_of(claim.key)
     evaluation_only = cls.surface is Surface.LOCAL
+    if not cls.evaluable:
+        return LocalEvaluation(None, claim.key, True, permitted=False)
 
     if value is None:
         return LocalEvaluation(None, claim.key, evaluation_only)
@@ -91,6 +96,8 @@ def _evaluate_dependency(
     held = list(getattr(standing_interest.interest, claim.key, []))
     cls = standing_interest.class_of(claim.key)
     evaluation_only = cls.surface is Surface.LOCAL
+    if not cls.evaluable:
+        return LocalEvaluation(None, claim.key, True, permitted=False)
 
     if not held:
         # Nothing held: the Agent cannot determine the answer, and Section
@@ -240,8 +247,14 @@ def choose_result(
     implementation may pull. Neither can produce an answer that asserts what
     the Agent's values contradict, because the truthful branches are the only
     ones that can return ``compatible`` or ``incompatible``.
+
+    Coarsening is asymmetric (S-25). ``conditionally_compatible`` is a
+    *qualifying* result: a session can reach an Opportunity on it. Issued over
+    a truth of ``incompatible`` it would let a session qualify on a dimension
+    the responder knows to be ruled out, so a ruled-out claim coarsens to
+    ``unknown`` instead, which prevents qualification and asserts nothing.
     """
-    if decline:
+    if decline or not evaluation.permitted:
         return ClaimResult.DECLINED
 
     if evaluation.truth is None:
@@ -250,8 +263,11 @@ def choose_result(
         return ClaimResult.UNKNOWN
 
     if coarsen:
-        # Permitted: replaces *either* truthful answer, asserts neither.
-        return ClaimResult.CONDITIONALLY_COMPATIBLE
+        return (
+            ClaimResult.CONDITIONALLY_COMPATIBLE
+            if evaluation.truth
+            else ClaimResult.UNKNOWN
+        )
 
     return ClaimResult.COMPATIBLE if evaluation.truth else ClaimResult.INCOMPATIBLE
 
@@ -269,4 +285,10 @@ def assert_truthful(evaluation: LocalEvaluation, answered: ClaimResult) -> None:
     if answered is ClaimResult.INCOMPATIBLE and evaluation.truth is True:
         raise Truthfulness(
             "answered 'incompatible' where private values make the claim true (15.5)"
+        )
+    if answered is ClaimResult.CONDITIONALLY_COMPATIBLE and evaluation.truth is False:
+        raise Truthfulness(
+            "answered 'conditionally_compatible' where private values rule the "
+            "claim out; it is a qualifying result and may only replace "
+            "'compatible' (15.5, S-25)"
         )

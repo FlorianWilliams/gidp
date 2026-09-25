@@ -7,12 +7,17 @@
           "title": "Key",
           "type": "string"
         },
+        "claim_id": {
+          "title": "Claim Id",
+          "type": "string"
+        },
         "result": {
           "$ref": "#/$defs/ClaimResult"
         }
       },
       "required": [
         "key",
+        "claim_id",
         "result"
       ],
       "title": "ClaimOutcome",

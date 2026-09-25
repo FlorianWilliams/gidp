@@ -88,6 +88,13 @@
       "default": true,
       "title": "Requires Principal Presence",
       "type": "boolean"
+    },
+    "contingent_on": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Contingent On",
+      "type": "array"
     }
   },
   "required": [

@@ -66,8 +66,21 @@ class DisclosureClass(Strict):
 
     surface: Surface
     gate: Gate = Gate.NONE
+    #: False only for `never` (Section 10.3): the attribute MUST NOT be used
+    #: to produce any transmitted result, not even a coarse one. Before this
+    #: field the implementation could not say `never` at all, and every local
+    #: attribute was evaluation-only (S-23).
+    evaluable: bool = True
+
+    @model_validator(mode="after")
+    def _only_local_is_unevaluable(self) -> DisclosureClass:
+        if not self.evaluable and self.surface is not Surface.LOCAL:
+            raise ValueError("only a local attribute can be `never` (Section 10.3)")
+        return self
 
     def __str__(self) -> str:  # "session/principal_approval", "discovery"
+        if self.surface is Surface.LOCAL:
+            return "evaluation_only" if self.evaluable else "never"
         if self.gate is Gate.NONE:
             return self.surface.value
         return f"{self.surface.value}/{self.gate.value}"
@@ -80,6 +93,11 @@ class DisclosureClass(Strict):
 #: An attribute with no explicit policy entry is treated as evaluation-only,
 #: i.e. usable for local evaluation and never transmitted (Section 9.1).
 EVALUATION_ONLY = DisclosureClass(surface=Surface.LOCAL, gate=Gate.NONE)
+
+#: Section 10.3: never transmitted, and never used to produce a transmitted
+#: result. A claim on it is declined; a dependency so classified leaves no
+#: trace in any object (S-23).
+NEVER = DisclosureClass(surface=Surface.LOCAL, gate=Gate.NONE, evaluable=False)
 
 
 class DisclosurePolicy(Strict):
@@ -265,15 +283,37 @@ class SessionAccept(Response):
 
 
 class Claim(Strict):
-    """One question about one dimension (Section 14.2)."""
+    """One question about one dimension (Section 14.2).
+
+    A claim is a *proposition*, not a dimension: two claims on one key with
+    different values are two questions, and a result belongs to the question
+    it answers (S-24). ``claim_id`` names the proposition, unique among the
+    claims its sender has sent in the session; an Agent assigns one when the
+    caller does not. ``supersedes`` withdraws earlier claims of the same
+    sender, which is the only way a result leaves the session.
+    """
 
     key: str
     operator: ClaimOperator
     value: Any
+    claim_id: str | None = None
+    supersedes: list[str] = Field(default_factory=list)
+
+    # The schema describes the wire, where `claim_id` is required; only the
+    # in-process constructor may omit it, for the Agent to fill (S-24).
+    model_config = ConfigDict(
+        **Strict.model_config,
+        json_schema_extra=lambda schema, _: (
+            schema.setdefault("required", []).append("claim_id"),
+            schema["properties"].__setitem__("claim_id", {"type": "string", "title": "Claim Id"}),
+        ),
+    )
 
 
 class ClaimOutcome(Strict):
     key: str
+    #: Echoes the claim this result answers (S-24).
+    claim_id: str
     result: ClaimResult
 
 
@@ -281,6 +321,15 @@ class CompatibilityRequest(Request):
     type: Literal["CompatibilityRequest"] = "CompatibilityRequest"
     claims: list[Claim]
     allowed_results: list[ClaimResult] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def _claims_are_identified(self) -> CompatibilityRequest:
+        ids = [c.claim_id for c in self.claims]
+        if any(i is None for i in ids):
+            raise ValueError("every transmitted claim carries a claim_id (Section 14.2)")
+        if len(set(ids)) != len(ids):
+            raise ValueError("claim_id is unique within a request (Section 14.2)")
+        return self
 
 
 class NextBlock(Strict):
@@ -393,6 +442,9 @@ class Handoff(SessionScoped):
     target: HandoffTarget
     authorized_scope: list[Authority] = Field(default_factory=list)
     requires_principal_presence: bool = True
+    #: Section 14.6 requires a Handoff to carry the contingency forward;
+    #: the same Disclosure Policy rule applies as to the Opportunity (S-23).
+    contingent_on: list[str] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def _never_commit(self) -> Handoff:

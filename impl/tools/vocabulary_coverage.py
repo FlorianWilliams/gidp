@@ -31,12 +31,6 @@ import gidp.vocab as vocab  # noqa: E402
 KEPT_WITHOUT_A_DEMONSTRATION = {
     "CloseReason.EXPIRED": "reachable when a Standing Interest or session outlives its validity; "
     "no example waits long enough to show it",
-    "ConsentAction.DISCLOSE_ATTRIBUTES": "a deployment may seek consent for an attribute set rather than for "
-    "identity; the worked domains all seek identity",
-    "ConsentAction.ESTABLISH_DIRECT_CONTACT": "the consent a Handoff to a human needs when the parties will speak "
-    "outside any protocol",
-    "DisclosureStatus.GRANTED_IF_RECIPROCAL": "the reciprocity lever; LIMITS L-3 showed it inverts under asymmetric "
-    "exposure, so it is deliberately not demonstrated as a good idea",
     "Feature.MULTI_PARTY": "Section 19.2 is experimental and this implementation does not "
     "implement it, by the implementation plan's own rule",
     "HandoffKind.WORKFLOW": "a handoff target that is neither a human nor a protocol; plausible "

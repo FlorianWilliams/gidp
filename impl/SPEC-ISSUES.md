@@ -9,7 +9,9 @@ Each entry states what the specification says, what a reader cannot determine
 from it, what this implementation decided, and whether GIDP 0.1 should change.
 
 **Status: twenty of twenty-one were applied to GIDP 0.1 on 23 September 2026**, before the
-specification was frozen for publication. The entries are kept because the
+specification was frozen for publication. S-22 to S-26 were found by the first
+external review, on 25 September, and applied the same day — still before
+publication, which is why they belong to 0.1 rather than to a later version. The entries are kept because the
 record of what an implementation found is worth more than a clean file: it is
 the evidence that the draft was tested rather than merely written.
 
@@ -706,3 +708,167 @@ three-way rule and its asymmetry, notes that the hierarchy is never
 transmitted, and contrasts it with Section 12.4: a provider resolves for the
 whole index because it sees only projections, while inside a session only the
 responder can, because only the responder may see its own value.
+
+---
+
+## S-22 — A consent the session needed could not be asked for
+
+**Found.** 2026-09-25, by the first external review of the specification
+(T02), read without the code. Confirmed against the code by a test written
+before the fix, which also found a second defect the review had not.
+
+**Spec.** Section 10.2 makes the `consent` gate require a granted
+`ConsentResponse`. Section 17.2, which forbids any transition it does not list,
+allowed `ConsentRequest` only from `QUALIFIED` or `CONSENTED`.
+
+**The defect.** An attribute classified `session/consent` that qualification
+needs is a cycle: it cannot be disclosed without consent, and consent cannot be
+asked before qualification. No implementation can resolve that without
+inventing a transition.
+
+The test for it found a worse one next to it. `QUALIFIED` + `DisclosureRequest`
+led to `DISCLOSURE_PENDING`, whose terminal answer led to `PROBING` —
+unconditionally. A qualified session that asked one more question was no
+longer qualified, could not qualify again because the Opportunity had already
+been produced, and could never reach a `Handoff`. Every worked domain stopped
+before asking anything after qualification, so none of them met it.
+
+**Decided.** A disclosure or a consent is a request made *within* a stage of
+the session, not a stage of its own: its answer returns the session to the
+stage it was asked in. `ConsentRequest` with `action: disclose_attributes` may
+be sent from `PROBING`; a grant there opens the gate and leaves the session in
+`PROBING`. Every other consent action — identity, contact, handoff — stays
+behind qualification, which now enforces Section 5 by an explicit rule rather
+than by an absent row. `DisclosureRequest` is permitted from `CONSENTED`.
+`granted_if_reciprocal` and `granted_if_verified` stay pending, as Section 14
+already said and the table contradicted; the implementation had followed
+Section 14.
+
+**Resolution — applied to GIDP 0.1 on 2026-09-25.** Sections 14.5 and 17.2.
+
+---
+
+## S-23 — A required field that the Disclosure Policy forbids
+
+**Found.** 2026-09-25, external review (T03). The test found that it was not
+only a contradiction in the text but a live leak in the code.
+
+**Spec.** Section 19.1 classifies the dependency lists like any other
+attribute. Section 14.6 required every Agent to put every dependency it holds
+in the Opportunity's `contingent_on`.
+
+**The defect.** A dependency classified `evaluation_only` or `never` either
+had to be transmitted or the field left incomplete, and the text chose
+neither. The implementation chose transmission, silently: the default class of
+an unlisted attribute is `evaluation_only`, and `contingent_on` copied
+`conditional_on` verbatim, so **by default a private dependency went on the
+wire**.
+
+Two further gaps surfaced while fixing it. The implementation could not express
+`never` at all — every local attribute was evaluation-only. And Section 14.6
+required a `Handoff` to carry the contingency forward while Section 14.7 gave
+the Handoff no field to carry it in.
+
+**Decided.** A required field does not outrank the policy. A learned
+dependency travels as named. A held one travels by name only if the policy
+permits `conditional_on` at the session's depth when the Opportunity is built;
+otherwise the single token `undisclosed` says the Opportunity is contingent
+without saying on what — a derived result, which is what `evaluation_only`
+permits. A `never` dependency leaves no trace, because a flag that exists only
+because of it is a result produced from it. A claim on a `never` attribute is
+declined. The Handoff carries `contingent_on` under the same rule.
+
+**Resolution — applied to GIDP 0.1 on 2026-09-25.** Sections 10.3, 14.6, 14.7.
+
+---
+
+## S-24 — A result named its dimension, not its question
+
+**Found.** 2026-09-25, external review (T04). The tests showed it qualifying
+sessions it should have closed.
+
+**Spec.** Section 14.2 identified a claim by its `key`, and Section 15.2 said
+results are "keyed by claim key and the most recent answer stands".
+
+**The defect.** A key is a dimension; a claim is a proposition. Asked whether
+a value lay in two different ranges, the responder answered `incompatible`
+then `compatible`, and the second overwrote the first: the session
+**qualified** on a dimension that had failed. The same overwrite ran across
+directions — a proposition one side declined was erased by the other side's
+compatible answer on the same key — and within one request, where two claims
+on one key collapsed into one entry.
+
+**Decided.** Every claim carries a `claim_id`, and a result belongs to the
+proposition it answers, identified by that id and the direction. Asking again
+adds a proposition; replacing one takes an explicit `supersedes` naming claims
+of the same sender. A proposition answered `incompatible` cannot be withdrawn:
+a known contradiction closes the session, and a requester allowed to withdraw
+it and ask a neighbouring value would have bisection — the attack of Section
+24.3 — as a supported feature. The counts of Section 14.6 are per dimension
+over the standing propositions, which keeps their identity intact.
+
+The JSON Schema publishes `claim_id` as required even though the in-process
+constructor lets the Agent fill it, because the schema describes the wire.
+
+**Resolution — applied to GIDP 0.1 on 2026-09-25.** Sections 14.2, 14.3,
+14.6, 15.2.
+
+---
+
+## S-25 — A qualifying answer could stand over a ruled-out claim
+
+**Found.** 2026-09-25, external review (T01).
+
+**Spec.** Section 15.5 let a responder replace *either* truthful answer with
+`conditionally_compatible`. Section 15.2 counts `conditionally_compatible` as
+qualifying.
+
+**The defect.** A responder whose own evaluation said `incompatible` could
+answer `conditionally_compatible`, and with one genuinely compatible dimension
+elsewhere the session reached an Opportunity on a dimension the responder knew
+had failed. The default Agent never did this — it coarsened only true answers —
+but the library function every profile would call allowed it, and so did the
+text. Separately, nothing said what an Opportunity asserts, and the obvious
+reading — that the Principals are compatible — is false even without coarsening:
+dimension-by-dimension claims cannot see that two sides agree on every
+dimension and on no whole configuration.
+
+**Decided.** Coarsening is asymmetric: `compatible` may become
+`conditionally_compatible`, `unknown` or `declined`; `incompatible` may become
+only `unknown` or `declined`. And Section 14.6 now states what an Opportunity
+asserts — no standing proposition met a contradiction its responder knew of —
+and what it does not, with the counterexample, and tells a profile that needs
+joint satisfiability to ask for the combination as one claim.
+
+**Resolution — applied to GIDP 0.1 on 2026-09-25.** Sections 14.6, 15.2, 15.5.
+
+---
+
+## S-26 — Residues of resolved issues, and other editorial faults
+
+**Found.** 2026-09-25, external review (section 4 of its report).
+
+Two of these are faults in this file's own process rather than in the
+specification. S-15 removed `requires_principal_approval` from the result
+vocabulary and was marked resolved while Section 14 still listed it as a
+provisional response. S-16 removed the enumeration of operational outcomes and
+was marked resolved while Section 26 still listed them among the closed
+vocabularies to register. Closing an issue now means searching the whole
+document for what it removed, not editing the paragraph it was found in.
+
+The others, corrected on the same day: the fallback of Section 15.3 assumed a
+close reason for every operational outcome, and there are fewer; Section 14.8
+gave an empty `features` intersection as a reason to refuse although the
+bilateral core needs no feature; Section 22.2 justified carrying GIDP objects
+in A2A `metadata` by claiming a Part is for humans, which is false — A2A Parts
+carry structured data — and the real reason is Section 6.10; Section 2
+referred to an Appendix H that does not exist; Section 20's reference to an
+`evidence_ref` named a field no section defines; Section 12 required a
+provider to stop returning a withdrawn projection both on acceptance and within
+a published latency; the preamble described the reference implementation as
+future; the example Standing Interest carried a `class` field Section 8 says
+does not exist; and the example Opportunity omitted the required
+`contingent_on`. Also corrected: two sentences broken by the rename to GIDP,
+and "those four" after a list of three.
+
+**Resolution — applied to GIDP 0.1 on 2026-09-25.**

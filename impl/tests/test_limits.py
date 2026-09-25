@@ -41,8 +41,14 @@ def test_l1_the_policy_cannot_express_an_obligation_to_publish():
     for surface in Surface:
         cls = DisclosureClass(surface=surface)
         # There is no field, and no value of any field, that means "must".
-        assert set(type(cls).model_fields) == {"surface", "gate"}
+        # `evaluable` (S-23) is a further ceiling: its only non-default value
+        # forbids a use, and only of an attribute that is already local.
+        assert set(type(cls).model_fields) == {"surface", "gate", "evaluable"}
         assert cls.gate in set(Gate)
+        assert cls.evaluable is True
+        if surface is not Surface.LOCAL:
+            with pytest.raises(ValueError):
+                DisclosureClass(surface=surface, evaluable=False)
     # And nothing anywhere obliges an Agent to publish a projection.
     authority = AuthoritySpec(
         levels={Authority.PUBLISH_PROJECTION: AuthorityValue.FALSE}
@@ -88,7 +94,7 @@ def test_l4_identity_cannot_precede_probing():
     opened = a.open_session("s-kyc", purpose="regulated")
     a.confirm_accept(b.handle_session_open(opened))
 
-    with pytest.raises(ProtocolError, match="ConsentRequest"):
+    with pytest.raises(ProtocolError, match="before qualification"):
         a.request_consent(ConsentAction.REVEAL_IDENTITY, ["principal_name"])
 
 

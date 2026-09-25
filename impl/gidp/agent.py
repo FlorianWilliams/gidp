@@ -157,7 +157,7 @@ class Agent:
             expires_at=_soon(),
         )
         self.session.open(message)
-        self.session.note_dependency(*self.standing_interest.interest.conditional_on)
+        self._note_own_dependencies()
         self._log("session_open", f"purpose={purpose} max_depth={max_depth.value}")
         return message
 
@@ -197,13 +197,36 @@ class Agent:
             expires_at=_soon(),
         )
         self.session.accept(accept)
-        self.session.note_dependency(*self.standing_interest.interest.conditional_on)
+        self._note_own_dependencies()
         self._log(
             "session_accept",
             f"depth in force={depth.value}; features="
             f"{', '.join(f.value for f in agreed) or 'core only'}",
         )
         return accept
+
+    def _note_own_dependencies(self) -> None:
+        """Hand the session this side's dependencies and a way to ask, when
+        the Opportunity is built, how far its Disclosure Policy lets them
+        travel (Sections 10.3, 14.6; S-23)."""
+        assert self.session is not None
+
+        def visibility() -> str:
+            assert self.session is not None
+            cls = self.standing_interest.class_of("conditional_on")
+            if not cls.evaluable:
+                return "never"
+            decision = evaluate_disclosure(
+                self.standing_interest,
+                "conditional_on",
+                self.session.max_depth,
+                self.consents,
+            )
+            return "transmit" if decision.permitted else "withhold"
+
+        self.session.note_own_dependencies(
+            self.standing_interest.interest.conditional_on, visibility
+        )
 
     def confirm_accept(self, accept: SessionAccept) -> None:
         assert self.session is not None
@@ -218,14 +241,24 @@ class Agent:
 
     def ask(self, claims: list[Claim]) -> CompatibilityRequest:
         assert self.session is not None
+        request_id = self._rid()
+        # Every claim is a proposition with its own name (S-24).
+        claims = [
+            c if c.claim_id is not None else c.model_copy(update={"claim_id": f"{request_id}.{i}"})
+            for i, c in enumerate(claims)
+        ]
+        withdrawn = [cid for c in claims for cid in c.supersedes]
+        self.session.check_supersedes("sent", withdrawn)
         request = CompatibilityRequest(
             session_id=self.session.session_id,
-            request_id=self._rid(),
+            request_id=request_id,
             claims=claims,
             allowed_results=list(ClaimResult),
             expires_at=_soon(),
         )
         self.session.register_request(request.request_id, request.type)
+        if withdrawn:
+            self.session.pending_supersedes[request.request_id] = withdrawn
         self._log("compatibility_request", ", ".join(c.key for c in claims))
         return request
 
@@ -245,6 +278,9 @@ class Agent:
         self.session.note_compatibility()
         outcomes: list[ClaimOutcome] = []
         requires: list[str] = []
+        self.session.withdraw(
+            "received", [cid for claim in request.claims for cid in claim.supersedes]
+        )
 
         for claim in request.claims:
             self.queries_answered += 1
@@ -260,7 +296,10 @@ class Agent:
                 result = self._answer(evaluation, over_budget=over_budget)
                 if self.disclosure_audit is not None:
                     self.disclosure_audit.record(claim, self.standing_interest, result)
-            outcomes.append(ClaimOutcome(key=claim.key, result=result))
+            assert claim.claim_id is not None
+            outcomes.append(
+                ClaimOutcome(key=claim.key, claim_id=claim.claim_id, result=result)
+            )
             if claim.key == "conditional_on" and result is ClaimResult.COMPATIBLE:
                 # The responder has confirmed it holds this dependency. The
                 # session cannot resolve it, so it travels with the
@@ -275,7 +314,7 @@ class Agent:
                 + (" [budget exhausted]" if over_budget else ""),
             )
 
-        self.session.record_results(outcomes)
+        self.session.record_results(outcomes, direction="received")
         self.session.outstanding_requires = set(requires)
 
         return CompatibilityResponse(
@@ -319,13 +358,13 @@ class Agent:
             return
         # Mirror of the responder's bookkeeping: a confirmed dependency is
         # unresolved for both sides (Section 14.6).
-        by_key = {claim.key: claim for claim in request.claims}
+        by_id = {claim.claim_id: claim for claim in request.claims}
         for outcome in response.results:
             if (
                 outcome.key == "conditional_on"
                 and outcome.result is ClaimResult.COMPATIBLE
             ):
-                claim = by_key.get("conditional_on")
+                claim = by_id.get(outcome.claim_id)
                 if claim is None:
                     continue
                 values = claim.value if isinstance(claim.value, list) else [claim.value]
@@ -485,8 +524,8 @@ class Agent:
             binding_commitment=False,
             expires_at=_soon(),
         )
+        self.session.begin_consent(action)
         self.session.register_request(request.request_id, request.type)
-        self.session.begin_consent()
         self._log("consent_request", f"{action.value}: {', '.join(scope)}")
         return request
 
@@ -498,7 +537,7 @@ class Agent:
         attribute in scope carries the `principal_approval` gate.
         """
         assert self.session is not None
-        self.session.begin_consent()
+        self.session.begin_consent(request.action)
         level = CONSENT_ACTION_AUTHORITY[request.action]
         gated = [
             attribute
@@ -604,6 +643,7 @@ class Agent:
             target=HandoffTarget(kind=HandoffKind.PROTOCOL, protocol_ref=protocol_ref),
             authorized_scope=scope,
             requires_principal_presence=True,
+            contingent_on=self.session.contingent_on(),
             expires_at=_soon(60 * 24),
         )
         self.session.record_handoff(message)

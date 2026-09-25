@@ -78,8 +78,38 @@ MUTATIONS = (
     Mutation(
         "an Opportunity carries its unresolved dependencies (14.6)",
         "gidp/session.py",
-        "contingent_on=sorted(self.unresolved_dependencies)",
-        "contingent_on=[]",
+        "            contingent_on=self.contingent_on(),",
+        "            contingent_on=[],",
+    ),
+    Mutation(
+        "a withheld dependency is not named on the wire (14.6, S-23)",
+        "gidp/session.py",
+        "        if own and visibility == \"transmit\":",
+        "        if own:",
+    ),
+    Mutation(
+        "a result belongs to its proposition, not its dimension (14.2, S-24)",
+        "gidp/session.py",
+        "            proposition = f\"{direction}:{outcome.claim_id}\"\n            self.results[proposition] = outcome.result",
+        "            proposition = outcome.key\n            self.results[proposition] = outcome.result",
+    ),
+    Mutation(
+        "an incompatible result cannot be superseded (14.2, S-24)",
+        "gidp/session.py",
+        "            if self.results[proposition] is ClaimResult.INCOMPATIBLE:",
+        "            if False:",
+    ),
+    Mutation(
+        "a qualifying result never masks a ruled-out claim (15.5, S-25)",
+        "gidp/evaluation.py",
+        "            if evaluation.truth\n            else ClaimResult.UNKNOWN",
+        "            if True\n            else ClaimResult.UNKNOWN",
+    ),
+    Mutation(
+        "a disclosure returns to the stage it was asked in (17.2, S-22)",
+        "gidp/session.py",
+        "        if target is _RETURN:\n            target = self.return_to",
+        "        if target is _RETURN:\n            target = SessionState.PROBING",
     ),
     Mutation(
         "a shape mismatch answers unknown rather than failing (14.2, S-13)",

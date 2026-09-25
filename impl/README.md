@@ -48,14 +48,14 @@ pip install -e ".[dev]"
 Then, in order of what each one tells you:
 
 ```
-pytest -q                          # 142 passed
+pytest -q                          # 160 passed
 ruff check .                       # All checks passed!
 mypy gidp                          # Success
-python tools/mutation_check.py     # 14 mutations, 14 killed
+python tools/mutation_check.py     # 19 mutations, 19 killed
 ```
 
 The mutation check is the one worth your minute. It breaks the implementation
-in fourteen deliberate ways, each one corresponding to a normative clause, and
+in nineteen deliberate ways, each one corresponding to a normative clause, and
 asserts that the suite notices. A test that passes for the wrong reason is
 invisible to `pytest` and obvious here — which is how S-18 was caught, after
 passing green for a week for an unrelated reason.
