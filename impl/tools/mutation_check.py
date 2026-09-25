@@ -100,6 +100,18 @@ MUTATIONS = (
         "            False",
     ),
     Mutation(
+        "an audited claim off the lattice is declined (24.3)",
+        "gidp/agent.py",
+        "            if self.disclosure_audit is not None and not self.disclosure_audit.admits(",
+        "            if False and not self.disclosure_audit.admits(",
+    ),
+    Mutation(
+        "a refusal costs nothing, so it is not a channel (24.3)",
+        "gidp/auditing.py",
+        "        for surviving in outcomes.values():",
+        "        for surviving in list(outcomes.values())[:0]:",
+    ),
+    Mutation(
         "a stated retention must be dischargeable (10.7, S-18)",
         "gidp/agent.py",
         "        if retention is not None and retention not in self.dischargeable_retention:",

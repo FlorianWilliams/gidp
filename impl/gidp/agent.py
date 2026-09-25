@@ -20,6 +20,7 @@ from datetime import UTC, datetime, timedelta
 from itertools import count
 from typing import Any
 
+from .auditing import DisclosureAudit
 from .evaluation import LocalEvaluation, choose_result, evaluate_claim
 from .objects import (
     Claim,
@@ -110,6 +111,11 @@ class Agent:
     dischargeable_retention: set[Retention] = field(
         default_factory=lambda: {Retention.SESSION_ONLY}
     )
+    #: What this Agent declines to be asked (Section 24.3). None means it
+    #: answers whatever Section 15.5 permits, which bounds nothing.
+    #: Named at length because `audit` is already the audit *trail*, and the
+    #: two are unrelated: one records what happened, this decides what may.
+    disclosure_audit: DisclosureAudit | None = None
     _ids: Any = field(default_factory=lambda: count(1))
 
     # -- helpers -----------------------------------------------------------
@@ -243,8 +249,17 @@ class Agent:
         for claim in request.claims:
             self.queries_answered += 1
             over_budget = self.queries_answered > self.query_budget
-            evaluation = evaluate_claim(self.standing_interest, claim)
-            result = self._answer(evaluation, over_budget=over_budget)
+            if self.disclosure_audit is not None and not self.disclosure_audit.admits(
+                claim, self.standing_interest
+            ):
+                # Section 18: a refusal implies nothing, and this one implies
+                # less than most -- an observer can reproduce the decision.
+                result = ClaimResult.DECLINED
+            else:
+                evaluation = evaluate_claim(self.standing_interest, claim)
+                result = self._answer(evaluation, over_budget=over_budget)
+                if self.disclosure_audit is not None:
+                    self.disclosure_audit.record(claim, self.standing_interest, result)
             outcomes.append(ClaimOutcome(key=claim.key, result=result))
             if claim.key == "conditional_on" and result is ClaimResult.COMPATIBLE:
                 # The responder has confirmed it holds this dependency. The

@@ -34,8 +34,9 @@ specification version it implements; the two do not advance together.
 
 First public draft, under the name *Graduated Interest Disclosure*.
 
-Consolidates three earlier internal drafts written under a former working
-name, and incorporates two independent adversarial reviews of the consolidated
+Consolidates three earlier internal drafts written under the working name
+*Conditional Interest Discovery*, abandoned before publication because its
+contraction collides with IPFS content identifiers inside the same layer, and incorporates two independent adversarial reviews of the consolidated
 text and twelve issues found while writing the reference implementation
 (`impl/SPEC-ISSUES.md`).
 
@@ -45,9 +46,14 @@ test the protocol against existing mechanisms showed that the coarsening
 illustrated in Section 15.4 provides no protection against inference: it
 relabels one deterministic answer as another, and an adaptive querent's
 partition of the responder's possible values is unchanged. Sections 15.4, 15.5
-and 24.3 were corrected before publication, and Section 24.3 now states that
-the only mitigation in GIDP 0.1 which bounds adaptive inference is a bound on
-the number of claims. The measurements are in `spec/alternatives.md`.
+and 24.3 were corrected before publication, and Section 24.3 now names the two
+controls that do bound adaptive inference: a granularity lattice, which caps
+the resolution of any answer, and an information budget, which refuses a claim
+whose worst-case answer would cost more bits than the budget allows. Counting
+claims was itself the error: an honest question over a wide band costs a
+fraction of a bit, while a bisecting question costs a full bit by
+construction, so a budget denominated in questions cannot separate the two.
+The measurements are in `spec/alternatives.md`.
 
 Everything before the first publication is absorbed into this version: there
 is no history to preserve until a reader can cite one. From the day 0.1 is
