@@ -1,6 +1,6 @@
 """Every object a session produces validates against the generated schema.
 
-CID 0.2 must publish a normative JSON Schema. Generating it from the models
+GIDP 0.2 must publish a normative JSON Schema. Generating it from the models
 is only useful if the schema actually accepts what a conforming session emits,
 so this replays two complete sessions and validates every object on the wire
 against the schema file that `tools/emit_schema.py` writes.
@@ -68,7 +68,7 @@ def test_the_schema_rejects_an_object_missing_a_required_field(schema_dir):
     schema = json.loads(
         (schema_dir / "SessionOpen.schema.json").read_text(encoding="utf-8")
     )
-    incomplete = {"type": "SessionOpen", "version": "cidisc/0.1"}
+    incomplete = {"type": "SessionOpen", "version": "gidp/0.1"}
     with pytest.raises(jsonschema.ValidationError):
         jsonschema.validate(instance=incomplete, schema=schema)
 
@@ -79,7 +79,7 @@ def test_the_schema_rejects_a_value_outside_a_closed_vocabulary(schema_dir):
     )
     bad = {
         "type": "SessionClose",
-        "version": "cidisc/0.1",
+        "version": "gidp/0.1",
         "session_id": "s",
         "expires_at": "2026-09-23T12:00:00Z",
         "reason": "maybe_later",

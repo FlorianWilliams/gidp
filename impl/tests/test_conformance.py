@@ -1,4 +1,4 @@
-"""The conformance suite of CID 0.1, Section 23.2.
+"""The conformance suite of GIDP 0.1, Section 23.2.
 
 One test per criterion, named after it, so that a third party can run this
 suite against their own implementation: "third-party implementation" means
@@ -19,9 +19,9 @@ from pydantic import ValidationError
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from cid.agent import Agent
-from cid.evaluation import Truthfulness, assert_truthful, choose_result, evaluate_claim
-from cid.objects import (
+from gidp.agent import Agent
+from gidp.evaluation import Truthfulness, assert_truthful, choose_result, evaluate_claim
+from gidp.objects import (
     AuthoritySpec,
     Claim,
     ConditionalInterest,
@@ -34,16 +34,16 @@ from cid.objects import (
     StandingInterest,
     TransmittedObject,
 )
-from cid.policy import (
+from gidp.policy import (
     ProjectionRuleViolation,
     RetrievalAttribute,
     SessionConsents,
     derive_projection,
     evaluate_disclosure,
 )
-from cid.provider import InMemoryProvider
-from cid.session import ProtocolError, Session
-from cid.vocab import (
+from gidp.provider import InMemoryProvider
+from gidp.session import ProtocolError, Session
+from gidp.vocab import (
     Authority,
     AuthorityValue,
     ClaimOperator,
@@ -127,7 +127,7 @@ def test_criterion_1_the_four_situations_of_section_8_all_run():
     four situations and that the difference between them is policy. So build
     the four, run each, and check both halves.
     """
-    from cid.transport import Wire
+    from gidp.transport import Wire
 
     # The four classes of Section 8, expressed the way the section defines
     # them: by which attribute is local and which is disclosable.
@@ -562,8 +562,8 @@ def test_a_principal_may_refuse_consent_and_the_request_is_discharged():
     so a gated consent stayed provisional for the life of the session and the
     request was never discharged (Section 14).
     """
-    from cid.transport import Wire
-    from cid.vocab import ConsentStatus, SessionState
+    from gidp.transport import Wire
+    from gidp.vocab import ConsentStatus, SessionState
 
     a, b = _pair()
     a.session.state = SessionState.QUALIFIED
@@ -591,7 +591,7 @@ def test_a_principal_may_refuse_consent_and_the_request_is_discharged():
 
 def test_a_principal_may_refuse_a_disclosure_and_it_looks_like_any_refusal():
     """Section 14.4: a refusal says nothing about the attribute."""
-    from cid.vocab import DisclosureStatus
+    from gidp.vocab import DisclosureStatus
 
     a, b = _pair()
     request = a.request_disclosure("identity", purpose="test")
@@ -604,7 +604,7 @@ def test_an_opportunity_records_that_identity_was_actually_granted():
     """`IdentityStatus.GRANTED` is the normal end of a consented session and
     no worked domain reached it: the examples all stop at `not_requested`.
     A status nothing ever sets is a status no reader can trust."""
-    from cid.vocab import ConsentStatus, IdentityStatus, SessionState
+    from gidp.vocab import ConsentStatus, IdentityStatus, SessionState
 
     a, b = _pair()
     a.session.state = SessionState.QUALIFIED
@@ -637,7 +637,7 @@ def test_a_stated_retention_is_an_obligation_not_advice():
     Before this rule the `retention` field was two SHOULDs facing each other
     — state it, honour it — which is advice whatever it is called.
     """
-    from cid.vocab import Retention
+    from gidp.vocab import Retention
 
     a, _ = _pair()
     assert a.dischargeable_retention == {Retention.SESSION_ONLY}
@@ -659,7 +659,7 @@ def test_a_stated_retention_is_an_obligation_not_advice():
 def test_an_agent_that_can_discharge_nothing_states_nothing():
     """The safe outcome is an omitted field and a responder free to decline,
     not a limit the requester intends to ignore."""
-    from cid.vocab import Retention
+    from gidp.vocab import Retention
 
     a, _ = _pair()
     a.dischargeable_retention = set()
@@ -684,7 +684,7 @@ def test_approval_required_authority_is_not_silently_ignored():
     so a Principal who said "ask me before disclosing anything" was obeyed for
     gated attributes and silently ignored for every other one.
     """
-    from cid.vocab import DisclosureStatus
+    from gidp.vocab import DisclosureStatus
 
     interest = _interest()
     interest.authority.levels[Authority.DISCLOSE] = AuthorityValue.APPROVAL_REQUIRED
@@ -720,7 +720,7 @@ def _geographic(held: list[str]) -> StandingInterest:
 
 
 def _ask(held: list[str], asked: list[str]):
-    from cid.evaluation import evaluate_claim
+    from gidp.evaluation import evaluate_claim
 
     return evaluate_claim(
         _geographic(held),
@@ -752,7 +752,7 @@ def test_without_a_taxonomy_the_old_reading_still_applies():
     the false negative with them. Declaring the hierarchy is what fixes it."""
     si = _geographic(["munich"])
     si.interest.taxonomies.clear()
-    from cid.evaluation import evaluate_claim
+    from gidp.evaluation import evaluate_claim
 
     assert (
         evaluate_claim(
@@ -767,7 +767,7 @@ def test_without_a_taxonomy_the_old_reading_still_applies():
 
 def test_the_hierarchy_is_never_transmitted():
     """It lives in the Standing Interest, which Section 9.1 keeps home."""
-    from cid.transport import Wire
+    from gidp.transport import Wire
 
     a = Agent(ref="agent:a", standing_interest=_interest())
     b = Agent(ref="agent:b", standing_interest=_geographic(["munich"]))

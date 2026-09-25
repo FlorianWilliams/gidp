@@ -1,6 +1,6 @@
 """An in-process wire between two Agents, and the checks it enforces.
 
-CID 0.1 defines no transport binding (Section 22), so this is not a binding:
+GIDP 0.1 defines no transport binding (Section 22), so this is not a binding:
 it is a test harness that carries objects from one Agent to the other and
 enforces, on every message, the rules Section 14 states about correlation and
 answering. Those rules are easy to state and easy to violate, and an
@@ -85,7 +85,7 @@ class Wire:
             # requests nor responses and are not answered (Section 14).
             return
 
-        raise WireError(f"{type(message).__name__} is not a CID 0.1 object")
+        raise WireError(f"{type(message).__name__} is not a GIDP 0.1 object")
 
     @staticmethod
     def _is_provisional(message: TransmittedObject) -> bool:

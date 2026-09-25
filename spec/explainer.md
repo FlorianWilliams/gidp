@@ -22,7 +22,7 @@ What none of those does is work over *sets of conditions* between parties who ha
 
 ## What the protocol does
 
-**Conditional Interest Discovery** defines how two agents do that. Four things, and nothing else.
+**Graduated Interest Disclosure** defines how two agents do that. Four things, and nothing else.
 
 A principal's conditions live with their agent in a **Standing Interest** — one or more conditional interests, the constraints and exclusions around them, a policy saying what may ever be revealed and under what conditions, and an explicit statement of what the agent is allowed to do. It is never transmitted. Not encrypted and transmitted: never transmitted.
 

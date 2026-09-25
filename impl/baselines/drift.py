@@ -29,8 +29,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from baselines.mitigations import POLICIES, _ask  # noqa: E402
 from baselines.scenario import b_interest  # noqa: E402
-from cid.objects import Claim  # noqa: E402
-from cid.vocab import ClaimOperator, ClaimResult  # noqa: E402
+from gidp.objects import Claim  # noqa: E402
+from gidp.vocab import ClaimOperator, ClaimResult  # noqa: E402
 
 STEP = 5_000_000
 GRID = tuple(range(0, 205_000_000, STEP))

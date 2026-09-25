@@ -1,6 +1,6 @@
 """Appendix F.2, the horizontality hypothesis, checked mechanically.
 
-The specification says CID should not become a protocol layer merely because
+The specification says GIDP should not become a protocol layer merely because
 the abstraction is appealing, and states the validation: the same core
 implementation across materially different domains, changing primarily
 vocabularies and validation rules.
@@ -25,7 +25,7 @@ import executive_succession as succession  # noqa: E402
 import partnership  # noqa: E402
 from test_scenario import _run as run_cross_border  # noqa: E402
 
-from cid.vocab import ClaimOperator, ClaimResult, Gate, Surface  # noqa: E402
+from gidp.vocab import ClaimOperator, ClaimResult, Gate, Surface  # noqa: E402
 
 
 def _all_domains():

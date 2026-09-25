@@ -18,8 +18,8 @@
   "description": "Section 14.8. Carries request_ref only when sent in place of a response.",
   "properties": {
     "version": {
-      "const": "cidisc/0.1",
-      "default": "cidisc/0.1",
+      "const": "gidp/0.1",
+      "default": "gidp/0.1",
       "title": "Version",
       "type": "string"
     },
@@ -61,5 +61,5 @@
   ],
   "title": "SessionClose",
   "type": "object",
-  "$id": "urn:example:cidisc:0.1:SessionClose"
+  "$id": "urn:example:gidp:0.1:SessionClose"
 }

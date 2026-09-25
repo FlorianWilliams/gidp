@@ -4,7 +4,7 @@ Everything under `spec/`, together with this file and `README.md`, is
 published under the **Creative Commons Attribution 4.0 International
 licence (CC BY 4.0)**.
 
-    Conditional Interest Discovery (CID)
+    Graduated Interest Disclosure (GIDP)
     Copyright (c) 2026 {{AUTHOR}}
 
     This work is licensed under the Creative Commons Attribution 4.0

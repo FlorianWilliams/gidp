@@ -3,7 +3,7 @@
     "Agents SHOULD minimise projections while preserving sufficient retrieval
     quality. This is a fundamental trade-off: more specific projections
     improve retrieval and increase inference risk; less specific projections
-    do the reverse. CID 0.1 does not prescribe an optimum."
+    do the reverse. GIDP 0.1 does not prescribe an optimum."
 
 That is asserted, not shown, and the shape of the curve decides whether the
 advice is useful. Run it:

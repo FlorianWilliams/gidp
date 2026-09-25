@@ -1,4 +1,4 @@
-"""Closed vocabularies of CID 0.1.
+"""Closed vocabularies of GIDP 0.1.
 
 Section 26 of the specification freezes these vocabularies for version 0.1:
 an implementation MUST NOT add values to them. Defining them once, here, as
@@ -14,11 +14,11 @@ from __future__ import annotations
 from enum import Enum
 from typing import Final
 
-#: Object version token. The short form is ``cidisc`` rather than ``cid``
-#: because ``cid`` is the established abbreviation of the IPFS Content
+#: Object version token. The short form is ``gidp`` rather than ``gidp``
+#: because ``gidp`` is the established abbreviation of the IPFS Content
 #: Identifier and would be misread in the ecosystems this protocol sits in
-#: (CID 0.1 Section 14).
-VERSION: Final = "cidisc/0.1"
+#: (GIDP 0.1 Section 14).
+VERSION: Final = "gidp/0.1"
 
 PROFILE_CORE = "core"
 

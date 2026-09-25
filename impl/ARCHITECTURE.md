@@ -12,7 +12,7 @@ someone reviewing whether the structure matches what the specification says.
 A library, not a service. It has no network, no storage, no scheduler, no user
 interface and no identity system, and none of those are oversights — each is a
 decision recorded below. What it does have is the whole of the bilateral core
-of CID 0.1: the objects, the vocabularies, the disclosure engine, the
+of GIDP 0.1: the objects, the vocabularies, the disclosure engine, the
 compatibility semantics, the state machine, and an Agent that puts them
 together.
 
@@ -30,22 +30,22 @@ replaceable without touching them.
   examples/              six worked domains, an attack, four limit cases
   baselines/             measurement harnesses (not part of the protocol)
          │
-  cid/agent.py       596  the protocol as a usable object: sessions, claims,
+  gidp/agent.py       596  the protocol as a usable object: sessions, claims,
          │                disclosures, consents, handoff, the audit trail
          │
-  cid/session.py     321  the state machine of Section 17.2, the qualification
+  gidp/session.py     321  the state machine of Section 17.2, the qualification
          │                rule of 15.2, the Opportunity of 14.6
          │
-  cid/policy.py      189  the disclosure engine (surface x gate x depth) and
-  cid/evaluation.py  222  the claim evaluator and the truthfulness rule 15.5
+  gidp/policy.py      189  the disclosure engine (surface x gate x depth) and
+  gidp/evaluation.py  222  the claim evaluator and the truthfulness rule 15.5
          │
-  cid/objects.py     430  every transmitted object, as validated models
+  gidp/objects.py     430  every transmitted object, as validated models
          │
-  cid/vocab.py       246  the closed vocabularies and the wire version token
+  gidp/vocab.py       246  the closed vocabularies and the wire version token
 
-  cid/transport.py   126  a checking wire: correlation rules of Section 14
-  cid/provider.py    113  an in-memory Discovery Provider (Section 12)
-  cid/bindings/a2a.py 176 declaration, activation and carriage over A2A
+  gidp/transport.py   126  a checking wire: correlation rules of Section 14
+  gidp/provider.py    113  an in-memory Discovery Provider (Section 12)
+  gidp/bindings/a2a.py 176 declaration, activation and carriage over A2A
 ```
 
 `transport.py` and `provider.py` sit beside the stack rather than in it: an
@@ -118,7 +118,7 @@ non-binding proposals after the Handoff, and this code stops at the Handoff.
 
 `baselines/` is not part of the protocol and a second implementation need not
 have it. It measures: `compare.py` runs the same case through four existing
-mechanisms and CID on one yardstick, `mitigations.py` sweeps answering
+mechanisms and GIDP on one yardstick, `mitigations.py` sweeps answering
 policies against query budgets, `sybil.py` measures what a budget is worth
 against many identities, `projection.py` measures the Section 11.4 trade-off.
 `measure.py` holds the yardstick — leakage as the reduction of an observer's

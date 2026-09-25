@@ -1,4 +1,4 @@
-"""Protocol objects of CID 0.1, Section 14, plus the local objects of 9-11.
+"""Protocol objects of GIDP 0.1, Section 14, plus the local objects of 9-11.
 
 Field names follow the specification exactly. Required fields are required
 here; where the specification leaves a field optional it is optional here.
@@ -50,7 +50,7 @@ class Strict(BaseModel):
     """Base model: unknown fields are an error rather than silently dropped.
 
     An implementation that accepts unknown fields cannot detect a peer using a
-    vocabulary CID 0.1 froze (Section 26), so extra fields are forbidden.
+    vocabulary GIDP 0.1 froze (Section 26), so extra fields are forbidden.
     """
 
     model_config = ConfigDict(extra="forbid", use_enum_values=False)
@@ -131,7 +131,7 @@ class AuthoritySpec(Strict):
         value = self.levels.get(Authority.COMMIT, AuthorityValue.FALSE)
         if value is not AuthorityValue.FALSE:
             raise ValueError(
-                f"COMMIT MUST be false in CID 0.1 (Section 16.1); got {value.value!r}"
+                f"COMMIT MUST be false in GIDP 0.1 (Section 16.1); got {value.value!r}"
             )
         self.levels[Authority.COMMIT] = AuthorityValue.FALSE
         return self
@@ -185,7 +185,7 @@ class TransmittedObject(Strict):
     ``session_id``.
     """
 
-    version: Literal["cidisc/0.1"] = VERSION
+    version: Literal["gidp/0.1"] = VERSION
     expires_at: datetime
 
 
@@ -339,7 +339,7 @@ class ConsentRequest(Request):
     action: ConsentAction
     scope: list[str] = Field(default_factory=list)
     reciprocal: bool = False
-    #: MUST be false in CID 0.1. The field is required rather than omitted so
+    #: MUST be false in GIDP 0.1. The field is required rather than omitted so
     #: that the absence of commitment is explicit on the wire (Section 14.5).
     binding_commitment: Literal[False] = False
 
@@ -387,7 +387,7 @@ class HandoffTarget(Strict):
 
 
 class Handoff(SessionScoped):
-    """One-way notification; ends CID's responsibility (Section 14.7)."""
+    """One-way notification; ends GIDP's responsibility (Section 14.7)."""
 
     type: Literal["Handoff"] = "Handoff"
     target: HandoffTarget
@@ -398,7 +398,7 @@ class Handoff(SessionScoped):
     def _never_commit(self) -> Handoff:
         if Authority.COMMIT in self.authorized_scope:
             raise ValueError(
-                "authorized_scope never includes COMMIT in CID 0.1 (Section 14.7)"
+                "authorized_scope never includes COMMIT in GIDP 0.1 (Section 14.7)"
             )
         return self
 

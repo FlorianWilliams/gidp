@@ -13,8 +13,8 @@
   "additionalProperties": false,
   "properties": {
     "version": {
-      "const": "cidisc/0.1",
-      "default": "cidisc/0.1",
+      "const": "gidp/0.1",
+      "default": "gidp/0.1",
       "title": "Version",
       "type": "string"
     },
@@ -56,5 +56,5 @@
   ],
   "title": "ConsentResponse",
   "type": "object",
-  "$id": "urn:example:cidisc:0.1:ConsentResponse"
+  "$id": "urn:example:gidp:0.1:ConsentResponse"
 }

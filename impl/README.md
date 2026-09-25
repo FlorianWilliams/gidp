@@ -1,7 +1,7 @@
-# CID 0.1 — reference implementation
+# GIDP 0.1 — reference implementation
 
-Reference implementation of the **Conditional Interest Discovery** protocol,
-draft 0.1. The specification is in `../spec/CID-0.1.md`; the open problems and
+Reference implementation of the **Graduated Interest Disclosure Protocol**,
+draft 0.1. The specification is in `../spec/GIDP-0.1.md`; the open problems and
 design rationale are in `../spec/open-problems.md`.
 
 This code exists to test the specification, not to ship a product.
@@ -19,7 +19,7 @@ Discovery Provider.
 ## What it deliberately does not do
 
 Multi-party discovery, any transport binding, and **any cryptography at all**.
-CID 0.1 requires none of these, and a toy version of any of them would
+GIDP 0.1 requires none of these, and a toy version of any of them would
 misrepresent what the protocol guarantees.
 
 **This implementation provides no confidentiality** against a malicious peer
@@ -64,7 +64,7 @@ Section 11.4 trade-off and finds it non-monotone;
 `tests/test_properties.py` generates Standing Interests nobody designed and
 checks the invariants against them, which is the closest a single
 implementation can come to the real check — a second implementation written
-by somebody else. `cid/bindings/a2a.py` is the Section 22.2 binding written
+by somebody else. `gidp/bindings/a2a.py` is the Section 22.2 binding written
 against the published A2A 1.0 mechanism rather than from memory. `test_schema.py` validates every
 object of both sessions against freshly generated schemas, so the schema
 cannot drift from the code.

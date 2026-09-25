@@ -26,9 +26,9 @@ from hypothesis import strategies as st
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from cid.agent import Agent
-from cid.evaluation import assert_truthful, choose_result, evaluate_claim
-from cid.objects import (
+from gidp.agent import Agent
+from gidp.evaluation import assert_truthful, choose_result, evaluate_claim
+from gidp.objects import (
     AuthoritySpec,
     Claim,
     ConditionalInterest,
@@ -36,9 +36,9 @@ from cid.objects import (
     DisclosurePolicy,
     StandingInterest,
 )
-from cid.policy import RetrievalAttribute, derive_projection
-from cid.session import ProtocolError
-from cid.vocab import (
+from gidp.policy import RetrievalAttribute, derive_projection
+from gidp.session import ProtocolError
+from gidp.vocab import (
     Authority,
     AuthorityValue,
     ClaimOperator,
@@ -257,13 +257,13 @@ def test_every_event_sequence_either_advances_or_is_refused(interest, events):
             elif event == "disclose":
                 a.request_disclosure("alpha", purpose="test")
             elif event == "consent":
-                from cid.vocab import ConsentAction
+                from gidp.vocab import ConsentAction
 
                 a.request_consent(ConsentAction.REVEAL_IDENTITY, ["alpha"])
             elif event == "handoff":
                 a.handoff("https://example.org/human/v1")
             elif event == "close":
-                from cid.vocab import CloseReason
+                from gidp.vocab import CloseReason
 
                 a.session.close(CloseReason.COMPLETED)
         except ProtocolError:

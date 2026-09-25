@@ -1,8 +1,8 @@
 ---
-title: Conditional Interest Discovery — Why not use an existing mechanism?
+title: Graduated Interest Disclosure — Why not use an existing mechanism?
 version: 0.1
 date: 2026-09-23
-status: Non-normative companion to CID 0.1
+status: Non-normative companion to GIDP 0.1
 ---
 
 # Why not use an existing mechanism?
@@ -60,8 +60,8 @@ is permanent and its audience is unbounded.
 | Public listing | introduce | 1 | 6.62 b | 0 | **5.62 b** |
 | Ideal sealed comparison | introduce | 1 | 4.66 b | 0 | 0 |
 | Private set intersection | **cannot decide** | 1 | 2.00 b | 0 | 0 |
-| CID, honest counterparty | introduce | 6 | 4.30 b | 0 | 0 |
-| CID, probing counterparty | introduce | 17 | **9.94 b** | 0 | 0 |
+| GIDP, honest counterparty | introduce | 6 | 4.30 b | 0 | 0 |
+| GIDP, probing counterparty | introduce | 17 | **9.94 b** | 0 | 0 |
 
 Read the first three rows together. Against a counterparty that asks what it
 needs and stops, the three mechanisms that decide the case leak roughly the
@@ -94,7 +94,7 @@ decide the case: the binding conditions here are a threshold and a condition,
 not set membership. Leaking nothing about a question you cannot ask is not a
 privacy property.
 
-**CID** is the only one of the five that performs discovery, decides the case,
+**GIDP** is the only one of the five that performs discovery, decides the case,
 and leaves no third party holding both secrets. That is the whole of what it
 buys, and it is narrower than the specification's prose implied.
 
@@ -172,14 +172,14 @@ identity this design deliberately does not carry.
 Nothing in the object model, the state machine or the authority ladder. One
 thing in the text: the specification no longer describes coarsening as an
 inference-limiting measure, and Section 24.3 now says plainly that the only
-mechanism in CID 0.1 which bounds adaptive inference is a bound on the number
+mechanism in GIDP 0.1 which bounds adaptive inference is a bound on the number
 of claims, with its known weakness named.
 
 And one thing in the argument. The claim is no longer that existing mechanisms
-cannot do this. It is that each of them gives up exactly one thing CID keeps —
+cannot do this. It is that each of them gives up exactly one thing GIDP keeps —
 the intermediary gives up having no one to trust, the listing gives up privacy
 altogether, the sealed comparison and the set intersection give up discovery —
-and that CID keeps all of them only for as long as the counterparty's questions
+and that GIDP keeps all of them only for as long as the counterparty's questions
 are bounded. Whether that bound can be made principled rather than arbitrary is
 the open problem of `open-problems.md`, and this document is the first
 measurement of how much rests on it.
@@ -227,11 +227,11 @@ responder's failure is a function of the shape of its own secret. Section 14.2
 now requires `unknown`. Every hand-written test had passed, because an author
 writes the claims the protocol was designed for.
 
-None of the three changes what CID does. All three change what the
+None of the three changes what GIDP does. All three change what the
 specification may claim, and the first two narrow the claim in the same
 direction the table above does: this protocol's guarantees hold against a
 counterparty whose questions are bounded — and, since these measurements were
-taken, CID does contain a principled way to bound them. Budgeting *information*
+taken, GIDP does contain a principled way to bound them. Budgeting *information*
 rather than questions, with the refusal decided from what an observer already
 knows rather than from the value, holds a probing counterparty to under a bit
 of a five-bit threshold while serving most honest ones. It needs no identity

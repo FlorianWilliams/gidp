@@ -18,16 +18,16 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "examples"))
 
 import limits  # noqa: E402
 
-from cid.agent import Agent  # noqa: E402
-from cid.objects import (  # noqa: E402
+from gidp.agent import Agent  # noqa: E402
+from gidp.objects import (  # noqa: E402
     AuthoritySpec,
     ConditionalInterest,
     DisclosureClass,
     DisclosurePolicy,
     StandingInterest,
 )
-from cid.session import ProtocolError  # noqa: E402
-from cid.vocab import (  # noqa: E402
+from gidp.session import ProtocolError  # noqa: E402
+from gidp.vocab import (  # noqa: E402
     Authority,
     AuthorityValue,
     ConsentAction,

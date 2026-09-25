@@ -39,7 +39,7 @@ Permission permits an action, a Prohibition forbids one, and a **Duty**
 obligates one, with a Policy attaching obligations by reference. A deployment
 that must express "this MUST be published" already has a standard vocabulary
 for saying so, and the honest statement of L-1 is therefore not that the
-problem is unsolvable but that CID's Disclosure Policy is a permission
+problem is unsolvable but that GIDP's Disclosure Policy is a permission
 language and a duty language is a different object, which this protocol does
 not attempt and should compose with rather than absorb.
 
@@ -132,7 +132,7 @@ it, because profiles may not weaken the core semantics of Sections 10, 15.5,
 16 and 24.
 
 **Consequence.** Regulated markets requiring pre-engagement screening are out
-of scope for CID 0.1. Whether a future version should permit an identity-first
+of scope for GIDP 0.1. Whether a future version should permit an identity-first
 profile is a real question, and it is not a small one: it would invert the
 property the whole design exists to provide.
 
@@ -140,7 +140,7 @@ property the whole design exists to provide.
 
 ## What this adds up to
 
-CID is for markets where the conditions are multi-dimensional, the parties are
+GIDP is for markets where the conditions are multi-dimensional, the parties are
 comparably exposed, publication is a choice rather than an obligation, and
 identity can wait. Corporate transactions, executive appointments, commercial
 partnerships and private financings sit inside that description. Commodity

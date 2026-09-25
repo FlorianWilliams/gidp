@@ -27,8 +27,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from baselines.auditing import GRID, STEP, TOTAL_BITS, _answer_of  # noqa: E402
-from cid.objects import Claim  # noqa: E402
-from cid.vocab import ClaimOperator, ClaimResult  # noqa: E402
+from gidp.objects import Claim  # noqa: E402
+from gidp.vocab import ClaimOperator, ClaimResult  # noqa: E402
 
 FLOOR = 45_000_000
 HONEST = 40

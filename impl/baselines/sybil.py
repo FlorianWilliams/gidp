@@ -35,8 +35,8 @@ from baselines.scenario import (
     VALUATION_GRID,
     b_interest,
 )
-from cid.objects import Claim  # noqa: E402
-from cid.vocab import ClaimOperator, ClaimResult  # noqa: E402
+from gidp.objects import Claim  # noqa: E402
+from gidp.vocab import ClaimOperator, ClaimResult  # noqa: E402
 
 
 @dataclass
@@ -44,7 +44,7 @@ class Oracle:
     """A responder that meters answers, and the two ways it can meter them.
 
     ``per_counterparty`` is what Section 24.3 offers: each session, with each
-    counterparty, gets its own allowance. ``global_budget`` is not in CID 0.1
+    counterparty, gets its own allowance. ``global_budget`` is not in GIDP 0.1
     at all: a cap on what the responder will answer in total, to anyone, over
     the life of the Standing Interest.
     """
@@ -267,7 +267,7 @@ def main() -> None:
     print()
     print("Section 24.3 names query budgets as the mitigation against probing and")
     print("Section 24.4 names Sybil identities as the way around them. Read")
-    print("together they say that CID 0.1's only bounding lever is bypassed by a")
+    print("together they say that GIDP 0.1's only bounding lever is bypassed by a")
     print("threat the same document acknowledges. That is now measured rather")
     print("than implied, and it narrows the open problem usefully: a responder")
     print("policy that bounds adaptive leakage must either meter something other")

@@ -88,7 +88,7 @@ def main() -> None:
     def cp(outcome) -> float:
         return outcome.ledger.total(COUNTERPARTY)
 
-    print("Against a counterparty that asks what it needs and stops, CID gives up")
+    print("Against a counterparty that asks what it needs and stops, GIDP gives up")
     print(
         f"{cp(honest):.2f} bits where an ideal sealed comparison gives up {cp(sealed):.2f} and a"
     )
@@ -101,8 +101,8 @@ def main() -> None:
         f"The intermediary leaks {broker.ledger.total(OPERATOR):.2f} bits of a possible {TOTAL:.2f} to a third"
     )
     print("party — everything, exactly, permanently, and again for every pair it")
-    print("serves. That column is the one CID empties, and emptying it is the whole")
-    print("of what CID buys.")
+    print("serves. That column is the one GIDP empties, and emptying it is the whole")
+    print("of what GIDP buys.")
     print()
     print(
         f"The listing leaks {listing.ledger.total(PUBLIC):.2f} bits to an unbounded and permanent"
@@ -120,7 +120,7 @@ def main() -> None:
     print("the actual problem.")
     print()
     print(
-        f"Against a probing counterparty CID gives up {cp(probing):.2f} bits in "
+        f"Against a probing counterparty GIDP gives up {cp(probing):.2f} bits in "
         f"{probing.queries} queries,"
     )
     print(
@@ -131,7 +131,7 @@ def main() -> None:
     print("argument against deploying this protocol as it stands.")
     print()
     print("So the claim the specification makes in prose survives, but narrowly and")
-    print("not in the form it was written. CID is the only one of the five that")
+    print("not in the form it was written. GIDP is the only one of the five that")
     print("performs discovery, decides the case, and leaves no third party holding")
     print("both secrets. It is not the most private mechanism here. It is the only")
     print("one that is private *and* has no one to trust, and it holds that only")

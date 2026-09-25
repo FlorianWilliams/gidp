@@ -30,8 +30,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from cid.agent import Agent  # noqa: E402
-from cid.objects import (  # noqa: E402
+from gidp.agent import Agent  # noqa: E402
+from gidp.objects import (  # noqa: E402
     AuthoritySpec,
     Claim,
     ConditionalInterest,
@@ -40,8 +40,8 @@ from cid.objects import (  # noqa: E402
     StandingInterest,
     Validity,
 )
-from cid.transport import Wire  # noqa: E402
-from cid.vocab import (  # noqa: E402
+from gidp.transport import Wire  # noqa: E402
+from gidp.vocab import (  # noqa: E402
     Authority,
     AuthorityValue,
     ClaimOperator,
@@ -282,7 +282,7 @@ def main() -> None:
     print(LINE)
     print("Horizontality (Appendix F.2)")
     print(LINE)
-    say("", f"{len(wire.transcript)} objects, all from the CID 0.1 core set")
+    say("", f"{len(wire.transcript)} objects, all from the GIDP 0.1 core set")
     say("", "no new object, operator, disclosure class, authority level or state")
     say("", "compared with the cross-border transaction in cross_border.py")
     say("", "what changed: claim keys, values, and what each side keeps local")

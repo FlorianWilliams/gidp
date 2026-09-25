@@ -24,7 +24,7 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 
 from baselines.measure import Fact
-from cid.objects import (
+from gidp.objects import (
     AuthoritySpec,
     ConditionalInterest,
     DisclosureClass,
@@ -32,7 +32,7 @@ from cid.objects import (
     StandingInterest,
     Validity,
 )
-from cid.vocab import Authority, AuthorityValue, Gate, Surface
+from gidp.vocab import Authority, AuthorityValue, Gate, Surface
 
 # --------------------------------------------------------------------------
 # Priors

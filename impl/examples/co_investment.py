@@ -1,13 +1,13 @@
 """Appendix C.5: co-investment — an interdependent conditional interest.
 
-The fourth domain, and the one that presses on the boundary of CID 0.1.
+The fourth domain, and the one that presses on the boundary of GIDP 0.1.
 
 The interest here is class 4 (Section 8.4): *I will consider X if another
 party performs or commits to Y*. A family office will follow a round, but only
 if a credible lead commits first. That dependency is real, it is the whole
 substance of the interest, and the third party does not exist yet.
 
-CID 0.1 is bilateral. It can *record* the dependency and carry it forward
+GIDP 0.1 is bilateral. It can *record* the dependency and carry it forward
 honestly; it cannot discover the third party, which is what the experimental
 multi-party section is for. Running the case anyway is the point: it shows
 exactly where the bilateral core stops, and it found a gap in the
@@ -24,8 +24,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from cid.agent import Agent  # noqa: E402
-from cid.objects import (  # noqa: E402
+from gidp.agent import Agent  # noqa: E402
+from gidp.objects import (  # noqa: E402
     AuthoritySpec,
     Claim,
     ConditionalInterest,
@@ -34,8 +34,8 @@ from cid.objects import (  # noqa: E402
     StandingInterest,
     Validity,
 )
-from cid.transport import Wire  # noqa: E402
-from cid.vocab import (  # noqa: E402
+from gidp.transport import Wire  # noqa: E402
+from gidp.vocab import (  # noqa: E402
     Authority,
     AuthorityValue,
     ClaimOperator,
@@ -285,7 +285,7 @@ def main() -> None:
     say("", "the session qualified, and the Opportunity is *contingent*: the")
     say("", "dependency is recorded and carried forward, not resolved.")
     say("", "finding the lead is multi-party discovery (Section 19.2),")
-    say("", "which CID 0.1 marks experimental and this code does not implement.")
+    say("", "which GIDP 0.1 marks experimental and this code does not implement.")
     say("", "the honest output is a qualified but contingent Opportunity,")
     say("", "handed to a human rather than to a negotiation protocol.")
 

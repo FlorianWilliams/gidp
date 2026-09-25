@@ -382,8 +382,8 @@ def test_the_refusal_does_not_depend_on_the_value():
     """Simulatability, checked: the same claim sequence must be admitted or
     refused identically whatever the responder happens to hold."""
     from baselines.auditing import GRID, Auditor
-    from cid.objects import Claim
-    from cid.vocab import ClaimOperator
+    from gidp.objects import Claim
+    from gidp.vocab import ClaimOperator
 
     claim = Claim(
         key="valuation_floor",

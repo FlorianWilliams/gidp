@@ -26,10 +26,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "examples"))
 
 from cross_border import _in, a_interest, b_interest  # noqa: E402
 
-from cid.agent import Agent  # noqa: E402
-from cid.objects import Claim  # noqa: E402
-from cid.transport import Wire  # noqa: E402
-from cid.vocab import (  # noqa: E402
+from gidp.agent import Agent  # noqa: E402
+from gidp.objects import Claim  # noqa: E402
+from gidp.transport import Wire  # noqa: E402
+from gidp.vocab import (  # noqa: E402
     ClaimOperator,
     CloseReason,
     ConsentAction,

@@ -1,12 +1,12 @@
 ---
-title: Conditional Interest Discovery (CID) Protocol
+title: Graduated Interest Disclosure Protocol (GIDP)
 version: 0.1
 date: 2026-09-23
 status: Experimental — Early Draft / Request for Comments
 category: Experimental
 ---
 
-# Conditional Interest Discovery (CID) Protocol — Draft 0.1
+# Graduated Interest Disclosure Protocol (GIDP) — Draft 0.1
 
 **Status of this document:** experimental, early draft, request for comments. This document is not an Internet-Draft, has not been submitted to any standards body, and claims no endorsement. It follows the structure and editorial conventions of IETF Internet-Drafts ([RFC7322] style; BCP 14 requirement language; separate Security, Privacy and IANA Considerations; normative and informative references) so that it can be converted into one if the work warrants it.
 **Category:** Experimental.
@@ -25,9 +25,9 @@ AI agents can increasingly access tools, communicate with other agents, advertis
 
 A principal may not be actively seeking an outcome, yet may be willing to consider it under specific conditions. An organisation may seek an acquisition, partner, supplier, investor, employee or asset without wishing to reveal the search, its constraints, its identity or its reservation values. A principal may be willing to provide something without publicly offering it. In all these cases, publishing enough information to be found may reveal the very fact the principal wants to keep private.
 
-Conditional Interest Discovery (CID) defines a common model for representing such **Conditional Interests** inside a **Standing Interest**, deriving privacy-preserving **Discovery Projections**, retrieving candidate counterparties, evaluating compatibility progressively inside bounded **Compatibility Sessions**, controlling disclosure through explicit **Disclosure Policies**, obtaining **Consent**, and handing qualified **Opportunities** to humans or downstream negotiation systems.
+The Graduated Interest Disclosure Protocol (GIDP) defines a common model for representing such **Conditional Interests** inside a **Standing Interest**, deriving privacy-preserving **Discovery Projections**, retrieving candidate counterparties, evaluating compatibility progressively inside bounded **Compatibility Sessions**, controlling disclosure through explicit **Disclosure Policies**, obtaining **Consent**, and handing qualified **Opportunities** to humans or downstream negotiation systems.
 
-CID is a discovery and compatibility layer. It is intended to operate above agent-to-agent communication protocols and alongside identity, authority, payment and negotiation protocols, not to replace them. CID 0.1 describes a bilateral core — objects, message semantics, disclosure classes, authority levels and state machines — without yet fixing a normative wire schema, and reserves data-model primitives for multi-party discovery, which remains experimental and non-normative in this version.
+GIDP is a discovery and compatibility layer. It is intended to operate above agent-to-agent communication protocols and alongside identity, authority, payment and negotiation protocols, not to replace them. GIDP 0.1 describes a bilateral core — objects, message semantics, disclosure classes, authority levels and state machines — without yet fixing a normative wire schema, and reserves data-model primitives for multi-party discovery, which remains experimental and non-normative in this version.
 
 ---
 
@@ -63,7 +63,7 @@ CID is a discovery and compatibility layer. It is intended to operate above agen
 Appendix A — Minimal Conceptual Schema (non-normative)
 Appendix B — Logical Interfaces (non-normative)
 Appendix C — Worked Examples (non-normative)
-Appendix D — Why CID Is Not Capability Discovery (non-normative)
+Appendix D — Why GIDP Is Not Capability Discovery (non-normative)
 Appendix E — Open Questions and Request for Comments
 Appendix F — Standardisation Strategy and Evaluation Criteria
 Appendix G — Acknowledgements
@@ -80,25 +80,25 @@ These cases share one structure:
 
 > A principal has a state transition it may be willing to consider, subject to conditions, and does not wish to publish all or part of that willingness.
 
-The discovery problem is circular. A counterparty cannot find such an interest without information about it, and publishing enough information to make it findable may reveal exactly what the principal wants to keep private. CID exists to manage this tension.
+The discovery problem is circular. A counterparty cannot find such an interest without information about it, and publishing enough information to make it findable may reveal exactly what the principal wants to keep private. GIDP exists to manage this tension.
 
-CID separates four concepts that are often conflated: a **Principal** whose interests are represented; an **Agent** acting under delegated authority; a **Standing Interest** containing conditional interests, constraints, disclosure rules and authority; and a **Discovery Projection**, a deliberately reduced representation that makes a Standing Interest discoverable without publishing it.
+GIDP separates four concepts that are often conflated: a **Principal** whose interests are represented; an **Agent** acting under delegated authority; a **Standing Interest** containing conditional interests, constraints, disclosure rules and authority; and a **Discovery Projection**, a deliberately reduced representation that makes a Standing Interest discoverable without publishing it.
 
 The key design question of this draft is not whether private matching can be built inside one application; it can. It is whether the same small set of primitives can support private conditional discovery across materially different domains and independently operated agents. Draft 0.1 is written to make that question testable (Appendix F).
 
 ### 1.1 Relationship to prior work (informative)
 
-CID is not the first attempt to let two parties find each other without either revealing what it wants. What follows sets out the systems it descends from, so that a reader can judge what, if anything, is left unsolved. Whether the remaining gap warrants a protocol is stated as a hypothesis to be falsified, not as a claim, in Appendix F.
+GIDP is not the first attempt to let two parties find each other without either revealing what it wants. What follows sets out the systems it descends from, so that a reader can judge what, if anything, is left unsolved. Whether the remaining gap warrants a protocol is stated as a hypothesis to be falsified, not as a claim, in Appendix F.
 
-**Double-blind matching.** The core idea is four decades old, and part of it has a cryptographic treatment: a *secret handshake* [SECRET-HANDSHAKE] lets two members of the same group authenticate to each other while a non-member learns nothing — not even that a group was in question. That is the mutual-revelation property of this document, obtained exactly, and it is worth being precise about what it does not cover: the predicate is membership, binary and agreed in advance, whereas the predicate here is a conjunction of conditions neither party has stated and which the session discovers. The cryptography settles the easy half. Baldwin and Gramlich described a cryptographic matchmaking protocol in 1985, in which a mutual interest is revealed only when it is mutual, in both trusted-server and untrusted-server variants [MATCH1985]; the pattern was patented for social matching at the end of the 1990s and has since appeared in consumer matching services [ANON-MATCH]. Its limit is structural: both sides must independently name *the same counterparty or the same item*. CID generalises the primitive from "do we both name each other?" to "does my set of conditions admit anything in your set of conditions?", which is what makes it applicable where the counterparty is not known in advance.
+**Double-blind matching.** The core idea is four decades old, and part of it has a cryptographic treatment: a *secret handshake* [SECRET-HANDSHAKE] lets two members of the same group authenticate to each other while a non-member learns nothing — not even that a group was in question. That is the mutual-revelation property of this document, obtained exactly, and it is worth being precise about what it does not cover: the predicate is membership, binary and agreed in advance, whereas the predicate here is a conjunction of conditions neither party has stated and which the session discovers. The cryptography settles the easy half. Baldwin and Gramlich described a cryptographic matchmaking protocol in 1985, in which a mutual interest is revealed only when it is mutual, in both trusted-server and untrusted-server variants [MATCH1985]; the pattern was patented for social matching at the end of the 1990s and has since appeared in consumer matching services [ANON-MATCH]. Its limit is structural: both sides must independently name *the same counterparty or the same item*. GIDP generalises the primitive from "do we both name each other?" to "does my set of conditions admit anything in your set of conditions?", which is what makes it applicable where the counterparty is not known in advance.
 
-**Confidential matching in finance.** A narrow version of this problem has been solved in production for decades, within a single regulated venue. An indication of interest is a non-binding communication of trading interest, used to look for a counterparty without displaying an order; market practice allows fields to be omitted, and the display of such communications is subject to rule [FINRA5210]. That rule exists because the experiment went wrong first: broadcast indications were found to leak the very intentions they were meant to conceal, regulators examined the practice across venues [IOSCO-DARK], and the industry had to publish a taxonomy classifying indications by how much they actually reveal [AFME-IOI]. This is the closest thing to a controlled trial of the idea behind this document, it was run at scale by sophisticated participants, and its failure mode was inference from the signals rather than disclosure of the values — which is the failure mode of Section 24.3. Conditional orders let a large order rest unpublished in a non-displayed venue and "firm up" only when a contra-side match appears [COND-ORDERS] — the human-market precedent for the transition from probing to a qualified Opportunity (Section 17.2). A 1999 patent family describes anonymous, confidential matching of indications followed by human negotiation of final terms [WO0070518]. Three properties distinguish CID from these systems: the venue is not trusted with the private values, the matched object is a set of heterogeneous conditions rather than a price and a quantity, and no central operator is required.
+**Confidential matching in finance.** A narrow version of this problem has been solved in production for decades, within a single regulated venue. An indication of interest is a non-binding communication of trading interest, used to look for a counterparty without displaying an order; market practice allows fields to be omitted, and the display of such communications is subject to rule [FINRA5210]. That rule exists because the experiment went wrong first: broadcast indications were found to leak the very intentions they were meant to conceal, regulators examined the practice across venues [IOSCO-DARK], and the industry had to publish a taxonomy classifying indications by how much they actually reveal [AFME-IOI]. This is the closest thing to a controlled trial of the idea behind this document, it was run at scale by sophisticated participants, and its failure mode was inference from the signals rather than disclosure of the values — which is the failure mode of Section 24.3. Conditional orders let a large order rest unpublished in a non-displayed venue and "firm up" only when a contra-side match appears [COND-ORDERS] — the human-market precedent for the transition from probing to a qualified Opportunity (Section 17.2). A 1999 patent family describes anonymous, confidential matching of indications followed by human negotiation of final terms [WO0070518]. Three properties distinguish GIDP from these systems: the venue is not trusted with the private values, the matched object is a set of heterogeneous conditions rather than a price and a quantity, and no central operator is required.
 
 **The human staged-disclosure protocol.** Sell-side mergers and acquisitions run a disclosure ladder by hand: an anonymised one-page teaser on a "no-names basis" [TEASER], then a non-disclosure agreement, then a confidential memorandum, then a non-binding indication, then a binding letter of intent. The Discovery Projection (Section 11) is a machine-readable teaser, and the Disclosure Policy (Section 10) is that ladder made explicit and enforceable.
 
-**Cryptographic matching.** Private set intersection [PSI-SLR], private retrieval [PIR-SURVEY] and secure stable matching at scale [SSM-CCS16] provide mechanisms for computing on private inputs, and have been demonstrated on problems of national-registry size. CID does not compete with them; it defines the information-flow properties (Sections 10, 15, 25) that such a mechanism would have to satisfy, and leaves the choice of mechanism to the deployment (Section 24.12).
+**Cryptographic matching.** Private set intersection [PSI-SLR], private retrieval [PIR-SURVEY] and secure stable matching at scale [SSM-CCS16] provide mechanisms for computing on private inputs, and have been demonstrated on problems of national-registry size. GIDP does not compete with them; it defines the information-flow properties (Sections 10, 15, 25) that such a mechanism would have to satisfy, and leaves the choice of mechanism to the deployment (Section 24.12).
 
-**Agent protocols.** Agent-to-agent communication [A2A], tool and context access [MCP], capability discovery and intent-based agent selection [AIDIP], delegation and mandate protocols [PAP] [AP2], and negotiation protocols [A2CN] [CONCORDIA] all assume that the thing being discovered is a *capability* or that the thing being authorised is a *transaction*. The nearest protocol-level neighbour is Concordia's want registry, in which agents publish what they seek [CONCORDIA]; CID differs in that nothing is published. Progressive disclosure of *trust artifacts* between agents has been proposed in [ATN]; CID applies the same gate idea to the substance of a principal's interest rather than to credentials.
+**Agent protocols.** Agent-to-agent communication [A2A], tool and context access [MCP], capability discovery and intent-based agent selection [AIDIP], delegation and mandate protocols [PAP] [AP2], and negotiation protocols [A2CN] [CONCORDIA] all assume that the thing being discovered is a *capability* or that the thing being authorised is a *transaction*. The nearest protocol-level neighbour is Concordia's want registry, in which agents publish what they seek [CONCORDIA]; GIDP differs in that nothing is published. Progressive disclosure of *trust artifacts* between agents has been proposed in [ATN]; GIDP applies the same gate idea to the substance of a principal's interest rather than to credentials.
 
 **What this document adds.** No single mechanism above is new here. What this document proposes is their composition: a conditional interest held privately by an agent and never transmitted; a per-attribute disclosure policy with a class that is usable for local evaluation and never transmissible; a projection designed for retrieval without inversion; a reciprocal, bounded compatibility session with a truthful coarsening rule; and an authority ladder that stops before commitment.
 
@@ -106,7 +106,7 @@ CID is not the first attempt to let two parties find each other without either r
 
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in BCP 14 [RFC2119] [RFC8174] when, and only when, they appear in all capitals, as shown here.
 
-Because CID 0.1 is experimental, normative language indicates the intended behaviour of a conforming CID 0.1 implementation rather than an established standard.
+Because GIDP 0.1 is experimental, normative language indicates the intended behaviour of a conforming GIDP 0.1 implementation rather than an established standard.
 
 Sections 3 (Terminology) and 7 (Conceptual Model) are definitional. Requirements are stated in Sections 8 through 26. YAML and JSON fragments, worked examples and **all appendices** are non-normative; Appendices A and B illustrate a possible data model and interface shape and create no requirements, and Appendices E to H are editorial; where a section contains both a normative field list and an example, only the field list is normative. Timestamps in examples use the [RFC3339] format. Identifiers in message fields use `lower_snake_case`; authority levels use `UPPER_SNAKE_CASE`.
 
@@ -152,7 +152,7 @@ This section defines terms. It imposes no requirements; requirements on these ob
 
 Existing agent discovery commonly begins with a capability or a task: *find an agent that can translate this document; find an agent that can book a flight.* The relevant capability can generally be advertised.
 
-CID addresses a different class of problem:
+GIDP addresses a different class of problem:
 
 > Find another Principal whose private conditions may be compatible with mine, even though neither side wants to publish the information required to establish that compatibility.
 
@@ -160,7 +160,7 @@ Capability is not willingness. A registry can answer "which agent can perform X"
 
 ### 4.2 Scope
 
-CID addresses the discovery phase that occurs **before** conventional negotiation. It covers:
+GIDP addresses the discovery phase that occurs **before** conventional negotiation. It covers:
 
 1. representation of a Conditional Interest inside a Standing Interest;
 2. Disclosure Policies attached to that Standing Interest;
@@ -172,11 +172,11 @@ CID addresses the discovery phase that occurs **before** conventional negotiatio
 8. Handoff to a human or a downstream protocol;
 9. the authority boundaries that apply throughout.
 
-CID does not require that any central service possess the complete private state of participating Principals.
+GIDP does not require that any central service possess the complete private state of participating Principals.
 
 ## 5. Non-Goals
 
-CID 0.1 does **not** attempt to define:
+GIDP 0.1 does **not** attempt to define:
 
 - a general agent-to-agent transport protocol;
 - a tool, data or context access protocol;
@@ -192,7 +192,7 @@ CID 0.1 does **not** attempt to define:
 - whether a proposed Opportunity is economically or ethically desirable;
 - autonomous binding commitment by Agents.
 
-CID may integrate with systems that provide these functions (Sections 20–22).
+GIDP may integrate with systems that provide these functions (Sections 20–22).
 
 
 **Market structures this protocol does not serve.** Four were tested against
@@ -232,22 +232,22 @@ Information is not disclosed merely because it is useful for matching. Informati
 Information is revealed progressively as confidence, authorisation and mutual interest increase. Discovery, compatibility, identity disclosure, negotiation and commitment are separate stages.
 
 ### 6.4 Reciprocal discovery
-CID is not limited to request-to-provider search. Both sides may hold private constraints, and compatibility may depend on the intersection of both.
+GIDP is not limited to request-to-provider search. Both sides may hold private constraints, and compatibility may depend on the intersection of both.
 
 ### 6.5 Principal-centric, explicit authority
 Permission to discover is never permission to disclose identity, negotiate binding terms or commit. Authority is explicit and per-Standing Interest (Section 16).
 
 ### 6.6 Transport independence
-CID is implementable over existing agent communication mechanisms and defines no new transport (Section 22).
+GIDP is implementable over existing agent communication mechanisms and defines no new transport (Section 22).
 
 ### 6.7 Market-structure neutrality
-CID does not require a single centralised exchange; centralised, federated, peer-to-peer and enterprise-private discovery architectures are all admissible (Section 12.3).
+GIDP does not require a single centralised exchange; centralised, federated, peer-to-peer and enterprise-private discovery architectures are all admissible (Section 12.3).
 
 ### 6.8 Cross-market primitives
 The core describes Conditional Interests generically; vertical vocabularies are extensions (Section 21).
 
 ### 6.9 Multi-party compatibility by design
-The data model does not make bilateral matching the only representable structure. CID 0.1 implements bilateral compatibility as the minimum interoperable core while keeping dependency primitives available for multi-party Opportunities (Section 19).
+The data model does not make bilateral matching the only representable structure. GIDP 0.1 implements bilateral compatibility as the minimum interoperable core while keeping dependency primitives available for multi-party Opportunities (Section 19).
 
 ### 6.10 Policy enforcement outside the model
 Where an Agent is driven by a language model, disclosure and authority enforcement are implemented by a deterministic policy layer outside unconstrained model behaviour. The model may reason about a request; the policy layer decides whether protected information may leave the Agent (Section 24.10).
@@ -281,7 +281,7 @@ A Principal may hold multiple Standing Interests and use multiple Agents:
 
 An Agent may represent multiple Standing Interests. An intermediary Agent may represent Standing Interests from multiple Principals, provided each Standing Interest retains its own authority and disclosure boundaries. Principals may be persons, organisations, business functions, institutions or software; personal Principals are first-class, and the same session may connect person ↔ person, person ↔ organisation or organisation ↔ organisation.
 
-The object of CID discovery is therefore not an Agent. It is a **potentially compatible Standing Interest represented by an Agent**.
+The object of GIDP discovery is therefore not an Agent. It is a **potentially compatible Standing Interest represented by an Agent**.
 
 ### 7.1 Conceptual dimensions of a Conditional Interest
 
@@ -301,7 +301,7 @@ These dimensions are conceptual. In the Standing Interest representation of Sect
 
 ## 8. Conditional Interest Model
 
-CID 0.1 recognises four classes of Conditional Interest. They differ in what is hidden, not in protocol mechanics; a conforming implementation MUST be able to represent all four with the same objects.
+GIDP 0.1 recognises four classes of Conditional Interest. They differ in what is hidden, not in protocol mechanics; a conforming implementation MUST be able to represent all four with the same objects.
 
 ### 8.1 Passive conditional demand
 *I am not seeking X, but I would consider X if conditions C hold.* Example: an executive who would consider a CEO role in B2B software above a private scale threshold. Established analogue: the "passive candidate" in executive search, and the owner of an unlisted asset holding an implicit option.
@@ -315,14 +315,14 @@ CID 0.1 recognises four classes of Conditional Interest. They differ in what is 
 ### 8.4 Interdependent conditional interest
 *I will consider X if another party performs or commits to Y.* Example: an investor who participates only if a qualified lead commits; a buyer who acquires a building only if an anchor tenant signs. Established analogue: conditional co-investment subject to a lead investor, and contingent real-estate transactions. This class uses the dependency primitives of Section 19 and is the entry point to multi-party discovery.
 
-> *There is no field for this.* CID defines no attribute carrying the classification, and a conforming implementation is not asked to record one. The four classes are a way of thinking about what is being expressed, and they are expressed entirely through the Disclosure Policy: which attributes are `local`, which reach a `discovery` surface, which need a gate. An Agent's behaviour cannot depend on the class because nothing in the protocol states it, and that is deliberate — a required field that no behaviour reads is a tax on every implementer for the author's convenience, and two implementations given one would eventually disagree about what it means.
+> *There is no field for this.* GIDP defines no attribute carrying the classification, and a conforming implementation is not asked to record one. The four classes are a way of thinking about what is being expressed, and they are expressed entirely through the Disclosure Policy: which attributes are `local`, which reach a `discovery` surface, which need a gate. An Agent's behaviour cannot depend on the class because nothing in the protocol states it, and that is deliberate — a required field that no behaviour reads is a tax on every implementer for the author's convenience, and two implementations given one would eventually disagree about what it means.
 
 ## 9. Standing Interest
 
 A Standing Interest SHOULD contain sufficient information for an Agent to determine whether an Opportunity is worth exploring without the complete Standing Interest ever leaving the Agent's trust boundary.
 
 ### 9.1 Private by default
-A Standing Interest MUST NOT be transmitted through CID. Attributes without an explicit Disclosure Policy entry MUST be treated as `evaluation_only` (Section 10).
+A Standing Interest MUST NOT be transmitted through GIDP. Attributes without an explicit Disclosure Policy entry MUST be treated as `evaluation_only` (Section 10).
 
 The requirement binds the holder: an Agent MUST NOT transmit an attribute classified `local` *of the Standing Interest it holds*. It does not and cannot mean that such a value never appears in a session, because a claim carries a candidate value chosen by the querent (Section 14.2); where that guess coincides with the responder's private value, the value is on the wire, put there by the party that does not hold it. What the responder never does is confirm it.
 
@@ -405,7 +405,7 @@ A surface is the most exposed place an attribute (or a coarsened derivative of i
 | `discovery` | May appear in a Discovery Projection submitted to any Discovery Provider. |
 | `network` | May appear in a Discovery Projection submitted to, or be disclosed within, an authorised trust domain (e.g. a private registry or verified community). |
 | `session` | May be disclosed to an authenticated peer inside a Compatibility Session. |
-| `local` | MUST NOT be transmitted through CID. |
+| `local` | MUST NOT be transmitted through GIDP. |
 
 ### 10.2 Gates
 A gate is a condition that must hold before an attribute is disclosed on its surface:
@@ -451,7 +451,7 @@ Principal identity MUST have its own policy entry (`principal_identity`). Its su
 ### 10.7 Purpose and retention
 Every disclosure request MUST state its purpose and SHOULD state retention expectations (Section 14.4). Purpose *restrictions* enforced by the recipient are future work.
 
-Retention, however, is not advice. A requester MUST NOT state a retention it is not able to discharge, and an implementation that cannot discharge any retention mode MUST omit the field rather than state one it will ignore — leaving the responder to decline, which is the safe outcome. The distinction is borrowed rather than invented: XACML separates an *obligation*, which an enforcement point must carry out, from *advice*, which it may ignore, and requires a conforming enforcement point to deny access outright when it cannot discharge an obligation attached to a permit [XACML]. A field that a recipient may state and then disregard is advice whatever the specification calls it, and the only lever a protocol has is to make disregarding it non-conformant. CID cannot verify discharge and does not pretend to; it can refuse to call something a limit when nothing turns on it.
+Retention, however, is not advice. A requester MUST NOT state a retention it is not able to discharge, and an implementation that cannot discharge any retention mode MUST omit the field rather than state one it will ignore — leaving the responder to decline, which is the safe outcome. The distinction is borrowed rather than invented: XACML separates an *obligation*, which an enforcement point must carry out, from *advice*, which it may ignore, and requires a conforming enforcement point to deny access outright when it cannot discharge an obligation attached to a permit [XACML]. A field that a recipient may state and then disregard is advice whatever the specification calls it, and the only lever a protocol has is to make disregarding it non-conformant. GIDP cannot verify discharge and does not pretend to; it can refuse to call something a limit when nothing turns on it.
 
 ### 10.8 Irreversibility
 Previously disclosed information cannot be recalled from a counterparty. Revocation (Section 17) affects future behaviour, not past disclosures; implementations SHOULD make this visible to Principals when they approve disclosures.
@@ -461,7 +461,7 @@ Authority (Section 16) states whether the Agent may perform a *category* of acti
 
 ## 11. Discovery Projection
 
-Publishing a complete Standing Interest would defeat the purpose of CID. An Agent with `PUBLISH_PROJECTION` authority derives one or more Discovery Projections.
+Publishing a complete Standing Interest would defeat the purpose of GIDP. An Agent with `PUBLISH_PROJECTION` authority derives one or more Discovery Projections.
 
 ### 11.1 Required fields
 A `DiscoveryProjection` MUST carry `type`, `version` and `expires_at` (Section 14), `projection_id` (opaque, unique to the publishing Agent), and `endpoint` (the reference by which a candidate's Agent can open a Compatibility Session with the publishing Agent, expressed in binding-specific terms). `type`, `version`, `expires_at`, `projection_id` and `endpoint` are protocol metadata: they are not derived from the Standing Interest and are not subject to the content rule of Section 11.2. `endpoint` and `projection_id` SHOULD nevertheless be unlinkable across providers — a distinct value per projection — because a value that is stable across providers is precisely the correlating identifier Section 24.2 warns about, and deriving distinct projections per provider (Section 11.5) achieves nothing if all of them carry the same endpoint. A projection MUST NOT carry `session_id`, a Principal identifier, or a resolvable reference to the Standing Interest it derives from; `interest_ref`, where present, MUST be opaque and resolvable only by the publishing Agent.
@@ -477,7 +477,7 @@ From the Standing Interest in Section 9.5:
 ```yaml
 discovery_projection:
   type: DiscoveryProjection
-  version: "cidisc/0.1"
+  version: "gidp/0.1"
   projection_id: "opaque-projection-id"
   interest_ref: opaque                  # resolvable only by the publishing Agent
   categories: [strategic_transaction]
@@ -491,18 +491,18 @@ discovery_projection:
 The projection omits Principal identity, transaction direction (buy vs sell), valuation limits, ARR range, rationale and exclusions.
 
 ### 11.4 Minimisation
-Agents SHOULD minimise projections while preserving sufficient retrieval quality. This is a fundamental trade-off: more specific projections improve retrieval and increase inference risk; less specific projections do the reverse. CID 0.1 does not prescribe an optimum, and the shape of the curve is worth stating even though the optimum is not, because minimisation past a point reverses. Two effects, both measured on a synthetic index in the reference implementation. An over-precise projection is retrieved *less*, not more: it answers only querents who described the target in the same terms, so a publisher that named a city is never found by a querent that named the country — though that second effect is a property of the provider rather than of the projection, and a provider that resolves one hierarchy removes it entirely (Section 12.4). And a projection coarse enough to be retrieved by everyone is retrieved by everyone — each retrieval being a Compatibility Session with a counterparty that had no business finding this Principal, and each session an opportunity to probe under Section 24.3. Past a certain coarseness the sessions cost a publisher more than the projection saved it. The quantity that decides where that point falls is how many other publishers a given projection will be confused with, which the publishing Agent cannot observe and the Discovery Provider can; Section 12 gives a provider no way to say so, and a provider that reported the size of a matching set would also be helping an adversary calibrate. Coarsening techniques include generalising geography (city → region), bucketing economic ranges, and replacing direction-revealing attributes with symmetric ones (`strategic_transaction` rather than `acquire`). The last has an established precedent: in the equivalent human market, an indication of interest may omit side and price and still attract a counterparty [COND-ORDERS].
+Agents SHOULD minimise projections while preserving sufficient retrieval quality. This is a fundamental trade-off: more specific projections improve retrieval and increase inference risk; less specific projections do the reverse. GIDP 0.1 does not prescribe an optimum, and the shape of the curve is worth stating even though the optimum is not, because minimisation past a point reverses. Two effects, both measured on a synthetic index in the reference implementation. An over-precise projection is retrieved *less*, not more: it answers only querents who described the target in the same terms, so a publisher that named a city is never found by a querent that named the country — though that second effect is a property of the provider rather than of the projection, and a provider that resolves one hierarchy removes it entirely (Section 12.4). And a projection coarse enough to be retrieved by everyone is retrieved by everyone — each retrieval being a Compatibility Session with a counterparty that had no business finding this Principal, and each session an opportunity to probe under Section 24.3. Past a certain coarseness the sessions cost a publisher more than the projection saved it. The quantity that decides where that point falls is how many other publishers a given projection will be confused with, which the publishing Agent cannot observe and the Discovery Provider can; Section 12 gives a provider no way to say so, and a provider that reported the size of a matching set would also be helping an adversary calibrate. Coarsening techniques include generalising geography (city → region), bucketing economic ranges, and replacing direction-revealing attributes with symmetric ones (`strategic_transaction` rather than `acquire`). The last has an established precedent: in the equivalent human market, an indication of interest may omit side and price and still attract a counterparty [COND-ORDERS].
 
 ### 11.5 Multiple projections
 An Agent MAY derive different projections from one Standing Interest for different Discovery Providers or trust contexts.
 
 ### 11.6 Non-invertibility and non-faithfulness
-Implementations SHOULD design projections so that observing a projection, alone or combined with other projections and external data, does not trivially reconstruct the Standing Interest or identify the Principal; this is a design objective, not a cryptographic guarantee, in CID 0.1. A projection is not a complete statement of the Principal's preferences. An Agent MUST NOT emit an `Opportunity` for a candidate before a `CompatibilityResponse` has been received in a session with that candidate, and MUST NOT disclose any attribute to a candidate on the basis of retrieval alone: every disclosure requires the gates of Section 10.2 to be satisfied within a session.
+Implementations SHOULD design projections so that observing a projection, alone or combined with other projections and external data, does not trivially reconstruct the Standing Interest or identify the Principal; this is a design objective, not a cryptographic guarantee, in GIDP 0.1. A projection is not a complete statement of the Principal's preferences. An Agent MUST NOT emit an `Opportunity` for a candidate before a `CompatibilityResponse` has been received in a session with that candidate, and MUST NOT disclose any attribute to a candidate on the basis of retrieval alone: every disclosure requires the gates of Section 10.2 to be satisfied within a session.
 
 ## 12. Discovery Providers and Candidate Retrieval
 
 ### 12.1 Agent discovery versus interest discovery
-CID distinguishes *agent discovery* ("which endpoints support CID?") from *Standing Interest discovery* ("which of those endpoints may represent a Standing Interest relevant to this Conditional Interest?"). CID SHOULD reuse existing mechanisms for endpoint discovery (Section 22) and defines only the logical Discovery Provider interface for Standing Interest discovery.
+GIDP distinguishes *agent discovery* ("which endpoints support GIDP?") from *Standing Interest discovery* ("which of those endpoints may represent a Standing Interest relevant to this Conditional Interest?"). GIDP SHOULD reuse existing mechanisms for endpoint discovery (Section 22) and defines only the logical Discovery Provider interface for Standing Interest discovery.
 
 ### 12.2 Logical operations
 A Discovery Provider SHOULD offer operations equivalent to:
@@ -518,10 +518,10 @@ resolveCandidate(candidate_ref)               -> agent_endpoint
 Exact APIs are not specified in 0.1. `projection_ref` is assigned by the provider and need not equal the `projection_id` the Agent minted (Section 11.1); an Agent MUST be able to withdraw using the `projection_ref` the provider returned. A provider MUST NOT return a projection after accepting its `withdrawProjection`, or after its `expires_at`, and MUST publish a withdrawal latency and MUST stop returning a withdrawn projection within it (Section 25.5); an Agent MUST treat that published latency as the time for which its projection remains retrievable after withdrawal.
 
 ### 12.3 Architectures
-A provider MAY be: *centralised* (a single index receiving projections and returning candidate references — the simplest architecture for a reference implementation); *federated* (multiple providers — industry registries, professional communities, banks, CRM ecosystems, recruiting or investment networks, regional networks — exchanging or routing projections); *peer-to-peer* (Agents exchanging projections without a central provider; routing is not defined in 0.1); or *privacy-preserving* (private set intersection [PSI-SLR], private information retrieval [PIR-SURVEY], secure multi-party computation, trusted execution environments, encrypted or oblivious indexes, local embeddings with privacy controls). CID 0.1 does not prescribe a cryptographic architecture, and does not require that a deployment use a single central provider.
+A provider MAY be: *centralised* (a single index receiving projections and returning candidate references — the simplest architecture for a reference implementation); *federated* (multiple providers — industry registries, professional communities, banks, CRM ecosystems, recruiting or investment networks, regional networks — exchanging or routing projections); *peer-to-peer* (Agents exchanging projections without a central provider; routing is not defined in 0.1); or *privacy-preserving* (private set intersection [PSI-SLR], private information retrieval [PIR-SURVEY], secure multi-party computation, trusted execution environments, encrypted or oblivious indexes, local embeddings with privacy controls). GIDP 0.1 does not prescribe a cryptographic architecture, and does not require that a deployment use a single central provider.
 
 ### 12.4 Staged retrieval
-CID is not intended to perform exhaustive pairwise comparison across all participating Agents. Implementations SHOULD use a staged architecture in which cheap, coarse retrieval narrows the candidate set before any Compatibility Session is opened:
+GIDP is not intended to perform exhaustive pairwise comparison across all participating Agents. Implementations SHOULD use a staged architecture in which cheap, coarse retrieval narrows the candidate set before any Compatibility Session is opened:
 
 ```text
 all published projections
@@ -542,7 +542,7 @@ Each stage is expected to reduce the set by orders of magnitude, so that the num
 
 Retrieval signals may include interest category, coarse geography, industry, capability class, time horizon, non-sensitive economic buckets, verified attributes and domain-specific projection fields.
 
-A provider SHOULD resolve hierarchical retrieval attributes — a city against its country, a sub-industry against its industry — rather than comparing tokens for equality, and SHOULD publish which hierarchies it resolves so that an Agent knows what its projection will be matched against. This is a recommendation about provider quality, not about the protocol, and it is here because the cost of omitting it falls somewhere unexpected. A provider that compares tokens never returns a publisher who named a city to a querent who named the country, so a publisher that wants to be found compensates by publishing the country instead — coarsening its projection, and conceding a *less precise* attribute to the index, in order to repair a defect in the index. Measured on a synthetic population, resolving one hierarchy raised the recall of a precise projection from 26 % to 100 % with the publisher changing nothing it published. Where a provider resolves, retrieval quality stops arguing for coarsening altogether, and the minimisation advice of Section 11.4 is left with the single consideration it should have had: exposure. CID 0.1 defines no vocabulary and no hierarchy (Section 5), and does not need to; it is enough that a provider says what it resolves.
+A provider SHOULD resolve hierarchical retrieval attributes — a city against its country, a sub-industry against its industry — rather than comparing tokens for equality, and SHOULD publish which hierarchies it resolves so that an Agent knows what its projection will be matched against. This is a recommendation about provider quality, not about the protocol, and it is here because the cost of omitting it falls somewhere unexpected. A provider that compares tokens never returns a publisher who named a city to a querent who named the country, so a publisher that wants to be found compensates by publishing the country instead — coarsening its projection, and conceding a *less precise* attribute to the index, in order to repair a defect in the index. Measured on a synthetic population, resolving one hierarchy raised the recall of a precise projection from 26 % to 100 % with the publisher changing nothing it published. Where a provider resolves, retrieval quality stops arguing for coarsening altogether, and the minimisation advice of Section 11.4 is left with the single consideration it should have had: exposure. GIDP 0.1 defines no vocabulary and no hierarchy (Section 5), and does not need to; it is enough that a provider says what it resolves.
 
 A compatibility result is produced only by a `CompatibilityResponse` within a session; an Agent MUST NOT record or report a compatibility result for a candidate with which no session has been opened.
 
@@ -551,7 +551,7 @@ Discovery infrastructure is a high-value target for spam and intelligence gather
 
 ## 13. Protocol Flow
 
-The CID 0.1 bilateral core has eight conceptual stages. Stages 0–2 precede the existence of a session; from Stage 3 onward either Agent MAY close the session at any time without giving a reason (Section 14.8).
+The GIDP 0.1 bilateral core has eight conceptual stages. Stages 0–2 precede the existence of a session; from Stage 3 onward either Agent MAY close the session at any time without giving a reason (Section 14.8).
 
 ```text
 Stage 0  Standing Interest formation         (local)
@@ -578,13 +578,13 @@ Stage 7  Handoff                   (to humans or downstream protocol)
 
 **Stage 6 — Consent.** When compatibility has been established, the session yields an `Opportunity` (Section 14.6). Any disclosure gated by `consent` or `principal_approval` — including Principal identity — requires a `ConsentRequest` / `ConsentResponse` exchange (Section 14.5). A potential match MUST NOT automatically reveal Principal identities.
 
-**Stage 7 — Handoff.** After the required consents, Agents MAY reveal identities, introduce Principals, arrange a meeting, transfer the session to a negotiation agent, initiate an authorised negotiation protocol (`Handoff`, Section 14.7), or close without further disclosure. CID does not define the resulting agreement.
+**Stage 7 — Handoff.** After the required consents, Agents MAY reveal identities, introduce Principals, arrange a meeting, transfer the session to a negotiation agent, initiate an authorised negotiation protocol (`Handoff`, Section 14.7), or close without further disclosure. GIDP does not define the resulting agreement.
 
 The five-round pattern of earlier working notes (discovery, compatibility, constraints, intersection, human consent) maps onto Stages 2, 4, 4–5, 6 (Opportunity) and 6 (Consent) respectively.
 
 ## 14. Protocol Objects
 
-CID 0.1 defines the following object set. For each transmitted object this section lists its **required fields** (normative) and gives an **example** (non-normative). Future drafts SHOULD minimise this set where equivalent semantics can be achieved with fewer primitives, and SHOULD define a normative JSON Schema.
+GIDP 0.1 defines the following object set. For each transmitted object this section lists its **required fields** (normative) and gives an **example** (non-normative). Future drafts SHOULD minimise this set where equivalent semantics can be achieved with fewer primitives, and SHOULD define a normative JSON Schema.
 
 ```text
 Local, never transmitted:   StandingInterest, DisclosurePolicy
@@ -596,7 +596,7 @@ Consent:                    ConsentRequest, ConsentResponse
 Outcome:                    Opportunity, Handoff
 ```
 
-Every transmitted object MUST carry `type`, `version` (`"cidisc/0.1"` — the short token `cidisc` is used instead of `cid` throughout, because `cid` is the established abbreviation of the IPFS Content Identifier and would be misread in the DID/VC/agent ecosystems this protocol is designed to sit in), `session_id` (`DiscoveryProjection` excepted; in `SessionOpen` the value is the proposed identifier) and `expires_at`. The **request-type** objects are `SessionOpen`, `CompatibilityRequest`, `DisclosureRequest` and `ConsentRequest`. The **response-type** objects are `SessionAccept`, `CompatibilityResponse`, `DisclosureResponse` and `ConsentResponse`. `DiscoveryProjection`, `Opportunity` and `Handoff` are neither. `SessionClose` is neither, but may be sent in place of any response.
+Every transmitted object MUST carry `type`, `version` (`"gidp/0.1"` — the short token `gidp` is used instead of `gidp` throughout, because `gidp` is the established abbreviation of the IPFS Content Identifier and would be misread in the DID/VC/agent ecosystems this protocol is designed to sit in), `session_id` (`DiscoveryProjection` excepted; in `SessionOpen` the value is the proposed identifier) and `expires_at`. The **request-type** objects are `SessionOpen`, `CompatibilityRequest`, `DisclosureRequest` and `ConsentRequest`. The **response-type** objects are `SessionAccept`, `CompatibilityResponse`, `DisclosureResponse` and `ConsentResponse`. `DiscoveryProjection`, `Opportunity` and `Handoff` are neither. `SessionClose` is neither, but may be sent in place of any response.
 
 Every request-type object MUST carry a `request_id` unique within the session, and every response-type object MUST carry `request_ref` equal to the `request_id` it answers. A `SessionClose` sent in place of a response MUST carry `request_ref`; a `SessionClose` sent on its own MUST NOT.
 
@@ -614,7 +614,7 @@ The depth in force for the session is the shallower of the two declared values. 
 
 ```yaml
 type: SessionOpen
-version: "cidisc/0.1"
+version: "gidp/0.1"
 session_id: "opaque-session-id"
 request_id: "r-1"
 initiator: "agent:opaque:789"
@@ -627,7 +627,7 @@ expires_at: "2026-09-21T12:00:00Z"
 ```
 
 ### 14.2 Claims
-A *claim* is a question about one dimension. Required fields: `key` (attribute or category name, from the core vocabulary or the session's profile), `operator`, `value`. CID 0.1 defines the operators `equals`, `intersects` (set overlap), `within` (the asked range, expressed as `{min, max}` or a named bucket from the profile, is compatible with the responder's private value). Where the responder's own value is itself a range — the normal case for a reservation value — `within` is satisfied by **overlap**, not containment: a private range and an asked range are compatible if they intersect at all. Containment would make almost every honest claim incompatible. Implementers should be aware that overlap semantics are also what make the probing of Section 24.3 cheap, since each answer partitions the space, and `compatible_with` (profile-defined predicate). Profiles MAY add operators.
+A *claim* is a question about one dimension. Required fields: `key` (attribute or category name, from the core vocabulary or the session's profile), `operator`, `value`. GIDP 0.1 defines the operators `equals`, `intersects` (set overlap), `within` (the asked range, expressed as `{min, max}` or a named bucket from the profile, is compatible with the responder's private value). Where the responder's own value is itself a range — the normal case for a reservation value — `within` is satisfied by **overlap**, not containment: a private range and an asked range are compatible if they intersect at all. Containment would make almost every honest claim incompatible. Implementers should be aware that overlap semantics are also what make the probing of Section 24.3 cheap, since each answer partitions the space, and `compatible_with` (profile-defined predicate). Profiles MAY add operators.
 
 Two values at different levels of the same hierarchy do not intersect as sets. A claim asking `geography intersects ["germany"]`, answered by a responder holding `["munich"]`, would resolve `incompatible` under plain set semantics — formally correct and substantively false, since Munich is in Germany. Section 15.2 makes that result block, so a session between two compatible Principals would end because they named one thing at two granularities. This is not a problem a shared vocabulary has to solve, and requiring one would mean requiring agreement between parties who have never met.
 
@@ -651,7 +651,7 @@ An operator may not fit the shape of the value a responder holds: `within` names
 
 ```yaml
 type: CompatibilityRequest
-version: "cidisc/0.1"
+version: "gidp/0.1"
 session_id: "opaque-session-id"
 request_id: "r-2"
 claims:
@@ -664,7 +664,7 @@ expires_at: "2026-09-21T12:00:00Z"
 
 ```yaml
 type: CompatibilityResponse
-version: "cidisc/0.1"
+version: "gidp/0.1"
 session_id: "opaque-session-id"
 request_ref: "r-2"
 results:
@@ -686,7 +686,7 @@ expires_at: "2026-09-21T12:15:00Z"
 
 ```yaml
 type: DisclosureRequest
-version: "cidisc/0.1"
+version: "gidp/0.1"
 session_id: "opaque-session-id"
 request_id: "r-3"
 attribute: transaction_structure_class
@@ -700,7 +700,7 @@ expires_at: "2026-09-21T12:20:00Z"
 
 ### 14.5 ConsentRequest / ConsentResponse
 
-`ConsentRequest` required fields: `request_id`, `action` (`disclose_attributes`, `reveal_identity`, `establish_direct_contact`, `handoff`), `scope` (list of attribute keys or, for `reveal_identity`, the identity attributes requested), `reciprocal` (whether the requester will grant the same scope), `binding_commitment` (MUST be `false` in CID 0.1). The field is required, rather than omitted, so that the absence of commitment is explicit on the wire and so that a later version can define the conditions under which it may be `true`; the same reasoning applies to the `COMMIT` authority level (Section 16.1).
+`ConsentRequest` required fields: `request_id`, `action` (`disclose_attributes`, `reveal_identity`, `establish_direct_contact`, `handoff`), `scope` (list of attribute keys or, for `reveal_identity`, the identity attributes requested), `reciprocal` (whether the requester will grant the same scope), `binding_commitment` (MUST be `false` in GIDP 0.1). The field is required, rather than omitted, so that the absence of commitment is explicit on the wire and so that a later version can define the conditions under which it may be `true`; the same reasoning applies to the `COMMIT` authority level (Section 16.1).
 
 `ConsentResponse` required fields: `request_ref`, `status` (`granted`, `declined`, `pending_principal_approval`), `granted_scope` (MAY be narrower than requested; empty when not granted).
 
@@ -708,7 +708,7 @@ Consent MUST be scoped to a session and an action. Consent to reveal identity MU
 
 ```yaml
 type: ConsentRequest
-version: "cidisc/0.1"
+version: "gidp/0.1"
 session_id: "opaque-session-id"
 request_id: "r-4"
 action: reveal_identity
@@ -730,7 +730,7 @@ The two counts are defined as follows, because both Agents are expected to hold 
 
 ```yaml
 type: Opportunity
-version: "cidisc/0.1"
+version: "gidp/0.1"
 session_id: "opaque-session-id"
 structure: "minority investment + distribution agreement"
 evaluated_dimensions: 5
@@ -742,13 +742,13 @@ expires_at: "2026-09-28T00:00:00Z"
 
 ### 14.7 Handoff
 
-Required fields: `target` (an object whose `kind` is `human`, `workflow` or `protocol`, with `protocol_ref` REQUIRED when `kind` is `protocol`), `authorized_scope` (subset of authority levels of Section 16 that the handing Agent carries into the target, never including `COMMIT` in CID 0.1), `requires_principal_presence` (boolean).
+Required fields: `target` (an object whose `kind` is `human`, `workflow` or `protocol`, with `protocol_ref` REQUIRED when `kind` is `protocol`), `authorized_scope` (subset of authority levels of Section 16 that the handing Agent carries into the target, never including `COMMIT` in GIDP 0.1), `requires_principal_presence` (boolean).
 
-A Handoff ends CID's responsibility for the interaction. Where `target.kind` is `protocol`, `protocol_ref` identifies the negotiation or agreement protocol that takes over; A2A's negotiation patterns and the mandate objects being specified jointly by [A2CN] and [CONCORDIA] are the intended targets, and a CID binding to a negotiation protocol SHOULD map `authorized_scope` onto that protocol's own authority object rather than restating it. A Handoff MUST NOT be construed as conferring authority the handing Agent does not hold (Section 16.2), and the receiving protocol's authority object, not the Handoff, governs what may be committed.
+A Handoff ends GIDP's responsibility for the interaction. Where `target.kind` is `protocol`, `protocol_ref` identifies the negotiation or agreement protocol that takes over; A2A's negotiation patterns and the mandate objects being specified jointly by [A2CN] and [CONCORDIA] are the intended targets, and a GIDP binding to a negotiation protocol SHOULD map `authorized_scope` onto that protocol's own authority object rather than restating it. A Handoff MUST NOT be construed as conferring authority the handing Agent does not hold (Section 16.2), and the receiving protocol's authority object, not the Handoff, governs what may be committed.
 
 ```yaml
 type: Handoff
-version: "cidisc/0.1"
+version: "gidp/0.1"
 session_id: "opaque-session-id"
 target: {kind: protocol, protocol_ref: "negotiation-protocol-uri"}
 authorized_scope: [NEGOTIATE_NONBINDING]
@@ -789,7 +789,7 @@ It maps onto the state machine of Section 17.2: `open` ↔ `PROBING`/`DISCLOSURE
 A `declined`, `unknown` or `requires_disclosure` result therefore prevents qualification, and this is deliberate: `declined` carries no information whatever (Section 18), so an Opportunity that counted it as neutral would rest on silence. A requester that wants to qualify despite such a result asks the claim again — results are keyed by claim key and the most recent answer stands — or accepts that the session does not qualify. An implementation MUST NOT produce an `Opportunity` from a session in which any claim's most recent result is one of those four.
 
 ### 15.3 Operational outcomes
-Operational outcomes — `unsupported`, `unauthorized`, `expired`, `rate_limited`, `temporarily_unavailable` — belong to the transport binding, not to the CID object set: a binding conveys them through its own error mechanism, and CID defines no object for them. They are named here because they are observable by a peer and therefore part of the protocol's information flow; CID 0.1 defines no enumeration for them, and an implementation that ships one has added a closed vocabulary this document does not impose. An operational outcome is not a compatibility result and MUST NOT be used to encode one (Section 18); a peer that receives one MUST NOT infer anything about the responder's Standing Interest from it. An implementation that has no binding-level error mechanism available MUST use `SessionClose` with the matching `reason` instead.
+Operational outcomes — `unsupported`, `unauthorized`, `expired`, `rate_limited`, `temporarily_unavailable` — belong to the transport binding, not to the GIDP object set: a binding conveys them through its own error mechanism, and GIDP defines no object for them. They are named here because they are observable by a peer and therefore part of the protocol's information flow; GIDP 0.1 defines no enumeration for them, and an implementation that ships one has added a closed vocabulary this document does not impose. An operational outcome is not a compatibility result and MUST NOT be used to encode one (Section 18); a peer that receives one MUST NOT infer anything about the responder's Standing Interest from it. An implementation that has no binding-level error mechanism available MUST use `SessionClose` with the matching `reason` instead.
 
 ### 15.4 Local evaluation
 A claim MAY be evaluated locally against `evaluation_only` values without exposing them. Example: Agent A privately knows `maximum_valuation = 80M`; asked whether a transaction `within {50M, 100M}` is compatible, it may answer `conditionally_compatible` without exposing `80M`.
@@ -807,7 +807,7 @@ Because local evaluation lets a peer learn something with every answer, compatib
 ## 16. Authority Model
 
 ### 16.1 Levels
-Authority is expressed per Standing Interest and MAY differ between Standing Interests held by the same Agent. CID 0.1 defines eight levels, from least to most consequential:
+Authority is expressed per Standing Interest and MAY differ between Standing Interests held by the same Agent. GIDP 0.1 defines eight levels, from least to most consequential:
 
 ```text
 OBSERVE               receive projections and candidate references
@@ -817,32 +817,32 @@ PROBE                 open sessions and answer compatibility claims
 DISCLOSE              answer DisclosureRequests within the Disclosure Policy
 INTRODUCE             reveal identity / establish direct contact
 NEGOTIATE_NONBINDING  propose or discuss non-binding structures, after Handoff only
-COMMIT                make a binding commitment (outside CID 0.1; MUST be false)
+COMMIT                make a binding commitment (outside GIDP 0.1; MUST be false)
 ```
 
 Each level takes one of the values `true`, `false`, `approval_required` (a per-instance Principal decision is needed each time). Authority MAY additionally be restricted by counterparty, asset, monetary value, jurisdiction, duration, transaction type or disclosure surface.
 
-`NEGOTIATE_NONBINDING` is deliberately outside the Compatibility Session. Earlier working drafts of this protocol left it ambiguous whether non-binding structures could be proposed *inside* a session; this draft settles the question: they cannot. A Compatibility Session establishes whether two Principals should be talking, using the result vocabulary of Section 15 and nothing else; proposing terms, even non-binding ones, is negotiation and takes place after a Handoff (Section 14.7), under whatever protocol the Handoff targets. The level is retained in the CID ladder because a Principal must be able to express, in the Standing Interest, whether its Agent may carry that authority forward at all — not because CID carries the negotiation.
+`NEGOTIATE_NONBINDING` is deliberately outside the Compatibility Session. Earlier working drafts of this protocol left it ambiguous whether non-binding structures could be proposed *inside* a session; this draft settles the question: they cannot. A Compatibility Session establishes whether two Principals should be talking, using the result vocabulary of Section 15 and nothing else; proposing terms, even non-binding ones, is negotiation and takes place after a Handoff (Section 14.7), under whatever protocol the Handoff targets. The level is retained in the GIDP ladder because a Principal must be able to express, in the Standing Interest, whether its Agent may carry that authority forward at all — not because GIDP carries the negotiation.
 
 ### 16.2 Invariant
 Implementations MAY use a different authorisation model internally. They MUST preserve the following invariant:
 
-> An Agent MUST NOT perform an action at one authority level on the strength of holding a lower one, and MUST NOT perform, or represent to a counterparty that it may perform, a binding commitment on the strength of any CID authority. An Agent MUST NOT request or accept an action from its counterparty on the sole ground that the counterparty has previously performed actions of that kind.
+> An Agent MUST NOT perform an action at one authority level on the strength of holding a lower one, and MUST NOT perform, or represent to a counterparty that it may perform, a binding commitment on the strength of any GIDP authority. An Agent MUST NOT request or accept an action from its counterparty on the sole ground that the counterparty has previously performed actions of that kind.
 
 Non-inference is necessary but not sufficient. Where an Agent asserts an authority level to a counterparty, that assertion MUST be capable of being evidenced by a referenceable delegation artefact — a signed delegation mandate, delegation credential, token-exchange result or equivalent issued under the Principal's control and verifiable by the relying party (Section 20) — and a relying party MUST be able to request that evidence before acting on the assertion. An implementation that cannot produce such an artefact MUST represent the level as unevidenced, and a counterparty MUST be free to treat an unevidenced assertion as absent.
 
-This requirement is not merely hygienic. Under the doctrine of apparent authority, a principal may be bound by conduct that leads a counterparty reasonably to believe its agent was authorised, and commentators have begun to argue that the doctrine applies to AI agents acting in commerce [DEMOTT2026]. A protocol in which authority is asserted but never evidenced would systematically manufacture exactly the observable conduct on which such a belief is built. Requiring evidence, and requiring that its absence be visible, is how CID keeps exploration from silently becoming authority.
+This requirement is not merely hygienic. Under the doctrine of apparent authority, a principal may be bound by conduct that leads a counterparty reasonably to believe its agent was authorised, and commentators have begun to argue that the doctrine applies to AI agents acting in commerce [DEMOTT2026]. A protocol in which authority is asserted but never evidenced would systematically manufacture exactly the observable conduct on which such a belief is built. Requiring evidence, and requiring that its absence be visible, is how GIDP keeps exploration from silently becoming authority.
 
 Trust in a counterparty (Section 20) does not imply authority of that counterparty. Where a level is `approval_required`, the corresponding `ConsentResponse` or `DisclosureResponse` MUST be `pending_principal_approval` until the Principal decides (Section 14.5).
 
 ### 16.3 Levels of human control (non-normative)
-CID is compatible with different delegation levels:
+GIDP is compatible with different delegation levels:
 
 - *Conservative:* Agent discovers; a human approves every disclosure and identity reveal; humans negotiate.
 - *Moderate:* Agent discovers and performs bounded probing; a human approves identity reveal; Agent or human negotiates.
-- *Advanced:* Agent discovers, probes, discloses within deterministic policy and negotiates non-binding terms; a human approves commitment outside CID.
+- *Advanced:* Agent discovers, probes, discloses within deterministic policy and negotiates non-binding terms; a human approves commitment outside GIDP.
 
-CID 0.1 does not require fully autonomous economic agents.
+GIDP 0.1 does not require fully autonomous economic agents.
 
 ## 17. Lifecycle and State Machines
 
@@ -952,37 +952,37 @@ E joins a company if financing round F closes.
 G finances an acquisition if the seller retains 20 %.
 ```
 
-Such structures form chains (`A willing_if B; B willing_if C; C willing_if A`) in which no bilateral pair necessarily forms a viable transaction while the set may be jointly satisfiable. Implementations that declare the `multi_party` feature MAY experiment with discovering sets `{M1 … Mn}` such that `constraints(M0, M1 … Mn)` are potentially satisfiable. CID 0.1 defines no coalition solver, distributed constraint protocol or multi-party privacy model; the data model is designed not to preclude them.
+Such structures form chains (`A willing_if B; B willing_if C; C willing_if A`) in which no bilateral pair necessarily forms a viable transaction while the set may be jointly satisfiable. Implementations that declare the `multi_party` feature MAY experiment with discovering sets `{M1 … Mn}` such that `constraints(M0, M1 … Mn)` are potentially satisfiable. GIDP 0.1 defines no coalition solver, distributed constraint protocol or multi-party privacy model; the data model is designed not to preclude them.
 
 A practical way to avoid combinatorial explosion is *dependency-driven expansion*: expand only when a bilateral candidate reveals an unmet dependency (A matches B on its core interest, but B has an unresolved `requires: financing`; the implementation then searches for a C that `provides: financing` compatible with both). Coalition scoring, disclosure across members with different policies, circular conditions and partial-coalition reveal are open questions (Appendix E).
 
 ## 20. Trust, Credentials and Reputation
 
-CID 0.1 does not define identity infrastructure. Implementations SHOULD be able to distinguish trust levels of counterparties and let Disclosure Policies depend on them (Section 10.5).
+GIDP 0.1 does not define identity infrastructure. Implementations SHOULD be able to distinguish trust levels of counterparties and let Disclosure Policies depend on them (Section 10.5).
 
 Possible trust inputs: authenticated Agent endpoint; signed Agent metadata; verified organisation or individual; known intermediary; reputation; prior successful interactions; membership of a private registry; economic stake; contractual relationship.
 
 Some claims depend on facts that should be verifiable without being fully disclosed: accredited-investor status, revenue range, professional qualification, authorisation to represent an organisation, ownership of an asset, geographic eligibility, available financing. An implementation MUST be able to carry references to external identity, credential, attestation, selective-disclosure and delegated-authority systems — selective disclosure of signed claims [RFC9901] [BBS], verifiable-credential proofs [VC-DI], delegated authority obtained by token exchange [RFC8693], workload and agent identity [WIMSE-AI], and external transaction-authorisation objects of the kind noted in Section 3 — carried in `SessionOpen.trust_context` and in `DisclosureResponse.verification_required` as opaque, binding-specific references. This document defines no identity system of its own, and an implementation MUST NOT require one specific external system as a condition of interoperating.
 
-One such system is already published rather than prospective. GNAP [GNAP], a Standards Track RFC, defines how a piece of software negotiates delegated authority with an authorisation server and how the result is conveyed, covering both access to resources and subject information. Its grant is negotiated and continuable rather than a fixed scope string, which is the shape Section 16's ladder needs, and it is the natural referent for the `evidence_ref` that Section 16.2 requires. CID neither profiles it nor depends on it; naming it is meant to save an implementer the search.
+One such system is already published rather than prospective. GNAP [GNAP], a Standards Track RFC, defines how a piece of software negotiates delegated authority with an authorisation server and how the result is conveyed, covering both access to resources and subject information. Its grant is negotiated and continuable rather than a fixed scope string, which is the shape Section 16's ladder needs, and it is the natural referent for the `evidence_ref` that Section 16.2 requires. GIDP neither profiles it nor depends on it; naming it is meant to save an implementer the search.
 
-Which external systems supply persistent agent identity, ownership, delegation chains, attestations, reputation and revocation is outside this specification. This is a real gap rather than a deferred detail: a CID deployment cannot enforce Section 16.2 without at least one such system, and none of them is yet dominant. Sections 20 and 24.5 state what CID requires of whichever system is chosen; the choice itself belongs to the binding and the deployment.
+Which external systems supply persistent agent identity, ownership, delegation chains, attestations, reputation and revocation is outside this specification. This is a real gap rather than a deferred detail: a GIDP deployment cannot enforce Section 16.2 without at least one such system, and none of them is yet dominant. Sections 20 and 24.5 state what GIDP requires of whichever system is chosen; the choice itself belongs to the binding and the deployment.
 
 ## 21. Extensions and Domain Profiles
 
-CID Core avoids embedding vertical concepts. A *domain profile* MAY define vocabularies (claim keys, categories, buckets), validation rules, credential requirements, compatibility dimensions, regulatory constraints, additional claim operators and Handoff semantics for domains such as employment and executive recruiting, M&A, investment and co-investment, real estate, commercial partnerships, joint ventures, licensing, procurement, private expertise, research collaboration, financing, insurance, philanthropy and business succession.
+GIDP Core avoids embedding vertical concepts. A *domain profile* MAY define vocabularies (claim keys, categories, buckets), validation rules, credential requirements, compatibility dimensions, regulatory constraints, additional claim operators and Handoff semantics for domains such as employment and executive recruiting, M&A, investment and co-investment, real estate, commercial partnerships, joint ventures, licensing, procurement, private expertise, research collaboration, financing, insurance, philanthropy and business succession.
 
 A profile MUST NOT weaken the core privacy and authority semantics of Sections 10, 15.5, 16 and 24. A session uses exactly one profile, declared in `SessionOpen` and confirmed in `SessionAccept` (Section 14.1). A responder that does not implement the declared profile, or that shares no declared feature with the initiator where the initiator requires one, MUST answer `SessionClose` with `reason: unsupported` (Section 14.8) and MUST NOT propose an alternative profile in that response; richer extension negotiation is future work.
 
-A core research question is whether approximately the same protocol mechanics survive across domains; if every vertical requires a fundamentally different state machine, disclosure model and compatibility model, CID may not warrant a horizontal protocol (Appendix F.2).
+A core research question is whether approximately the same protocol mechanics survive across domains; if every vertical requires a fundamentally different state machine, disclosure model and compatibility model, GIDP may not warrant a horizontal protocol (Appendix F.2).
 
 ## 22. Transport Bindings and Adjacent Layers
 
 ### 22.1 Binding requirements
-CID is transport-independent; bindings MAY be defined separately. A binding MUST NOT require Standing Interests or any `session`/`local` attribute to be published in the host protocol's discovery metadata, and SHOULD NOT redefine the host protocol's transport, authentication, task lifecycle or generic messaging semantics.
+GIDP is transport-independent; bindings MAY be defined separately. A binding MUST NOT require Standing Interests or any `session`/`local` attribute to be published in the host protocol's discovery metadata, and SHOULD NOT redefine the host protocol's transport, authentication, task lifecycle or generic messaging semantics.
 
 ### 22.2 A2A binding sketch (non-normative)
-The most likely first binding is an extension of an agent-to-agent protocol such as A2A [A2A]. A2A version 1.0 declares extensions in the Agent Card's `capabilities.extensions` array (§4.4.3 `AgentCapabilities`), each entry being an `AgentExtension` (§4.4.4) with the fields `uri`, `description`, `required` and `params`. A CID implementation could advertise support as:
+The most likely first binding is an extension of an agent-to-agent protocol such as A2A [A2A]. A2A version 1.0 declares extensions in the Agent Card's `capabilities.extensions` array (§4.4.3 `AgentCapabilities`), each entry being an `AgentExtension` (§4.4.4) with the fields `uri`, `description`, `required` and `params`. A GIDP implementation could advertise support as:
 
 ```json
 {
@@ -990,7 +990,7 @@ The most likely first binding is an extension of an agent-to-agent protocol such
     "extensions": [
       {
         "uri": "{{CANONICAL_URL}}/extensions/conditional-interest-discovery/0.1",
-        "description": "Conditional Interest Discovery 0.1",
+        "description": "Graduated Interest Disclosure 0.1",
         "required": false,
         "params": { "profiles": ["core"] }
       }
@@ -999,18 +999,18 @@ The most likely first binding is an extension of an agent-to-agent protocol such
 }
 ```
 
-`required` is false deliberately. An Agent that made CID mandatory would refuse every counterparty that speaks plain A2A, which is the opposite of what a discovery protocol is for.
+`required` is false deliberately. An Agent that made GIDP mandatory would refuse every counterparty that speaks plain A2A, which is the opposite of what a discovery protocol is for.
 
-Declaring an extension does not activate it. A client that intends to use one sends the `A2A-Extensions` header carrying a comma-separated list of extension URIs, and the responder echoes back the subset it actually activated; an extension that was not echoed is not in force, whatever the Agent Card says. This matters for CID more than for most extensions, because it is the point at which an exchange can be refused before any CID object exists, and therefore before any Disclosure Policy has been consulted.
+Declaring an extension does not activate it. A client that intends to use one sends the `A2A-Extensions` header carrying a comma-separated list of extension URIs, and the responder echoes back the subset it actually activated; an extension that was not echoed is not in force, whatever the Agent Card says. This matters for GIDP more than for most extensions, because it is the point at which an exchange can be refused before any GIDP object exists, and therefore before any Disclosure Policy has been consulted.
 
-CID objects are then carried in the `metadata` map of A2A's core structures, under keys prefixed by the extension URI — A2A's own convention, which keeps extensions from colliding and leaves core types unmodified. A CID object is not content for a human to read, so it belongs in `metadata` rather than in a message Part.
+GIDP objects are then carried in the `metadata` map of A2A's core structures, under keys prefixed by the extension URI — A2A's own convention, which keeps extensions from colliding and leaves core types unmodified. A GIDP object is not content for a human to read, so it belongs in `metadata` rather than in a message Part.
 
-Note that two negotiations are now in play and neither subsumes the other. A2A activation answers *does this peer speak CID at all*; the `features` of Section 14.1 answer *which optional CID features are in force for this session*, and Section 14.1 requires `SessionAccept` to carry the intersection actually supported rather than an echo. A peer may activate the extension and support no optional feature whatever. An implementation that derives one from the other will be wrong in the direction that matters, by assuming a feature is in force because the extension was activated.
+Note that two negotiations are now in play and neither subsumes the other. A2A activation answers *does this peer speak GIDP at all*; the `features` of Section 14.1 answer *which optional GIDP features are in force for this session*, and Section 14.1 requires `SessionAccept` to carry the intersection actually supported rather than an echo. A peer may activate the extension and support no optional feature whatever. An implementation that derives one from the other will be wrong in the direction that matters, by assuming a feature is in force because the extension was activated.
 
-The extension URI above is illustrative: CID 0.1 allocates no URI and registers nothing (Section 26), and two deployments that pick different URIs will not interoperate — which is an argument for allocating one before there are two. The binding itself is not defined here. Whether CID is ultimately an A2A extension, a separate protocol or a reusable application profile is an open governance question (Appendix E). A worked mapping, with round-trip tests against every object that crosses a wire, is in the reference implementation under `impl/cid/bindings/a2a.py`.
+The extension URI above is illustrative: GIDP 0.1 allocates no URI and registers nothing (Section 26), and two deployments that pick different URIs will not interoperate — which is an argument for allocating one before there are two. The binding itself is not defined here. Whether GIDP is ultimately an A2A extension, a separate protocol or a reusable application profile is an open governance question (Appendix E). A worked mapping, with round-trip tests against every object that crosses a wire, is in the reference implementation under `impl/gidp/bindings/a2a.py`.
 
 ### 22.3 Tool and context protocols
-An Agent MAY use a tool/context protocol such as MCP [MCP] to obtain the local context required to construct or evaluate a Standing Interest. That interaction is outside CID.
+An Agent MAY use a tool/context protocol such as MCP [MCP] to obtain the local context required to construct or evaluate a Standing Interest. That interaction is outside GIDP.
 
 ### 22.4 Adjacent layers
 A conceptual stack, describing logical responsibilities rather than mandatory implementation layers:
@@ -1018,26 +1018,26 @@ A conceptual stack, describing logical responsibilities rather than mandatory im
 ```text
 Applications          personal agents / enterprise agents / CRM / ERP / ATS
         │
-Conditional Interest Discovery (CID)          ← this document
+Graduated Interest Disclosure (GIDP)          ← this document
         │
-Negotiation / agreement protocols        (after CID Handoff)
+Negotiation / agreement protocols        (after GIDP Handoff)
         │
 Authority / credentials / payments       (referenced, not redefined; Section 20)
         │
-Agent-to-agent communication             (transport for CID)
+Agent-to-agent communication             (transport for GIDP)
         │
 Tool / data / context access
 ```
 
-Capability registries and intent-based agent selection answer *which Agent can perform X*; authorisation and payment protocols establish *that an Agent is permitted to perform an action or payment*; negotiation protocols govern *what Agents may propose or accept once they are negotiating*. CID addresses the stage before all three: *whether two Principals should be negotiating at all*, without publishing the information that would normally make that discoverable.
+Capability registries and intent-based agent selection answer *which Agent can perform X*; authorisation and payment protocols establish *that an Agent is permitted to perform an action or payment*; negotiation protocols govern *what Agents may propose or accept once they are negotiating*. GIDP addresses the stage before all three: *whether two Principals should be negotiating at all*, without publishing the information that would normally make that discoverable.
 
 ## 23. Interoperability and Conformance
 
 ### 23.1 Interoperability
-A CID implementation SHOULD allow Agents from independent vendors or platforms to participate. Interoperability in 0.1 requires agreement on: object semantics and required fields (Section 14); disclosure surfaces and gates (Section 10); the result vocabulary (Section 15); authority level names (Section 16); expiry and close semantics (Sections 14.8, 17); the profile identifier (Section 21).
+A GIDP implementation SHOULD allow Agents from independent vendors or platforms to participate. Interoperability in 0.1 requires agreement on: object semantics and required fields (Section 14); disclosure surfaces and gates (Section 10); the result vocabulary (Section 15); authority level names (Section 16); expiry and close semantics (Sections 14.8, 17); the profile identifier (Section 21).
 
 ### 23.2 Conformance criteria
-An implementation claiming **CID Core 0.1** conformance MUST:
+An implementation claiming **GIDP Core 0.1** conformance MUST:
 
 1. express all four situations of Section 8 and run a session for each, with the four differing only in their Disclosure Policies and producing the same sequence of protocol objects. "Verified by local inspection" is not a conformance criterion; this one is executable, and it is the criterion that carries the horizontality claim of Appendix F.2 of an implementation's Standing Interest representation, not on the wire;
 2. never transmit a Standing Interest, a Disclosure Policy, or any attribute of surface `local` (Sections 9.1, 10);
@@ -1055,7 +1055,7 @@ An implementation claiming **CID Core 0.1** conformance MUST:
 
 Conformance to criteria 6 and 13 is testable against transmitted objects; criterion 3 is testable by replaying a session against a stated Standing Interest and Disclosure Policy and checking that the same objects are produced.
 
-**Deployment requirements.** Separately from the criteria above, which concern interoperability, a deployment of CID MUST publish a deployment-specific privacy and probing threat model stating how it bounds inference through repeated claims (Sections 15.6, 24, 24.3). This is a condition of responsible deployment, not of protocol conformance, and it is stated once here rather than repeatedly in the body.
+**Deployment requirements.** Separately from the criteria above, which concern interoperability, a deployment of GIDP MUST publish a deployment-specific privacy and probing threat model stating how it bounds inference through repeated claims (Sections 15.6, 24, 24.3). This is a condition of responsible deployment, not of protocol conformance, and it is stated once here rather than repeatedly in the body.
 
 Implementations MAY omit the `dependency_primitives` and `multi_party` features.
 
@@ -1073,7 +1073,7 @@ An attacker attempts to enumerate latent sellers, candidates, investors, buyers 
 An attacker combines projection metadata with external information, or correlates projections across providers, to infer the Principal. Mitigations: projection minimisation (Section 11.4); avoidance of stable identifiers and unnecessary metadata; distinct projections per provider (Section 11.5); symmetric attributes.
 
 ### 24.3 Constraint extraction by probing
-An attacker uses repeated claims to approximate a hidden reservation value (`within {50M,60M}? compatible — {60M,70M}? compatible — {70M,80M}? compatible — {80M,90M}? incompatible`). Even though the threshold is never transmitted, it has effectively been disclosed. Implementations SHOULD apply, within the bounds of Section 15.5: query budgets; rate limits; minimum claim granularity (bucket width); bucketed or randomised responses; session-level privacy budgets; trust tiers; authenticated counterparties; query history and coordinated-probing detection across identities; refusal policies; delayed responses; disclosure accounting; local policy engines. CID 0.1 does not define a universal privacy-budget algorithm.
+An attacker uses repeated claims to approximate a hidden reservation value (`within {50M,60M}? compatible — {60M,70M}? compatible — {70M,80M}? compatible — {80M,90M}? incompatible`). Even though the threshold is never transmitted, it has effectively been disclosed. Implementations SHOULD apply, within the bounds of Section 15.5: query budgets; rate limits; minimum claim granularity (bucket width); bucketed or randomised responses; session-level privacy budgets; trust tiers; authenticated counterparties; query history and coordinated-probing detection across identities; refusal policies; delayed responses; disclosure accounting; local policy engines. GIDP 0.1 does not define a universal privacy-budget algorithm.
 
 There is an older literature on exactly this decision and it was not consulted when this section was first written. *Query auditing* asks whether to answer or deny a query given the history of queries already answered, and [KMN2005] establishes the result that matters here: **denials leak**. An auditor that decides to deny based on the data it is protecting tells an attacker something by denying, and the paper's worked example recovers a database exactly from one answer and one refusal. Their repair is *simulatable auditing*: the decision to answer or deny must depend only on the queries asked and the answers already given, never on the data and never on the answer being withheld. An attacker who can reproduce the decision learns nothing from it.
 
@@ -1093,7 +1093,7 @@ A second control composes with it and has the opposite shape. A profile MAY requ
 
 One deployment practice belongs beside it, because it is nearly free and is not otherwise obvious. A bound on the *rate* rather than the total makes extraction take time, and a private value that is revised over that time is a moving target: what an adversary narrows between revisions, it loses at the next one. Measured against this document's own evaluator, the surviving uncertainty settles at roughly `2d / (2^r − 1)` candidate values, where `r` is the claims answered per period and `d` is how far the value moves in one. The shape of that expression is the useful part and it is not encouraging in the obvious direction: the protection is *exponential* in the rate allowed and only *linear* in how fast the value moves, so halving the rate is worth far more than doubling the drift, and against a competent adversary a slow drift buys almost nothing. Where it does earn its place is against an adversary that does not model the movement at all: such an adversary does not end up uncertain, it ends up confident and wrong, which is a worse position to act from. A Principal that re-authors its Standing Interest when its validity expires (Section 9.2) is therefore taking a privacy measure and not merely keeping records tidy. None of this is a bound the protocol provides; all of it is a bound a deployment can choose. Rate limits, granularity floors and session budgets are all forms of it. Its known weakness is that a budget keyed to a counterparty does not bound an asker that faces many counterparties, and a budget keyed to the asker requires a persistent identity this protocol deliberately does not carry. The measurements behind this paragraph, and the mechanism comparison they come from, are in the companion document *Why not use an existing mechanism?*; they are reproducible from the reference implementation.
 
-This threat has a formal treatment. [RANI2026] formalises *behavioural privacy leakage* in agentic negotiation — the inference of private constraints from negotiation dynamics rather than from disclosed values — and mitigates it with a phase-adaptive randomised policy achieving (ε,δ)-differential privacy while preserving convergence. That work models a **passive** adversary observing traces, and explicitly leaves adaptive and active adversaries to future work. CID's adversary is the active case: a counterparty that *chooses* the next claim in order to narrow a threshold, against an oracle that is obliged by Section 15.5 to answer truthfully or not at all.
+This threat has a formal treatment. [RANI2026] formalises *behavioural privacy leakage* in agentic negotiation — the inference of private constraints from negotiation dynamics rather than from disclosed values — and mitigates it with a phase-adaptive randomised policy achieving (ε,δ)-differential privacy while preserving convergence. That work models a **passive** adversary observing traces, and explicitly leaves adaptive and active adversaries to future work. GIDP's adversary is the active case: a counterparty that *chooses* the next claim in order to narrow a threshold, against an oracle that is obliged by Section 15.5 to answer truthfully or not at all.
 
 > **Open problem — adaptive probing of a truthful compatibility oracle.**
 >
@@ -1105,14 +1105,14 @@ This threat has a formal treatment. [RANI2026] formalises *behavioural privacy l
 >
 > Three neighbouring results do not settle it. [RANI2026] bounds leakage from *observed negotiation dynamics* against a passive adversary and explicitly leaves adaptive adversaries to future work. Differentially private query mechanisms bound leakage under adaptive querying but assume the responder may return a perturbed answer, which Section 15.5 forbids where the perturbation would assert a falsehood. Private set intersection and secure computation hide the responder's inputs from the querent but not the information carried by the *result*, which is the leak in question.
 >
-> CID 0.1 states this as the protocol's principal research question rather than pretending to solve it, and treats the abuse controls above as engineering mitigations, not guarantees. Section 15.6 states the corresponding protocol-level consequence: a result vocabulary and its abuse controls cannot be specified independently of each other. Candidate directions, none of them validated, are discussed in the companion document (Appendix E); contributions and refutations are both welcome.
+> GIDP 0.1 states this as the protocol's principal research question rather than pretending to solve it, and treats the abuse controls above as engineering mitigations, not guarantees. Section 15.6 states the corresponding protocol-level consequence: a result vocabulary and its abuse controls cannot be specified independently of each other. Candidate directions, none of them validated, are discussed in the companion document (Appendix E); contributions and refutations are both welcome.
 
 ### 24.4 Sybil agents
 An attacker operates many Agents or Principals to bypass query limits or obtain different disclosure views. Identity, credential, reputation, staking, economic or membership mechanisms MAY be used.
 
 This threat and the mitigation of Section 24.3 cancel each other, and the cancellation is measurable rather than theoretical. A query budget keyed to the counterparty bounds only the product of the budget and the number of counterparties an attacker can mint: in the reference implementation's worked case, an allowance of two claims per counterparty and four identities extracts exactly what an allowance of eight and one identity extracts, because nothing in this protocol connects the two. That is not an oversight in the budget design. It follows from the same property that keeps a responder from profiling its counterparties — opaque endpoints — seen from the other side: an Agent that cannot recognise who it is talking to cannot recognise that it is being enumerated.
 
-A cap on the responder's *total* answered claims, to anyone, over the life of a Standing Interest, cannot be diluted by identities and does bound. Its price is that it cannot distinguish the populations it is rationing, and where the cap should sit is a computation rather than a guess. An honest session costs one claim per attribute it asks about; an extraction costs one bisection per *private* attribute, which is logarithmic in the number of values that attribute may take. A separating cap exists when the second exceeds the first, so the window opens as the secret grows and closes as it shrinks: over 41 candidate values and a five-claim session there is no separating cap at all, while over 128 there is, and over a thousand the window is wide. A deployment that wants its budget to mean something computes that ratio for its own attributes rather than inheriting a number. Deployments SHOULD state which of the two they have chosen and at what level; CID 0.1 defines neither, and an implementer should not read Sections 24.3 and 24.4 together as describing a solved problem.
+A cap on the responder's *total* answered claims, to anyone, over the life of a Standing Interest, cannot be diluted by identities and does bound. Its price is that it cannot distinguish the populations it is rationing, and where the cap should sit is a computation rather than a guess. An honest session costs one claim per attribute it asks about; an extraction costs one bisection per *private* attribute, which is logarithmic in the number of values that attribute may take. A separating cap exists when the second exceeds the first, so the window opens as the secret grows and closes as it shrinks: over 41 candidate values and a five-claim session there is no separating cap at all, while over 128 there is, and over a thousand the window is wide. A deployment that wants its budget to mean something computes that ratio for its own attributes rather than inheriting a number. Deployments SHOULD state which of the two they have chosen and at what level; GIDP 0.1 defines neither, and an implementer should not read Sections 24.3 and 24.4 together as describing a solved problem.
 
 ### 24.5 Fraudulent projections and unauthorised delegation
 Agents may publish fraudulent or low-intent Discovery Projections to harvest information or spam Principals, or claim authority they do not hold. Mitigations: verified authorisation to represent (Section 20); reputation; economic cost; the invariant of Section 16.2.
@@ -1127,7 +1127,7 @@ Projection creation, withdrawal or response timing may reveal events; acceptance
 Agents MUST enforce Disclosure Policies before returning protected information; sensitive disclosure actions SHOULD be auditable (Section 25.3).
 
 ### 24.9 Compromised Agents
-CID cannot protect a Principal from an Agent that is fully compromised and holds plaintext access to all of the Principal's secrets. Implementations SHOULD minimise the information and authority available to any single component.
+GIDP cannot protect a Principal from an Agent that is fully compromised and holds plaintext access to all of the Principal's secrets. Implementations SHOULD minimise the information and authority available to any single component.
 
 ### 24.10 Over-disclosure by model behaviour and prompt injection
 An LLM-driven Agent may reveal information not permitted by the formal policy, and counterparties may attempt to manipulate an Agent into ignoring local disclosure or authority rules. Disclosure and authority enforcement MUST be implemented by a deterministic policy layer outside unconstrained model behaviour: the model reasons, the policy layer decides what leaves the Agent. Model-level alignment is not a substitute: information-flow control enforced outside the model has been shown necessary because instruction-level defences do not bound what a model discloses under adversarial input [FLOWSEAL].
@@ -1140,7 +1140,7 @@ Depending on sensitivity and deployment model, implementations MAY use local eva
 
 ## 25. Privacy Considerations
 
-This section follows [RFC6973]. CID is specifically intended for information that Principals may be unwilling to publish; privacy failures may therefore be more damaging than ordinary search or recommendation errors.
+This section follows [RFC6973]. GIDP is specifically intended for information that Principals may be unwilling to publish; privacy failures may therefore be more damaging than ordinary search or recommendation errors.
 
 ### 25.1 Governing principle
 *Reveal the minimum information required to justify the next authorised step.* A compatibility result MUST NOT reveal the underlying private value unless that disclosure is separately authorised.
@@ -1229,7 +1229,7 @@ All URLs were last verified on 21 and 22 September 2026. Individual Internet-Dra
 ## Appendix A — Minimal Conceptual Schema (non-normative)
 
 ```yaml
-version: "cidisc/0.1"
+version: "gidp/0.1"
 
 standing_interest:                         # local, never transmitted
   id: local_opaque
@@ -1258,7 +1258,7 @@ standing_interest:                         # local, never transmitted
   validity: {not_before: datetime, expires_at: datetime}
 
 projection:                                # Section 11
-  version: "cidisc/0.1"
+  version: "gidp/0.1"
   type: DiscoveryProjection
   projection_id: opaque
   interest_ref: opaque                     # opaque; resolvable only by the publishing Agent
@@ -1311,14 +1311,14 @@ Neither side advertises an active search; a provider retrieves the pair from coa
 Enterprise agent: `interest: consider [licensing, white_label, partnership] · requires: [capability_x] · commercial_thresholds: evaluation_only`. Startup agent: `provides: [capability_x] · interest: consider [white_label, licensing] · requires: [distribution_access] · minimum_contract_value: evaluation_only`. Both sessions declare `features: [dependency_primitives]`. The pair is discoverable because reduced projections expose compatible capability classes without publishing the strategic motives (e.g. "74 deals lost for lack of X") or thresholds.
 
 ### C.4 Multi-party real estate (experimental)
-Buyer: `acquire: commercial_property · requires: financing ≥ 7M, occupancy ≥ 60 %`. Owner: `consider_sale · minimum_price: evaluation_only`. Bank: `provides: financing ≤ 7M · conditional_on: investment_grade_tenant, lease_term ≥ 10y`. Tenant: `provides: occupancy 60 % · conditional_on: renovation_complete, rent_below_private_threshold`. CID Core discovers bilateral edges; an implementation with the `multi_party` feature could determine that the four Standing Interests form a potentially satisfiable coalition.
+Buyer: `acquire: commercial_property · requires: financing ≥ 7M, occupancy ≥ 60 %`. Owner: `consider_sale · minimum_price: evaluation_only`. Bank: `provides: financing ≤ 7M · conditional_on: investment_grade_tenant, lease_term ≥ 10y`. Tenant: `provides: occupancy 60 % · conditional_on: renovation_complete, rent_below_private_threshold`. GIDP Core discovers bilateral edges; an implementation with the `multi_party` feature could determine that the four Standing Interests form a potentially satisfiable coalition.
 
 ### C.5 Co-investment (interdependent)
 `invest: {max: 100k} · conditional_on: institutional_lead ≥ 1M · sector: ai_infrastructure · geography: france · referral: trusted_connection (evaluation_only)`. Discoverable as `co_investment · ai · france`; the dependency on a lead is evaluated in session and, if unmet, may trigger dependency-driven expansion (Section 19.2).
 
-## Appendix D — Why CID Is Not Capability Discovery (non-normative)
+## Appendix D — Why GIDP Is Not Capability Discovery (non-normative)
 
-| Dimension | Capability / agent discovery | CID |
+| Dimension | Capability / agent discovery | GIDP |
 |---|---|---|
 | Core question | What can this agent do? | What might its Principal consider? |
 | Primary object | Agent capability | Standing Interest |
@@ -1331,7 +1331,7 @@ Buyer: `acquire: commercial_property · requires: financing ≥ 7M, occupancy �
 | Typical example | Find a translation agent | Find a Principal who may transact only under private conditions |
 | Multi-party | Task orchestration | Conditional coalition discovery |
 
-Capability discovery answers *intent → capable agent*. CID answers *private preference set ↔ private preference set*. Whether that distinction justifies a durable independent protocol layer, rather than a small extension of an existing discovery system, is an empirical question this draft exists to make testable.
+Capability discovery answers *intent → capable agent*. GIDP answers *private preference set ↔ private preference set*. Whether that distinction justifies a durable independent protocol layer, rather than a small extension of an existing discovery system, is an empirical question this draft exists to make testable.
 
 ## Appendix E — Open Questions and Request for Comments
 
@@ -1343,11 +1343,11 @@ Capability discovery answers *intent → capable agent*. CID answers *private pr
 
 **Privacy.** How should re-identification risk of projections be measured? How should query privacy budgets work within the bounds of Section 15.5? Which cryptographic profiles are practical? How can behavioural leakage be bounded? The open problem stated in Section 24.3 — bounding what an *adaptive* querent can learn from a truthful compatibility oracle while keeping that oracle useful for discovery — is the question on which the authors most want contributions; [RANI2026] solves the passive case and explicitly leaves the active one open.
 
-**Trust and authority.** How should Agents prove authority for a specific Standing Interest? How should Principals be verified without unnecessary identity disclosure? How should reputation work without enabling surveillance? How should CID reference external delegated-authority credentials? At what point does identity become necessary?
+**Trust and authority.** How should Agents prove authority for a specific Standing Interest? How should Principals be verified without unnecessary identity disclosure? How should reputation work without enabling surveillance? How should GIDP reference external delegated-authority credentials? At what point does identity become necessary?
 
 **Multi-party.** How are dependencies discovered without combinatorial explosion? How are coalitions scored? How is information shared when members have different Disclosure Policies? How are circular conditions handled? When should a partial coalition be revealed?
 
-**Governance.** Should CID become an A2A extension, a separate protocol or a reusable application profile? Which parts should be standardised versus left to Discovery Providers? What namespace and versioning model? If CID gains adoption, what governance structure preserves neutrality?
+**Governance.** Should GIDP become an A2A extension, a separate protocol or a reusable application profile? Which parts should be standardised versus left to Discovery Providers? What namespace and versioning model? If GIDP gains adoption, what governance structure preserves neutrality?
 
 **How to comment.** The canonical location of this document is {{CANONICAL_URL}}. Objections, corrections, implementation reports and refutations should go to the issue tracker there, or to {{CONTACT}}. Every substantive comment received will be answered in public and, where it changes the text, recorded in the revision history with attribution. A companion document at the same location, *Open Problems and Design Rationale*, carries the non-normative material that does not belong in a specification: the mapping from this document's requirements to existing cryptographic and identity mechanisms, the candidate directions for the open problem of Section 24.3, and the reasoning behind choices this text states without arguing.
 
@@ -1356,13 +1356,13 @@ Capability discovery answers *intent → capable agent*. CID answers *private pr
 1. Is private reciprocal Standing Interest discovery a distinct protocol problem, or should it be absorbed into existing agent discovery?
 2. Is the Standing Interest / Discovery Projection distinction, with the surface/gate disclosure model, sufficient to support useful discovery without unacceptable leakage?
 3. Are `provides`, `requires`, `conditional_on` and `excludes` adequate foundations for future multi-party discovery?
-4. Which parts of CID should be standardised, and which should remain implementation-specific to Discovery Providers?
+4. Which parts of GIDP should be standardised, and which should remain implementation-specific to Discovery Providers?
 5. Where does the abstraction fail when applied across executive recruiting, M&A, investment, real estate and commercial partnerships?
 
 ## Appendix F — Standardisation Strategy and Evaluation Criteria
 
 ### F.1 Strategy
-The sequence adopted is publication of the specification first, reference implementation immediately after. A reference implementation of the bilateral core accompanies this draft at the canonical location, together with the conformance suite of Section 23.2 and a demonstration of the probing attack of Section 24.3. The purpose of Draft 0.1 is not premature formal standardisation but to name the problem, fix terminology, distinguish CID from adjacent layers, enable independent implementations and attract technical criticism. Expected progression:
+The sequence adopted is publication of the specification first, reference implementation immediately after. A reference implementation of the bilateral core accompanies this draft at the canonical location, together with the conformance suite of Section 23.2 and a demonstration of the probing attack of Section 24.3. The purpose of Draft 0.1 is not premature formal standardisation but to name the problem, fix terminology, distinguish GIDP from adjacent layers, enable independent implementations and attract technical criticism. Expected progression:
 
 ```text
 Draft 0.1 (request for comments)
@@ -1377,7 +1377,7 @@ Draft 0.1 (request for comments)
 ```
 
 ### F.2 Horizontal-layer hypothesis
-CID should not become a protocol layer merely because the abstraction is appealing. A strong validation would run the same core implementation across at least four domains while changing primarily vocabularies and validation rules, keeping Standing Interest, Disclosure Policy, Discovery Projection, candidate retrieval, compatibility, progressive disclosure, authority, consent and Handoff substantially common. If most core logic must be rewritten per market, CID is better treated as a design pattern or a family of vertical protocols.
+GIDP should not become a protocol layer merely because the abstraction is appealing. A strong validation would run the same core implementation across at least four domains while changing primarily vocabularies and validation rules, keeping Standing Interest, Disclosure Policy, Discovery Projection, candidate retrieval, compatibility, progressive disclosure, authority, consent and Handoff substantially common. If most core logic must be rewritten per market, GIDP is better treated as a design pattern or a family of vertical protocols.
 
 
 **Status at publication.** Four domains have been run against a single
@@ -1398,7 +1398,7 @@ circumstance in which a shared blind spot survives. The test that matters is a
 domain profile written by someone else.
 
 ### F.3 Evaluation criteria
-The proposal should be considered successful only if experiments show that: (1) Principals possess economically meaningful conditional interests they do not want to publish; (2) useful candidate retrieval is possible from reduced projections; (3) progressive disclosure preserves materially more privacy than marketplace publication; (4) Agents can evaluate meaningful compatibility without revealing all constraints; (5) the same core primitives work across multiple markets; (6) the protocol reuses rather than duplicates existing transport and negotiation infrastructure; (7) abuse controls prevent trivial Standing Interest harvesting; (8) the discovery layer produces Opportunities that would otherwise be difficult to surface. If these do not hold, CID should be narrowed, redesigned or abandoned.
+The proposal should be considered successful only if experiments show that: (1) Principals possess economically meaningful conditional interests they do not want to publish; (2) useful candidate retrieval is possible from reduced projections; (3) progressive disclosure preserves materially more privacy than marketplace publication; (4) Agents can evaluate meaningful compatibility without revealing all constraints; (5) the same core primitives work across multiple markets; (6) the protocol reuses rather than duplicates existing transport and negotiation infrastructure; (7) abuse controls prevent trivial Standing Interest harvesting; (8) the discovery layer produces Opportunities that would otherwise be difficult to surface. If these do not hold, GIDP should be narrowed, redesigned or abandoned.
 
 ### F.4 Core architectural hypothesis
 *A sufficiently general primitive exists for Agents to discover compatibility between private, conditional, unpublished interests of their Principals, and that primitive is distinct enough from capability discovery and negotiation to justify interoperable protocol semantics.* Draft 0.1 is intended to test that hypothesis, not to assume it.

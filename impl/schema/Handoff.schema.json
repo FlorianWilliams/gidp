@@ -51,11 +51,11 @@
     }
   },
   "additionalProperties": false,
-  "description": "One-way notification; ends CID's responsibility (Section 14.7).",
+  "description": "One-way notification; ends GIDP's responsibility (Section 14.7).",
   "properties": {
     "version": {
-      "const": "cidisc/0.1",
-      "default": "cidisc/0.1",
+      "const": "gidp/0.1",
+      "default": "gidp/0.1",
       "title": "Version",
       "type": "string"
     },
@@ -97,5 +97,5 @@
   ],
   "title": "Handoff",
   "type": "object",
-  "$id": "urn:example:cidisc:0.1:Handoff"
+  "$id": "urn:example:gidp:0.1:Handoff"
 }

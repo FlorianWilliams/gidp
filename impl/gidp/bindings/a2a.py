@@ -17,17 +17,17 @@ extension sends the `A2A-Extensions` header carrying a comma-separated list
 of extension URIs, and the server echoes back the ones it activated. An
 extension nobody activated is not in force, whatever the Agent Card says.
 The sketch did not mention this at all, which matters because it is the step
-at which a CID exchange can be refused before a single CID object exists.
+at which a GIDP exchange can be refused before a single GIDP object exists.
 
 *Carriage.* Extension data travels in the `metadata` map of A2A's core
 structures, under keys prefixed by the extension URI, so that extensions
 cannot collide and core types are never modified.
 
-The question the sketch does not raise: CID has its own negotiation.
+The question the sketch does not raise: GIDP has its own negotiation.
 Section 14.1 has `SessionOpen` propose features and `SessionAccept` return
 the intersection actually supported. Layered on A2A there are now two
-handshakes, and they are not redundant — the A2A one asks *do you speak CID
-at all*, the CID one asks *which of CID's optional features are in force for
+handshakes, and they are not redundant — the A2A one asks *do you speak GIDP
+at all*, the GIDP one asks *which of GIDP's optional features are in force for
 this session*. Conflating them is the obvious implementation mistake, and
 the second is not derivable from the first: a peer may activate the
 extension and still decline every optional feature.
@@ -47,11 +47,11 @@ from ..objects import (
     TransmittedObject,
 )
 
-#: Illustrative and unallocated: CID 0.1 mints no URI (Section 26). A real
+#: Illustrative and unallocated: GIDP 0.1 mints no URI (Section 26). A real
 #: deployment substitutes its own, and two deployments that choose different
 #: URIs do not interoperate, which is a reason to allocate one before there
 #: are two.
-EXTENSION_URI = "https://example.org/cid/extensions/conditional-interest-discovery/0.1"
+EXTENSION_URI = "https://example.org/gidp/extensions/conditional-interest-discovery/0.1"
 
 #: A2A carries extension data under URI-prefixed keys in `metadata`.
 OBJECT_KEY = f"{EXTENSION_URI}/object"
@@ -77,7 +77,7 @@ _BY_TYPE = {
 
 
 class BindingError(Exception):
-    """The message does not carry a CID object under this extension."""
+    """The message does not carry a GIDP object under this extension."""
 
 
 # ---------------------------------------------------------------------------
@@ -86,13 +86,13 @@ class BindingError(Exception):
 
 
 def agent_extension(
-    description: str = "Conditional Interest Discovery 0.1",
+    description: str = "Graduated Interest Disclosure 0.1",
     required: bool = False,
     params: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """The `AgentExtension` entry for an Agent Card's `capabilities.extensions`.
 
-    `required` stays false: an agent that made CID mandatory would refuse
+    `required` stays false: an agent that made GIDP mandatory would refuse
     every counterparty that speaks plain A2A, which is the opposite of what
     a discovery protocol is for.
     """
@@ -128,7 +128,7 @@ def parse_activation(headers: dict[str, str]) -> list[str]:
 
 
 def echo_activation(headers: dict[str, str]) -> dict[str, str]:
-    """What a responder that supports CID returns.
+    """What a responder that supports GIDP returns.
 
     It echoes only what it actually activated, which is the whole point of
     the round trip: a client cannot assume its request was honoured.
@@ -147,11 +147,11 @@ def is_active(response_headers: dict[str, str]) -> bool:
 
 
 def to_message(obj: TransmittedObject, role: str = "agent") -> dict[str, Any]:
-    """Wrap a CID object in an A2A Message.
+    """Wrap a GIDP object in an A2A Message.
 
     The object goes in `metadata` under a URI-prefixed key, not in a Part:
     A2A's own guidance is that an extension adds attributes to the metadata
-    map rather than modifying core types, and a CID object is not content
+    map rather than modifying core types, and a GIDP object is not content
     for a human to read.
     """
     return {
@@ -166,11 +166,11 @@ def from_message(message: dict[str, Any]) -> TransmittedObject:
     payload = metadata.get(OBJECT_KEY)
     if payload is None:
         raise BindingError(
-            f"no CID object under {OBJECT_KEY}; the extension may be declared "
+            f"no GIDP object under {OBJECT_KEY}; the extension may be declared "
             "but not activated"
         )
     kind = payload.get("type")
     model = _BY_TYPE.get(kind)
     if model is None:
-        raise BindingError(f"unknown CID object type {kind!r}")
+        raise BindingError(f"unknown GIDP object type {kind!r}")
     return model.model_validate(payload)

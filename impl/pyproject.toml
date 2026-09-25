@@ -1,7 +1,7 @@
 [project]
-name = "cid-reference"
+name = "gidp-reference"
 version = "0.1.0"
-description = "Reference implementation of Conditional Interest Discovery (CID) 0.1"
+description = "Reference implementation of Graduated Interest Disclosure (GIDP) 0.1"
 requires-python = ">=3.11"
 dependencies = ["pydantic>=2.0"]
 license = { text = "Apache-2.0" }
@@ -43,5 +43,5 @@ ignore = ["UP042", "E501"]
 
 [tool.mypy]
 python_version = "3.11"
-packages = ["cid"]
+packages = ["gidp"]
 ignore_missing_imports = true

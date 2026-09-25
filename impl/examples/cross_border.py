@@ -1,4 +1,4 @@
-"""Appendix C.1 of CID 0.1, end to end, printing the full transcript.
+"""Appendix C.1 of GIDP 0.1, end to end, printing the full transcript.
 
 *Principal A*, a French software company, privately authorises its Agent to
 explore expansion into Germany. *Principal B*, a German software company, is
@@ -19,8 +19,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from cid.agent import Agent  # noqa: E402
-from cid.objects import (  # noqa: E402
+from gidp.agent import Agent  # noqa: E402
+from gidp.objects import (  # noqa: E402
     AuthoritySpec,
     Claim,
     ConditionalInterest,
@@ -29,10 +29,10 @@ from cid.objects import (  # noqa: E402
     StandingInterest,
     Validity,
 )
-from cid.policy import RetrievalAttribute, derive_projection  # noqa: E402
-from cid.provider import InMemoryProvider  # noqa: E402
-from cid.transport import Wire  # noqa: E402
-from cid.vocab import (  # noqa: E402
+from gidp.policy import RetrievalAttribute, derive_projection  # noqa: E402
+from gidp.provider import InMemoryProvider  # noqa: E402
+from gidp.transport import Wire  # noqa: E402
+from gidp.vocab import (  # noqa: E402
     Authority,
     AuthorityValue,
     ClaimOperator,
@@ -342,7 +342,7 @@ def main() -> None:
     b.session.record_handoff(handoff)
     a.session.close(CloseReason.COMPLETED)
     b.session.close(CloseReason.COMPLETED)
-    say("", "CID's responsibility ends here; terms are never proposed in-session")
+    say("", "GIDP's responsibility ends here; terms are never proposed in-session")
 
     print()
     print(LINE)

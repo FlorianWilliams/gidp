@@ -6,9 +6,9 @@ implementation that found nothing would mean the implementer stopped reading
 carefully.
 
 Each entry states what the specification says, what a reader cannot determine
-from it, what this implementation decided, and whether CID 0.1 should change.
+from it, what this implementation decided, and whether GIDP 0.1 should change.
 
-**Status: twenty of twenty-one were applied to CID 0.1 on 23 September 2026**, before the
+**Status: twenty of twenty-one were applied to GIDP 0.1 on 23 September 2026**, before the
 specification was frozen for publication. The entries are kept because the
 record of what an implementation found is worth more than a clean file: it is
 the evidence that the draft was tested rather than merely written.
@@ -32,7 +32,7 @@ responder's own view: the state moves, nothing is discharged. Same for consent.
 **Spec should change.** Yes, minor: state in 17.2 that a side discharges only
 the requests it sent, and that the transitions apply to both views.
 
-**Resolution — applied to CID 0.1 on 2026-09-23.** Section 17.2 now states that the transitions apply to both Agents' views and that an Agent discharges only the requests it sent.
+**Resolution — applied to GIDP 0.1 on 2026-09-23.** Section 17.2 now states that the transitions apply to both Agents' views and that an Agent discharges only the requests it sent.
 
 ---
 
@@ -51,7 +51,7 @@ the example accordingly reports 5 and 3.
 
 **Spec should change.** Yes: either narrate twelve claims or report five.
 
-**Resolution — applied to CID 0.1 on 2026-09-23.** Appendix C.1 now reports five dimensions evaluated and three compatible, matching what it narrates — and matching what `examples/cross_border.py` prints.
+**Resolution — applied to GIDP 0.1 on 2026-09-23.** Appendix C.1 now reports five dimensions evaluated and three compatible, matching what it narrates — and matching what `examples/cross_border.py` prints.
 
 ---
 
@@ -70,7 +70,7 @@ appear in `open_conditions` and not in `compatible_dimensions`.
 
 **Spec should change.** Yes: define both in 14.6.
 
-**Resolution — applied to CID 0.1 on 2026-09-23.** Section 14.6 now defines both counts, counts each claim key once, excludes `conditionally_compatible` from `compatible_dimensions`, and states the identity `compatible + open_conditions = evaluated`.
+**Resolution — applied to GIDP 0.1 on 2026-09-23.** Section 14.6 now defines both counts, counts each claim key once, excludes `conditionally_compatible` from `compatible_dimensions`, and states the identity `compatible + open_conditions = evaluated`.
 
 ---
 
@@ -94,7 +94,7 @@ the most substantive issue found.
 `declined` to the blocking list, or require a minimum proportion of
 `compatible` results.
 
-**Resolution — applied to CID 0.1 on 2026-09-23.** **The rule changed.** Section 15.2 now requires every claim to have resolved `compatible` or `conditionally_compatible`; `declined`, `unknown`, `requires_disclosure` and `requires_principal_approval` all prevent qualification, and a requester may re-ask a claim to unblock it. `test_declined_result_prevents_qualification` guards it.
+**Resolution — applied to GIDP 0.1 on 2026-09-23.** **The rule changed.** Section 15.2 now requires every claim to have resolved `compatible` or `conditionally_compatible`; `declined`, `unknown`, `requires_disclosure` and `requires_principal_approval` all prevent qualification, and a requester may re-ask a claim to unblock it. `test_declined_result_prevents_qualification` guards it.
 
 ---
 
@@ -115,7 +115,7 @@ reading, and this note records the cost.
 per-projection or otherwise unlinkable across providers, or 24.2 should
 acknowledge the exception.
 
-**Resolution — applied to CID 0.1 on 2026-09-23.** Section 11.1 now says `endpoint` and `projection_id` SHOULD be unlinkable across providers, with the cross-reference to 24.2.
+**Resolution — applied to GIDP 0.1 on 2026-09-23.** Section 11.1 now says `endpoint` and `projection_id` SHOULD be unlinkable across providers, with the cross-reference to 24.2.
 
 ---
 
@@ -134,7 +134,7 @@ way to say "not applicable". A requester cannot distinguish "refused" from
 **Spec should change.** Editorial only: say so explicitly in 14.4, because
 every implementer will hesitate here.
 
-**Resolution — applied to CID 0.1 on 2026-09-23.** Section 14.4 now says explicitly that an Agent holding no value answers `declined`, and why the vocabulary has no "not applicable".
+**Resolution — applied to GIDP 0.1 on 2026-09-23.** Section 14.4 now says explicitly that an Agent holding no value answers `declined`, and why the vocabulary has no "not applicable".
 
 ---
 
@@ -153,7 +153,7 @@ may retry identically.
 **Spec should change.** Probably: either make the close a MUST, or accept the
 cost and say the initiator cannot distinguish this close from any other.
 
-**Resolution — applied to CID 0.1 on 2026-09-23.** Section 14.1 now states that the initiator cannot distinguish a depth-mismatch close from any other `unsupported` close, and that signalling the reason would itself be a disclosure.
+**Resolution — applied to GIDP 0.1 on 2026-09-23.** Section 14.1 now states that the initiator cannot distinguish a depth-mismatch close from any other `unsupported` close, and that signalling the reason would itself be a disclosure.
 
 ---
 
@@ -172,7 +172,7 @@ as it does.
 
 **Spec should change.** Yes: define the comparison for range-valued private
 attributes, and note the inference consequence of whichever is chosen.
-**Resolution — applied to CID 0.1 on 2026-09-23.** Section 14.2 now defines `within` as overlap for range-valued private attributes, and notes the inference consequence.
+**Resolution — applied to GIDP 0.1 on 2026-09-23.** Section 14.2 now defines `within` as overlap for range-valued private attributes, and notes the inference consequence.
 
 
 ---
@@ -182,7 +182,7 @@ attributes, and note the inference consequence of whichever is chosen.
 **Found.** 2026-09-23, by the end-to-end scenario test, on its first run.
 
 **Spec.** Sections 9.1 and 10.1 say a `local` attribute "MUST NOT be
-transmitted through CID". Section 15.4 illustrates a private threshold answered
+transmitted through GIDP". Section 15.4 illustrates a private threshold answered
 without being transmitted.
 
 **Ambiguity.** Read naively — and the first version of `tests/test_scenario.py`
@@ -328,11 +328,11 @@ for what it is for, and the alternatives are worse. The harness, its sweep and
 than an object-model fix, because it corrects a claim a reader would otherwise
 rely on.
 
-**Resolution — applied to CID 0.1 on 2026-09-23.** Section 15.4 now states
+**Resolution — applied to GIDP 0.1 on 2026-09-23.** Section 15.4 now states
 that coarsening protects the value and not the inference, and why. Section
 15.5 no longer attributes an inference-limiting purpose to the permitted
 replacements, and says that the question is answered in 24.3. Section 24.3 now
-states that the only mitigation in CID 0.1 which bounds adaptive inference is
+states that the only mitigation in GIDP 0.1 which bounds adaptive inference is
 a bound on the number of claims, names that bound's known weakness, and points
 at the measurements. See `../spec/alternatives.md`.
 
@@ -369,7 +369,7 @@ reason it matters is the paragraph above.
 **Spec should change.** Yes. An implementer's first instinct is to reject a
 mismatched claim as malformed, and that instinct produces both failures.
 
-**Resolution — applied to CID 0.1 on 2026-09-23.** Section 14.2 now requires
+**Resolution — applied to GIDP 0.1 on 2026-09-23.** Section 14.2 now requires
 `unknown` on a shape mismatch, forbids treating it as a malformed message,
 forbids failing, and states both reasons.
 
@@ -386,28 +386,28 @@ Agent2Agent 1.0 specification instead of from memory.
 
 **Three errors and an omission.** `AgentCapabilities` is §4.4.3 and
 `AgentExtension` is §4.4.4, not §4.6. `AgentExtension` has a fourth field,
-`params`, which is where a CID implementation would naturally declare the
+`params`, which is where a GIDP implementation would naturally declare the
 profiles it supports. And the sketch said nothing about **activation**: in
 A2A, declaring an extension in the Agent Card does not turn it on. A client
 sends the `A2A-Extensions` header listing the URIs it intends to activate and
 the responder echoes the subset it actually activated. An extension that was
 not echoed is not in force.
 
-The omission is the substantive one. Activation is the point at which a CID
-exchange can be refused before any CID object exists, and therefore before
+The omission is the substantive one. Activation is the point at which a GIDP
+exchange can be refused before any GIDP object exists, and therefore before
 any Disclosure Policy has been consulted — which is the earliest and cheapest
 refusal available to a responder, and Section 22.2 did not tell an
 implementer it was there.
 
 **The question the sketch did not raise.** Layered on A2A there are two
-negotiations. A2A activation asks *do you speak CID*; Section 14.1's
-`features` ask *which optional CID features are in force*. Neither implies
+negotiations. A2A activation asks *do you speak GIDP*; Section 14.1's
+`features` ask *which optional GIDP features are in force*. Neither implies
 the other, and the obvious implementation error is to assume a feature is
 available because the extension was activated. `tests/test_a2a_binding.py`
 holds a case where a peer activates the extension and supports no optional
 feature at all.
 
-**Decided here.** `cid/bindings/a2a.py` implements declaration, the
+**Decided here.** `gidp/bindings/a2a.py` implements declaration, the
 activation round trip and carriage in `metadata` under URI-prefixed keys,
 with round-trip tests over every object a real session puts on the wire.
 Writing it also showed that `REQUEST_TYPES`, `RESPONSE_TYPES` and
@@ -419,10 +419,10 @@ that trusts those tuples silently cannot carry two object types.
 the wrong section and omits the handshake is worse than no sketch, because a
 reader will copy it.
 
-**Resolution — applied to CID 0.1 on 2026-09-23.** Section 22.2 now cites
+**Resolution — applied to GIDP 0.1 on 2026-09-23.** Section 22.2 now cites
 §4.4.3 and §4.4.4, includes `params`, describes the activation round trip and
 what a non-echo means, states the `metadata` carriage convention and why a
-CID object does not belong in a Part, warns that the two negotiations are
+GIDP object does not belong in a Part, warns that the two negotiations are
 independent, and notes that an unallocated URI is an interoperability
 question rather than a detail.
 
@@ -441,7 +441,7 @@ from qualifying.
 **The defect.** Nothing can produce it. Gates — including
 `principal_approval` — are properties of the Disclosure Policy and govern
 disclosure and consent, and Section 15.4 is emphatic that answering a claim is
-not disclosing. So within CID 0.1's own model there is no construct under
+not disclosing. So within GIDP 0.1's own model there is no construct under
 which answering a claim requires a Principal decision, the result is
 unreachable by construction, and Section 15.2's rule about it is vacuous.
 Three enumerations carry a "pending principal approval" token; two are
@@ -453,7 +453,7 @@ obligation on every implementer, for a case none of them can reach.
 
 **Spec should change.** Yes. Removing it also makes Section 15.2 say something.
 
-**Resolution — applied to CID 0.1 on 2026-09-23.** Removed from the Section
+**Resolution — applied to GIDP 0.1 on 2026-09-23.** Removed from the Section
 15.1 table and from the Section 15.2 blocking list. If a deployment shows that
 a Principal should approve *answers* and not only disclosures, a future
 version can reintroduce it with the construct that produces it — noting that
@@ -468,8 +468,8 @@ decision keyed to the responder's own values is a channel.
 
 **Spec.** Section 15.3 says operational outcomes — `unsupported`,
 `unauthorized`, `expired`, `rate_limited`, `temporarily_unavailable` — "belong
-to the transport binding, not to the CID object set: a binding conveys them
-through its own error mechanism, and CID defines no object for them."
+to the transport binding, not to the GIDP object set: a binding conveys them
+through its own error mechanism, and GIDP defines no object for them."
 
 **The defect.** The implementation shipped a closed `OperationalOutcome`
 enumeration anyway, contradicting the sentence it was implementing. Nothing
@@ -479,11 +479,11 @@ right and the code disagreed.
 **Decided here.** Removed. The tokens stay in Section 15.3's prose, where they
 name what a binding conveys.
 
-**Spec should change.** Only to close the door: Section 15.3 now adds that CID
+**Spec should change.** Only to close the door: Section 15.3 now adds that GIDP
 defines no enumeration for them either, so that the next implementer does not
 repeat this.
 
-**Resolution — applied to CID 0.1 on 2026-09-23.**
+**Resolution — applied to GIDP 0.1 on 2026-09-23.**
 
 ---
 
@@ -522,7 +522,7 @@ say that the Principal's decision arrives as the terminal response to the
 original request, because an implementer reading 14.5 alone will build what
 this implementation built.
 
-**Resolution — applied to CID 0.1 on 2026-09-23.**
+**Resolution — applied to GIDP 0.1 on 2026-09-23.**
 
 ---
 
@@ -560,10 +560,10 @@ which is the safe outcome.
 **Spec should change.** Yes. A limit nothing turns on should not be called a
 limit.
 
-**Resolution — applied to CID 0.1 on 2026-09-23.** Section 10.7 now forbids
+**Resolution — applied to GIDP 0.1 on 2026-09-23.** Section 10.7 now forbids
 stating a retention the requester cannot discharge and requires omission
 instead; Section 25.4's "recipients SHOULD honour them" becomes a MUST for a
-recipient that stated one. The specification also says plainly that CID cannot
+recipient that stated one. The specification also says plainly that GIDP cannot
 verify discharge and does not pretend to.
 
 ---
@@ -646,7 +646,7 @@ their Disclosure Policies while producing the same sequence of protocol
 objects — which is also the criterion that carries the horizontality claim of
 Appendix F.2, and which had been resting on inspection.
 
-**Resolution — applied to CID 0.1 on 2026-09-24.**
+**Resolution — applied to GIDP 0.1 on 2026-09-24.**
 
 ---
 
@@ -701,7 +701,7 @@ strictly less.
 
 **Spec should change.** Yes, and differently from the first attempt.
 
-**Resolution — applied to CID 0.1 on 2026-09-24.** Section 14.2 states the
+**Resolution — applied to GIDP 0.1 on 2026-09-24.** Section 14.2 states the
 three-way rule and its asymmetry, notes that the hierarchy is never
 transmitted, and contrasts it with Section 12.4: a provider resolves for the
 whole index because it sees only projections, while inside a session only the

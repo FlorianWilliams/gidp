@@ -10,10 +10,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "examples"))
 
 import partnership  # noqa: E402
 
-from cid.agent import Agent  # noqa: E402
-from cid.evaluation import DEPENDENCY_KEYS, evaluate_claim  # noqa: E402
-from cid.objects import Claim  # noqa: E402
-from cid.vocab import ClaimOperator, Feature  # noqa: E402
+from gidp.agent import Agent  # noqa: E402
+from gidp.evaluation import DEPENDENCY_KEYS, evaluate_claim  # noqa: E402
+from gidp.objects import Claim  # noqa: E402
+from gidp.vocab import ClaimOperator, Feature  # noqa: E402
 
 
 def test_a_claim_may_name_a_dependency_primitive():

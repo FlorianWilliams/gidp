@@ -11,10 +11,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from test_conformance import _interest, _soon  # noqa: E402
 
-from cid.agent import Agent
-from cid.objects import Claim, SessionClose
-from cid.transport import Wire, WireError
-from cid.vocab import ClaimOperator, CloseReason, DisclosureStatus
+from gidp.agent import Agent
+from gidp.objects import Claim, SessionClose
+from gidp.transport import Wire, WireError
+from gidp.vocab import ClaimOperator, CloseReason, DisclosureStatus
 
 
 def _wired() -> tuple[Agent, Agent, Wire]:

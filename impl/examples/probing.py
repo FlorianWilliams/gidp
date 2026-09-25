@@ -21,8 +21,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from cid.agent import Agent  # noqa: E402
-from cid.objects import (  # noqa: E402
+from gidp.agent import Agent  # noqa: E402
+from gidp.objects import (  # noqa: E402
     AuthoritySpec,
     Claim,
     ConditionalInterest,
@@ -30,7 +30,7 @@ from cid.objects import (  # noqa: E402
     DisclosurePolicy,
     StandingInterest,
 )
-from cid.vocab import (  # noqa: E402
+from gidp.vocab import (  # noqa: E402
     Authority,
     AuthorityValue,
     ClaimOperator,

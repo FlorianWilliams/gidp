@@ -22,7 +22,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-import cid.vocab as vocab  # noqa: E402
+import gidp.vocab as vocab  # noqa: E402
 
 #: Values nothing reaches, each with the reason it is nonetheless kept. A
 #: value absent from this register and absent from the code is a value the
@@ -50,7 +50,7 @@ KEPT_WITHOUT_A_DEMONSTRATION = {
 }
 
 BUCKETS = {
-    "core": sorted(ROOT.joinpath("cid").rglob("*.py")),
+    "core": sorted(ROOT.joinpath("gidp").rglob("*.py")),
     "examples": sorted(ROOT.joinpath("examples").glob("*.py")),
     "tests": sorted(ROOT.joinpath("tests").glob("*.py")),
     "baselines": sorted(ROOT.joinpath("baselines").glob("*.py")),
@@ -77,7 +77,7 @@ def _members() -> dict[str, tuple[str, str, object]]:
 
 def coverage() -> dict[str, list[str]]:
     """value -> the buckets that reference it, excluding its own definition."""
-    vocab_source = ROOT.joinpath("cid/vocab.py").read_text()
+    vocab_source = ROOT.joinpath("gidp/vocab.py").read_text()
     sources = {
         bucket: "\n".join(p.read_text() for p in paths)
         for bucket, paths in BUCKETS.items()

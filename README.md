@@ -1,6 +1,6 @@
-# Conditional Interest Discovery
+# Graduated Interest Disclosure
 
-**Version 0.1 — draft for review. Wire version token: `cidisc/0.1`.**
+**Version 0.1 — draft for review. Wire version token: `gidp/0.1`.**
 
 Most of what an economy would like to match never gets stated. A company that
 would sell at the right price does not announce it. A candidate open to the
@@ -8,7 +8,7 @@ right role does not tell their employer. A fund that would follow a credible
 lead does not publish the conditions. The interest is real, the conditions are
 knowable, and stating them publicly costs more than the match is worth.
 
-Conditional Interest Discovery is an open protocol for that class of interest.
+Graduated Interest Disclosure is an open protocol for that class of interest.
 It lets an agent, acting for a principal under an explicit and auditable
 delegation, establish whether two parties are worth introducing — without
 either side disclosing what it is protecting, and without a central operator
@@ -21,7 +21,7 @@ protocol defines how such an interest is expressed, what may be exposed and to
 whom, what two agents may ask each other, what they must answer truthfully,
 and where the exchange stops and a human takes over.
 
-CID is a discovery layer. It does not negotiate, does not settle, does not
+GIDP is a discovery layer. It does not negotiate, does not settle, does not
 custody anything, and does not commit a principal to anything. It hands a
 qualified, consented Opportunity to a human or to a downstream protocol, and
 stops there.
@@ -30,7 +30,7 @@ stops there.
 
 | Path | What it is |
 |---|---|
-| [`spec/CID-0.1.md`](spec/CID-0.1.md) | The specification. Normative. |
+| [`spec/GIDP-0.1.md`](spec/GIDP-0.1.md) | The specification. Normative. |
 | [`spec/explainer.md`](spec/explainer.md) | One page, for a first reader. |
 | [`spec/use-cases.md`](spec/use-cases.md) | Eight cases the protocol is meant to serve. |
 | [`spec/open-problems.md`](spec/open-problems.md) | Design rationale, the formal open problem, candidate directions. Non-normative. |

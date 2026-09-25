@@ -3,7 +3,7 @@
 The binding is a sketch in the specification and non-normative here too.
 What these tests protect is narrower and worth protecting: that the sketch
 matches the four fields A2A actually defines, that it does not skip the
-activation round trip, and that every CID object can in fact be carried.
+activation round trip, and that every GIDP object can in fact be carried.
 """
 
 from __future__ import annotations
@@ -16,7 +16,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from cid.bindings.a2a import (
+from gidp.bindings.a2a import (
     ACTIVATION_HEADER,
     EXTENSION_URI,
     OBJECT_KEY,
@@ -30,8 +30,8 @@ from cid.bindings.a2a import (
     parse_activation,
     to_message,
 )
-from cid.objects import SessionClose
-from cid.vocab import CloseReason
+from gidp.objects import SessionClose
+from gidp.vocab import CloseReason
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "examples"))
 
@@ -54,7 +54,7 @@ def test_params_is_omitted_rather_than_null_when_unused():
 
 
 def test_the_extension_is_never_declared_required():
-    """An agent that made CID mandatory would refuse every plain A2A peer."""
+    """An agent that made GIDP mandatory would refuse every plain A2A peer."""
     assert agent_card_capabilities()["extensions"][0]["required"] is False
 
 
@@ -124,13 +124,13 @@ def test_an_unknown_object_type_is_refused():
 def test_activating_the_extension_says_nothing_about_cid_features():
     """Two negotiations, and the second is not derivable from the first.
 
-    A2A activation answers *do you speak CID*. Section 14.1 answers *which
-    optional CID features are in force*. A peer may activate and still
+    A2A activation answers *do you speak GIDP*. Section 14.1 answers *which
+    optional GIDP features are in force*. A peer may activate and still
     support no optional feature at all.
     """
     from baselines.scenario import b_interest
-    from cid.agent import Agent
-    from cid.vocab import Feature
+    from gidp.agent import Agent
+    from gidp.vocab import Feature
 
     assert is_active(echo_activation(activation_header()))
 

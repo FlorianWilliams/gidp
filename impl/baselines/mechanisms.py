@@ -30,9 +30,9 @@ from baselines.scenario import (
     b_interest,
     truly_compatible,
 )
-from cid.evaluation import choose_result, evaluate_claim
-from cid.objects import Claim
-from cid.vocab import ClaimOperator, ClaimResult
+from gidp.evaluation import choose_result, evaluate_claim
+from gidp.objects import Claim
+from gidp.vocab import ClaimOperator, ClaimResult
 
 #: The ground truth every mechanism is trying to reach.
 TRUTH = truly_compatible()
@@ -56,7 +56,7 @@ def _ledger() -> Ledger:
 
 
 def _answer(interest, claim: Claim, over_budget: bool = False) -> ClaimResult:
-    """The default answering policy of `cid/agent.py`, reused verbatim."""
+    """The default answering policy of `gidp/agent.py`, reused verbatim."""
     evaluation = evaluate_claim(interest, claim)
     if over_budget:
         return choose_result(evaluation, decline=True)
@@ -274,7 +274,7 @@ def private_set_intersection() -> Outcome:
 
 
 # ---------------------------------------------------------------------------
-# 5. CID, run honestly, and run adversarially
+# 5. GIDP, run honestly, and run adversarially
 # ---------------------------------------------------------------------------
 
 HONEST_CLAIMS = [
@@ -340,7 +340,7 @@ def cid_honest() -> Outcome:
     _replay(ledger, HONEST_CLAIMS, "answered in session")
 
     return Outcome(
-        name="CID, honest counterparty",
+        name="GIDP, honest counterparty",
         verdict="introduce" if TRUTH else "no match",
         correct=True,
         queries=len(HONEST_CLAIMS),
@@ -395,7 +395,7 @@ def cid_adversarial(budget: int = 40) -> Outcome:
 
     _replay(ledger, claims, "answered in session")
     return Outcome(
-        name="CID, probing counterparty",
+        name="GIDP, probing counterparty",
         verdict="introduce" if TRUTH else "no match",
         correct=True,
         queries=len(claims),

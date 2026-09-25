@@ -24,8 +24,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from baselines.mitigations import POLICIES, _ask  # noqa: E402
 from baselines.scenario import b_interest  # noqa: E402
-from cid.objects import Claim  # noqa: E402
-from cid.vocab import ClaimOperator  # noqa: E402
+from gidp.objects import Claim  # noqa: E402
+from gidp.vocab import ClaimOperator  # noqa: E402
 
 
 def extraction_cost(candidates: int, step: int = 5_000_000) -> int:

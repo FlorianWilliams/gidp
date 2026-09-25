@@ -39,9 +39,9 @@ from baselines.scenario import (  # noqa: E402
     VALUATION_GRID,
     b_interest,
 )
-from cid.evaluation import LocalEvaluation, evaluate_claim  # noqa: E402
-from cid.objects import Claim  # noqa: E402
-from cid.vocab import ClaimOperator, ClaimResult  # noqa: E402
+from gidp.evaluation import LocalEvaluation, evaluate_claim  # noqa: E402
+from gidp.objects import Claim  # noqa: E402
+from gidp.vocab import ClaimOperator, ClaimResult  # noqa: E402
 
 Policy = Callable[[LocalEvaluation, bool], set[ClaimResult]]
 
@@ -66,7 +66,7 @@ def _truthful(evaluation: LocalEvaluation) -> ClaimResult:
 
 
 def default_policy(evaluation: LocalEvaluation, over_budget: bool) -> set[ClaimResult]:
-    """What `cid/agent.py` does today: coarsen an affirmative local answer."""
+    """What `gidp/agent.py` does today: coarsen an affirmative local answer."""
     if over_budget:
         return {ClaimResult.DECLINED}
     if evaluation.evaluation_only and evaluation.truth is True:
