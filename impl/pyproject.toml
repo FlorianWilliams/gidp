@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Reference implementation of Graduated Interest Disclosure (GIDP) 0.1"
 requires-python = ">=3.11"
 dependencies = ["pydantic>=2.0"]
-license = { text = "Apache-2.0" }
+license = "Apache-2.0"
 
 [project.optional-dependencies]
 dev = [
@@ -16,12 +16,21 @@ dev = [
   "mypy>=1.10",
 ]
 
+# Only the library ships. baselines, schema, examples, tests and tools are
+# the workbench: flat-layout auto-discovery sees them as packages and
+# refuses to guess, which is how this was found.
+[tool.setuptools.packages.find]
+include = ["gidp*"]
+
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=77"]   # SPDX string form of `license` needs 77+
 build-backend = "setuptools.build_meta"
 
-[project.urls]
-Specification = "{{CANONICAL_URL}}"
+# The specification URL is the protocol identifier and must resolve for
+# good. It is declared once a domain exists; an unresolvable placeholder
+# here fails the build, which is the correct behaviour.
+# [project.urls]
+# Specification = "{{CANONICAL_URL}}"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
