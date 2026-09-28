@@ -81,6 +81,14 @@ from overlap claims is a screen and the document should not let a reader
 believe otherwise. `SessionOpen` gains an OPTIONAL `projection_ref`. The
 rest is propagation and honesty — the full account is in SPEC-ISSUES.
 
+A fifth pass closed the round with two raccords (S-47, S-48): a deferred
+qualification is recomputed at the return to PROBING rather than
+remembered from mid-wait — fixing which surfaced that the status-kept
+rule of S-35 had existed only in prose — and a claim on an identity
+attribute is declined without reveal_identity consent, closing the third
+door after S-33's two. The reviewer then judged the version fit to
+stabilise and submit to implementers.
+
 The last of those, S-12, is worth naming here because it changes what the
 document claims rather than what it specifies. A comparative harness built to
 test the protocol against existing mechanisms showed that the coarsening

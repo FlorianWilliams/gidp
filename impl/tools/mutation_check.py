@@ -34,6 +34,24 @@ class Mutation:
 
 MUTATIONS = (
     Mutation(
+        "an identity claim is declined without reveal_identity (10.6)",
+        "gidp/agent.py",
+        "                claim.key in IDENTITY_ATTRIBUTES",
+        "                False",
+    ),
+    Mutation(
+        "no qualifying status is reported while a request is pending (17.2)",
+        "gidp/session.py",
+        "        if self.state is not SessionState.PROBING:\n            return SessionStatus.OPEN",
+        "        if False:\n            return SessionStatus.OPEN",
+    ),
+    Mutation(
+        "session_status is kept after qualification (15.2)",
+        "gidp/session.py",
+        "        if self.opportunity_emitted:\n            return SessionStatus.POTENTIALLY_COMPATIBLE",
+        "        if False:\n            return SessionStatus.POTENTIALLY_COMPATIBLE",
+    ),
+    Mutation(
         "an identity attribute travels only under reveal_identity (10.6)",
         "gidp/agent.py",
         "            request.attribute in IDENTITY_ATTRIBUTES",

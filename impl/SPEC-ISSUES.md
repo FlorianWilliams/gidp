@@ -1024,3 +1024,39 @@ failed whenever the clock's microseconds contained "80" — the source of
 two phantom failures. It now excludes the timestamp.
 
 **Resolution — applied to GIDP 0.1 on 2026-09-28.**
+
+
+---
+
+## S-47, S-48 — the reviewer's fifth pass (28 September 2026): two raccords, then approval
+
+The reviewer judged the version fit to stabilise as the experimental 0.1
+and submit to implementers, with two targeted fixes.
+
+**S-47 — a deferred qualification is recomputed, not remembered.** The
+S-34 rule ("neither fires nor lapses") could be read as memorising a
+qualification met mid-wait, although a further result — an `unknown` at
+step three — could arrive during the same wait. Decided, per the
+reviewer's own proposal: while a request is pending, `session_status`
+remains `open`; on the return to `PROBING` the entry conditions are
+recomputed over the propositions standing at that moment; where they
+hold, status, state and Opportunity advance together — which also
+restores the exact coincidence Section 14.6 asserts. Fixing the text
+exposed that `Session.status()` had never implemented the S-35 keep
+either: the "status is kept after qualification" rule existed only in
+prose. Both are now in the code, each with a mutation.
+
+**S-48 — identity confirmation is the third door.** S-33 closed
+disclosure and consent; a claim `principal_identity equals "Acme GmbH"`
+answered `compatible` confirms the identity without any
+`DisclosureResponse` carrying it. A claim on an identity attribute is
+now `declined` unless a `reveal_identity` consent is in force, in the
+text and in the agent, tested before and after consent.
+
+The reviewer's remaining request — a light editorial pass moving the
+historical justifications out of the normative text and into this file
+and the rationale document — is deliberately not bundled here: it
+touches many sections at once and deserves its own pass with nothing
+else in flight.
+
+**Resolution — applied to GIDP 0.1 on 2026-09-28.**

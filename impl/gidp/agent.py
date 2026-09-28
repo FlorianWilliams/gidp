@@ -296,6 +296,15 @@ class Agent:
                 # Section 18: a refusal implies nothing, and this one implies
                 # less than most -- an observer can reproduce the decision.
                 result = ClaimResult.DECLINED
+            elif (
+                claim.key in IDENTITY_ATTRIBUTES
+                and claim.key not in self.consents.identity_revealed
+            ):
+                # Section 10.6: `compatible` to `principal_identity equals
+                # "Acme GmbH"` confirms the identity without any
+                # DisclosureResponse carrying it -- the third door, after
+                # the two S-33 closed. Declined, which implies nothing.
+                result = ClaimResult.DECLINED
             else:
                 evaluation = evaluate_claim(self.standing_interest, claim)
                 result = self._answer(evaluation, over_budget=over_budget)

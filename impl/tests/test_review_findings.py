@@ -604,7 +604,9 @@ def test_qualification_reached_while_a_disclosure_is_pending_defers():
     # ...when the qualifying exchange completes.
     _exchange(a, b, [Claim(key="domain", operator=ClaimOperator.INTERSECTS,
                            value=["enterprise_software"])])
-    assert a.session.status() is SessionStatus.POTENTIALLY_COMPATIBLE
+    # Section 17.2: while the request is pending, the status is not yet
+    # reported qualifying -- it is recomputed on the return to PROBING.
+    assert a.session.status() is SessionStatus.OPEN
     assert a.session.qualify() is False, "must not fire while pending"
     assert a.session.state is SessionState.DISCLOSURE_PENDING
     # The terminal response returns the session to PROBING...
@@ -615,3 +617,69 @@ def test_qualification_reached_while_a_disclosure_is_pending_defers():
     assert a.session.qualify() is True
     assert a.session.state is SessionState.QUALIFIED
     assert a.session.qualify() is False
+
+
+def test_a_result_arriving_during_the_wait_counts_at_the_return():
+    """The reviewer's exact sequence: qualifying at step 2, `unknown` at
+    step 3 during the same wait -- the session must NOT qualify at step 4,
+    because the conditions are recomputed over the propositions then
+    standing, not remembered from mid-wait."""
+    a, b = _pair()
+    request = a.request_disclosure("open_attribute", purpose="qualify")
+    # Step 2: a qualifying exchange completes during the wait.
+    _exchange(a, b, [Claim(key="domain", operator=ClaimOperator.INTERSECTS,
+                           value=["enterprise_software"])])
+    # Step 3: during the same wait, a further claim resolves unknown.
+    unresolved = _exchange(
+        a, b, [Claim(key="jurisdiction", operator=ClaimOperator.INTERSECTS,
+                     value=["antarctica"])]
+    )
+    assert unresolved.results[0].result is ClaimResult.UNKNOWN
+    # Step 4: the terminal response returns the session to PROBING.
+    response = b.handle_disclosure_request(request)
+    a.session.record_disclosure(response)
+    assert a.session.state is SessionState.PROBING
+    assert a.session.status() is SessionStatus.OPEN
+    assert a.session.qualify() is False, (
+        "an unresolved proposition standing at the return prevents "
+        "qualification (Sections 15.2, 17.2)"
+    )
+
+
+def test_status_is_kept_after_qualification():
+    """S-35, now in the code as well as the text: a later `unknown` does
+    not drop `session_status` back to `open`."""
+    a, b = _pair()
+    _qualify_both(a, b)
+    _exchange(a, b, [Claim(key="jurisdiction", operator=ClaimOperator.INTERSECTS,
+                           value=["antarctica"])])
+    assert a.session.status() is SessionStatus.POTENTIALLY_COMPATIBLE
+    assert b.session.status() is SessionStatus.POTENTIALLY_COMPATIBLE
+
+
+def test_an_identity_claim_is_declined_without_reveal_consent():
+    """S-48: `compatible` to `principal_identity equals X` confirms the
+    identity without any DisclosureResponse carrying it."""
+    a, b = _identity_pair(gate=Gate.NONE)
+    response = _exchange(
+        a, b, [Claim(key="principal_identity", operator=ClaimOperator.EQUALS,
+                     value="Acme GmbH")]
+    )
+    assert response.results[0].result is ClaimResult.DECLINED
+
+
+def test_an_identity_claim_is_answerable_after_reveal_consent():
+    a, b = _identity_pair(gate=Gate.NONE)
+    _qualify_both(a, b)
+    consent = a.request_consent(
+        ConsentAction.REVEAL_IDENTITY, scope=["principal_identity"]
+    )
+    granted = b.handle_consent_request(consent)
+    assert granted.status is ConsentStatus.GRANTED
+    a.session.record_consent(granted)
+    b.session.record_consent(granted, discharge=False)
+    response = _exchange(
+        a, b, [Claim(key="principal_identity", operator=ClaimOperator.EQUALS,
+                     value="Acme GmbH")]
+    )
+    assert response.results[0].result is ClaimResult.COMPATIBLE

@@ -352,6 +352,18 @@ class Session:
         if ClaimResult.INCOMPATIBLE in values:
             return SessionStatus.INCOMPATIBLE
 
+        # Section 15.2: the entry conditions decide the transition; once it
+        # is taken the status is kept, whatever is recorded afterwards.
+        if self.opportunity_emitted:
+            return SessionStatus.POTENTIALLY_COMPATIBLE
+
+        # Section 17.2: while a disclosure or consent is pending, the status
+        # is not yet reported qualifying -- it is recomputed on the return
+        # to PROBING, over the propositions then standing, so that status,
+        # state and Opportunity advance together.
+        if self.state is not SessionState.PROBING:
+            return SessionStatus.OPEN
+
         # Section 15.2: every claim must have resolved `compatible` or
         # `conditionally_compatible`, and at least one `compatible`. A
         # `declined`, `unknown`, `requires_disclosure` or
