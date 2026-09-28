@@ -322,6 +322,7 @@ class Agent:
             request_ref=request.request_id,
             results=outcomes,
             session_status=self.session.status(),
+            contingent_on=self.session.own_contingent_on(),
             next=NextBlock(
                 permitted=[
                     NextAction.COMPATIBILITY_REQUEST,
@@ -545,6 +546,20 @@ class Agent:
             if self.standing_interest.class_of(attribute).gate
             is Gate.PRINCIPAL_APPROVAL
         ]
+
+        if self._authority(level) is AuthorityValue.FALSE:
+            # Section 14.5: a refused authority is a refusal, not an approval
+            # pending -- `pending_principal_approval` would tell the peer to
+            # wait for a decision nobody will be asked to make (Section 18
+            # gives the same rule for disclosure). Section 16.3, second row.
+            self._log("consent_declined", f"{request.action.value} (authority)")
+            return ConsentResponse(
+                session_id=self.session.session_id,
+                request_ref=request.request_id,
+                status=ConsentStatus.DECLINED,
+                granted_scope=[],
+                expires_at=_soon(),
+            )
 
         if self._authority(level) is not AuthorityValue.TRUE or gated:
             if all(attribute in self.pre_approved for attribute in gated) and gated:

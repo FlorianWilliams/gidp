@@ -149,6 +149,22 @@ The review found four contradictions and an ambiguity, corrected before publicat
 
 **Testing flow control outside the model (T06).** Section 6.10 places policy enforcement outside the model; the conformance test of Section 23.2 checks reproducibility, and a leak can be perfectly reproducible. A stronger test varies one `never` attribute and checks that no covered output changes, and for `evaluation_only` checks that only explicitly permitted declassifications occur — including through the choice of questions, free text and side outputs, since two individually permitted messages can encode a secret by which one is chosen. Such tests raise confidence without proving absence. The reference implementation has the first half — a claim on a `never` attribute is declined and a `never` dependency leaves no trace — and not yet the variation test.
 
+### The 0.2 programme, from the second review (28 September 2026)
+
+The second review confirmed the first round of corrections, found six more defects — applied to 0.1, `impl/SPEC-ISSUES.md` S-27 to S-32 — and proposed the structural work that should not be done by patching. Recorded here as the shape of 0.2, in the reviewer's priority order, with which we concur:
+
+**Separate what one state currently encodes.** A session has a phase (opening, exploring, qualified, handed off, closed), a set of pending requests, and a set of granted consents; the current machine encodes all three in one state, and the `_RETURN` bookkeeping of Section 17.2 is the patch that proves it. Each event should state separately its effect on the phase, the pending set, the consent set and the evaluation.
+
+**Make qualification bilateral over a named result.** 0.1's minimal fix (S-32) lets the responder's contingencies reach the Opportunity; the full mechanism is an accepted summary — each side contributes its communicable results and contingencies, one summary is proposed with a revision reference, both accept it, the Opportunity cites it. Acceptance means the summary suffices for the next step; it is neither consent to identity nor commitment.
+
+**One narrow profile, fully typed.** For each attribute: fact, preference or acceptable set; type, unit, temporality; interval and set semantics; permitted operators; the meaning of absence; the minimum claims a session must have asked before its Opportunities qualify — including a joint predicate where dimension-by-dimension tests mislead (Section 14.6).
+
+**A privacy perimeter beyond one process.** 0.1 states the persistence requirements (Section 24.3); 0.2 owes their realisation — durable ledgers, replica coordination, derived attributes through the same control — and an explicit account of the LLM's controlled outputs: chosen questions, free text and tool calls, not only disclosed values. Structured codes for reasons and requests narrow the channels that resist control.
+
+**A conformance corpus that does not import the reference classes.** Messages plus permitted initial state in, permitted and forbidden responses and effects out. Priority scenarios: consent before qualification; a dependency known only to the responder; revocation during an approval; the same message twice; a response after expiry; concurrent questions; restart; a nearly spent budget under two concurrent requests.
+
+The test the whole programme answers to: someone who did not design GIDP implements a profile, passes the scenarios and explains their decisions from the published documents alone.
+
 These are the questions implementation should answer, restated compactly from Appendix E of the specification. How much of a Standing Interest should be structured rather than natural language, and how should fuzzy conditions be represented? What is the minimum useful projection, and how should projections be indexed without building the searchable database of sensitive interests the protocol exists to avoid? Where should compatibility be evaluated — locally, peer to peer, in a trusted execution environment, under secure computation? How should an Agent prove authority for a specific Standing Interest without disclosing the Principal? How should multi-party dependency discovery avoid combinatorial explosion, and when may a partial coalition be revealed? And the governance question that will be forced early: should GIDP be an extension of an agent-to-agent protocol, a protocol in its own right, or a reusable application profile?
 
 ## Part V — What would falsify this work

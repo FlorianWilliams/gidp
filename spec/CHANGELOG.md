@@ -38,8 +38,9 @@ Consolidates three earlier internal drafts written under the working name
 *Conditional Interest Discovery*, abandoned before publication because its
 contraction collides with IPFS content identifiers inside the same layer, and incorporates two independent adversarial reviews of the consolidated
 text, twenty-one issues found while writing the reference implementation,
-and five found by the first external review of the specification, read
-without the code (`impl/SPEC-ISSUES.md`, S-01 to S-26).
+five found by the first external review of the specification, read
+without the code, and six by the second, which re-read the corrected text
+(`impl/SPEC-ISSUES.md`, S-01 to S-32).
 
 The external review is worth naming for what it found rather than for
 having happened. Three of its findings were normative contradictions that
@@ -51,6 +52,20 @@ qualify on a dimension that had failed (S-24). Writing a test for each
 before fixing it showed two of them to be live defects of the reference
 implementation, not only of the text. They were corrected in both before
 publication, which is why they belong to 0.1 and not to a 0.2.
+
+The second review confirmed the corrections and found what they had missed:
+mostly propagation — sentences elsewhere in the document still asserting
+what a corrected section no longer asserts (S-27, S-29, S-30) — plus a
+consent path that told a counterparty to wait on an authority that had been
+refused (S-28), a missing line in the state table together with the
+undecided fate of an emitted Opportunity, now decided as frozen at
+qualification (S-31), and the one genuine design gap of the batch: the
+initiator emits the Opportunity but cannot know the responder's protected
+contingencies, so `CompatibilityResponse` now carries them in communicable
+form and the initiator merges them (S-32). The same date added the decision
+order for authorisation checks (Section 16.3) and the persistence
+requirements for the disclosure budget (Section 24.3). The review's
+structural proposals are recorded in `open-problems.md` for 0.2.
 
 The last of those, S-12, is worth naming here because it changes what the
 document claims rather than what it specifies. A comparative harness built to

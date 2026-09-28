@@ -365,3 +365,155 @@ def test_a_handoff_carries_the_contingency_forward_under_the_same_rule():
     handoff = a.handoff("urn:example:negotiation")
     assert handoff.contingent_on == ["undisclosed"]
     assert "board_vote_on_divestment" not in handoff.model_dump_json()
+
+
+# ---------------------------------------------------------------------------
+# Second review (28 September 2026) -- SPEC-ISSUES.md S-27 to S-32
+# ---------------------------------------------------------------------------
+
+
+def _responder_dependent_pair(conditional_on_class: DisclosureClass | None):
+    """The reviewer's case: the *responder* holds the dependency.
+
+    The initiator builds the Opportunity from its own session view; before
+    Section 14.3 carried `contingent_on`, nothing told it the responder's
+    evaluation was contingent, and the responder received an Opportunity
+    that did not match its own evaluation.
+    """
+    attributes = {"domain": DisclosureClass(surface=Surface.DISCOVERY)}
+    if conditional_on_class is not None:
+        attributes["conditional_on"] = conditional_on_class
+    follower = _interest(
+        interest=ConditionalInterest(
+            action="consider",
+            conditions={"domain": ["enterprise_software"]},
+            conditional_on=["anchor_investor_commitment"],
+        ),
+        disclosure_policy=DisclosurePolicy(attributes=attributes),
+    )
+    a = Agent(ref="agent:a", standing_interest=_interest())
+    b = Agent(ref="agent:b", standing_interest=follower)
+    opened = a.open_session("s-resp-dep", purpose="test")
+    a.confirm_accept(b.handle_session_open(opened))
+    response = _exchange(
+        a, b, [Claim(key="domain", operator=ClaimOperator.INTERSECTS,
+                     value=["enterprise_software"])]
+    )
+    assert b.session.qualify() is True
+    assert a.session.qualify() is True
+    opportunity = a.session.build_opportunity(
+        structure="x", expires_at=_soon(), identity_status={}
+    )
+    return response, opportunity
+
+
+def test_a_responders_withheld_dependency_reaches_the_opportunity():
+    """S-32: B's evaluation_only dependency, unknown to A, must still mark
+    the Opportunity as contingent -- as `undisclosed`, never by name."""
+    response, opportunity = _responder_dependent_pair(None)
+    assert response.contingent_on == ["undisclosed"]
+    assert opportunity.contingent_on == ["undisclosed"]
+    assert "anchor_investor_commitment" not in opportunity.model_dump_json()
+
+
+def test_a_responders_transmittable_dependency_travels_by_name():
+    response, opportunity = _responder_dependent_pair(
+        DisclosureClass(surface=Surface.SESSION)
+    )
+    assert response.contingent_on == ["anchor_investor_commitment"]
+    assert opportunity.contingent_on == ["anchor_investor_commitment"]
+
+
+def test_a_responders_never_dependency_leaves_no_trace():
+    response, opportunity = _responder_dependent_pair(_never())
+    assert response.contingent_on == []
+    assert opportunity.contingent_on == []
+    assert "anchor_investor_commitment" not in opportunity.model_dump_json()
+
+
+def test_consent_under_a_false_authority_is_declined_not_pending():
+    """S-28: a refused authority is a refusal. `pending_principal_approval`
+    would tell the counterparty to wait for a decision nobody will make."""
+    from gidp.objects import AuthoritySpec
+    from gidp.vocab import Authority, AuthorityValue
+
+    no_introduce = _interest(
+        authority=AuthoritySpec(
+            levels={
+                Authority.PROBE: AuthorityValue.TRUE,
+                Authority.DISCLOSE: AuthorityValue.TRUE,
+                # INTRODUCE unset: defaults to FALSE (Section 16.1)
+            }
+        )
+    )
+    a = Agent(ref="agent:a", standing_interest=_interest())
+    b = Agent(ref="agent:b", standing_interest=no_introduce)
+    opened = a.open_session("s-auth-false", purpose="test")
+    a.confirm_accept(b.handle_session_open(opened))
+    _qualify_both(a, b)
+    request = a.request_consent(ConsentAction.REVEAL_IDENTITY, scope=["identity"])
+    response = b.handle_consent_request(request)
+    assert response.status is ConsentStatus.DECLINED
+    assert response.granted_scope == []
+
+
+def test_an_approval_required_authority_still_answers_pending():
+    """The other branch of Section 14.5 is unchanged by S-28."""
+    from gidp.objects import AuthoritySpec
+    from gidp.vocab import Authority, AuthorityValue
+
+    approval = _interest(
+        authority=AuthoritySpec(
+            levels={
+                Authority.PROBE: AuthorityValue.TRUE,
+                Authority.DISCLOSE: AuthorityValue.TRUE,
+                Authority.INTRODUCE: AuthorityValue.APPROVAL_REQUIRED,
+            }
+        )
+    )
+    a = Agent(ref="agent:a", standing_interest=_interest())
+    b = Agent(ref="agent:b", standing_interest=approval)
+    opened = a.open_session("s-auth-appr", purpose="test")
+    a.confirm_accept(b.handle_session_open(opened))
+    _qualify_both(a, b)
+    request = a.request_consent(ConsentAction.REVEAL_IDENTITY, scope=["identity"])
+    response = b.handle_consent_request(request)
+    assert response.status is ConsentStatus.PENDING_PRINCIPAL_APPROVAL
+
+
+def test_probing_after_qualification_does_not_revise_the_opportunity():
+    """S-31: the Opportunity is the evaluation at the moment of the
+    transition. A later non-qualifying result leaves the session QUALIFIED
+    and produces no second Opportunity; re-evaluation is a new session."""
+    a, b = _pair()
+    _qualify_both(a, b)
+    opportunity = a.session.build_opportunity(
+        structure="x", expires_at=_soon(), identity_status={}
+    )
+    # A later claim on a value B does not hold qualifies nothing.
+    response = _exchange(
+        a, b, [Claim(key="jurisdiction", operator=ClaimOperator.INTERSECTS,
+                     value=["antarctica"])]
+    )
+    assert response.results[0].result is not ClaimResult.COMPATIBLE
+    assert a.session.state is SessionState.QUALIFIED
+    assert b.session.state is SessionState.QUALIFIED
+    assert a.session.qualify() is False, "qualification is reached at most once"
+    assert b.session.qualify() is False
+    again = a.session.build_opportunity(
+        structure="x", expires_at=_soon(), identity_status={}
+    )
+    assert again.evaluated_dimensions >= opportunity.evaluated_dimensions
+    # The emitted Opportunity is the one built at the transition; the session
+    # keeps recording, but nothing re-emits (qualify() gates emission).
+
+
+def test_a_compatibility_response_may_be_received_from_qualified():
+    """S-31: the spec table lacked the line; the machine must accept it."""
+    a, b = _pair()
+    _qualify_both(a, b)
+    request = a.ask([Claim(key="domain", operator=ClaimOperator.INTERSECTS,
+                           value=["enterprise_software"])])
+    response = b.handle_compatibility_request(request)
+    a.receive_compatibility_response(response, request)  # must not raise
+    assert a.session.state is SessionState.QUALIFIED

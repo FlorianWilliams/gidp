@@ -872,3 +872,69 @@ does not exist; and the example Opportunity omitted the required
 and "those four" after a list of three.
 
 **Resolution — applied to GIDP 0.1 on 2026-09-25.**
+
+
+---
+
+## S-27 to S-32 — second external review (28 September 2026)
+
+The same reviewer read the corrected text. It confirmed the earlier
+corrections and found the following, all applied to GIDP 0.1 before
+publication.
+
+**S-27 — Section 3 still promised joint satisfiability.** The terminology
+entry defined an Opportunity as a configuration "found potentially jointly
+satisfiable", which Section 14.6 now explicitly does not assert. The entry
+now points at Section 14.6 instead of contradicting it.
+
+**S-28 — an authority of `false` fell into the pending branch.** Section
+14.5 said: granted without a human decision only if the level is `true` and
+no gate applies, *otherwise* `pending_principal_approval`. For a level of
+`false` that told the counterparty to wait for a decision nobody would be
+asked to make, and contradicted Section 18, which already required a
+`DISCLOSE` level of `false` to answer `declined`. A refused authority is now
+a refusal on the consent path too, in the specification and in
+`Agent.handle_consent_request`.
+
+**S-29 — one absolute sentence survived the Section 24.3 correction.**
+Section 15.3 still said `declined` "carries no information whatever";
+Section 24.3 had just spent a paragraph qualifying exactly that claim. The
+sentence now says what is true: constructed to convey nothing about
+compatibility to the counterparty, not information-free to every observer.
+
+**S-30 — the Handoff example omitted `contingent_on`.** The field had been
+made required (S-25) and the example not updated.
+
+**S-31 — the state table lacked `CompatibilityResponse` from `QUALIFIED`,
+and the fate of an emitted Opportunity was undecided.** The reference
+implementation already accepted the response (its `COMPATIBILITY` event
+covers both directions); the table now says so. The open question the
+reviewer posed — what becomes of an Opportunity when a later result is
+non-qualifying — is now decided: the Opportunity represents the evaluation
+at the moment of the transition, qualification is reached at most once, a
+later `incompatible` closes the session and any other result changes
+nothing; re-evaluation is a new session, and the disclosure budget, kept per
+Standing Interest, carries over.
+
+**S-32 — the initiator could not know the responder's contingencies.** The
+Opportunity is emitted by the initiator from its own session view; a
+dependency held by the responder under `evaluation_only` was invisible to
+it, so the responder received an Opportunity that misstated its own
+evaluation — the confidentiality of `contingent_on` (S-25) was fixed, its
+bilateral construction was not. `CompatibilityResponse` now carries an
+OPTIONAL `contingent_on` under exactly the rule of Section 14.6, the
+responder states its communicable contingencies there, and the initiator
+merges them.
+
+Also added on the same date, from the review's robustness proposals: a
+normative decision order for authorisation checks (new Section 16.3, with
+the two rules easiest to get wrong: an authenticated peer is not a network
+member, and a late approval is re-checked against the current policy), and
+the persistence requirements for the disclosure budget (Section 24.3: no
+reset by new session, restart or replica; no double-spend under
+concurrency). The review's structural proposals — separating session phase
+from pending requests and granted consents, a bilaterally accepted summary
+before emission, a fully typed first profile, an implementation-independent
+conformance corpus — are recorded in `spec/open-problems.md` for 0.2.
+
+**Resolution — applied to GIDP 0.1 on 2026-09-28.**

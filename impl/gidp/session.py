@@ -251,6 +251,9 @@ class Session:
         self._discharge(response.request_ref)
         self.withdraw("sent", self.pending_supersedes.pop(response.request_ref, []))
         self.record_results(response.results, direction="sent")
+        # Section 14.3: contingencies the responder states are merged into
+        # what the Opportunity will carry (Section 14.6).
+        self.note_dependency(*response.contingent_on)
         self.outstanding_requires = set(response.next.requires)
 
     def record_results(
@@ -408,6 +411,26 @@ class Session:
         self.own_dependencies.update(dependencies)
         self.dependency_visibility = visibility
 
+    def own_contingent_on(self) -> list[str]:
+        """This side's own communicable contingencies (Section 14.3).
+
+        What a responder states in a ``CompatibilityResponse`` so that the
+        initiator, who cannot know these dependencies, can still build an
+        Opportunity that matches the responder's evaluation (Section 14.6).
+        Names travel if the policy transmits them; a withheld dependency
+        travels as the single token ``undisclosed``; ``never`` leaves no
+        trace.
+        """
+        visibility = self.dependency_visibility() if self.dependency_visibility else "transmit"
+        own = self.own_dependencies - self.unresolved_dependencies
+        if not own:
+            return []
+        if visibility == "transmit":
+            return sorted(own)
+        if visibility == "withhold":
+            return [UNDISCLOSED_DEPENDENCY]
+        return []
+
     def contingent_on(self) -> list[str]:
         """What the Opportunity may say it depends on (Sections 10.3, 14.6).
 
@@ -420,14 +443,7 @@ class Session:
         dependency leaves no trace, because a flag that exists only because
         of it would be a transmitted result produced from it.
         """
-        visibility = self.dependency_visibility() if self.dependency_visibility else "transmit"
-        out = set(self.unresolved_dependencies)
-        own = self.own_dependencies - out
-        if own and visibility == "transmit":
-            out |= own
-        elif own and visibility == "withhold":
-            out.add(UNDISCLOSED_DEPENDENCY)
-        return sorted(out)
+        return sorted(set(self.unresolved_dependencies) | set(self.own_contingent_on()))
 
     def build_opportunity(
         self, structure: str, expires_at, identity_status: dict

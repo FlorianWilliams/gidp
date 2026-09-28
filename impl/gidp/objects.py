@@ -344,6 +344,12 @@ class CompatibilityResponse(Response):
     results: list[ClaimOutcome]
     session_status: SessionStatus
     next: NextBlock = Field(default_factory=NextBlock)
+    # Section 14.3: the responder's own communicable contingencies, under the
+    # rule of Section 14.6 (names if the policy transmits them, the token
+    # ``undisclosed`` if it withholds them, nothing for ``never``). The
+    # initiator merges these into the Opportunity -- it cannot know them
+    # otherwise (Section 14.6).
+    contingent_on: list[str] = Field(default_factory=list)
 
 
 class DisclosureRequest(Request):

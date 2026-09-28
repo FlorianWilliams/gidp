@@ -34,6 +34,24 @@ class Mutation:
 
 MUTATIONS = (
     Mutation(
+        "the responder's stated contingencies reach the Opportunity (14.3, 14.6)",
+        "gidp/session.py",
+        "        self.note_dependency(*response.contingent_on)",
+        "        pass",
+    ),
+    Mutation(
+        "a responder states its communicable contingencies (14.3)",
+        "gidp/agent.py",
+        "            contingent_on=self.session.own_contingent_on(),",
+        "            contingent_on=[],",
+    ),
+    Mutation(
+        "consent under a false authority is declined, not pending (14.5, 16.3)",
+        "gidp/agent.py",
+        "        if self._authority(level) is AuthorityValue.FALSE:",
+        "        if False:",
+    ),
+    Mutation(
         "a local attribute is never disclosed (9.1, 10.1)",
         "gidp/policy.py",
         "    if cls.surface is Surface.LOCAL:",
@@ -82,10 +100,10 @@ MUTATIONS = (
         "            contingent_on=[],",
     ),
     Mutation(
-        "a withheld dependency is not named on the wire (14.6, S-23)",
+        "a withheld dependency is not named on the wire (14.3, 14.6, S-23)",
         "gidp/session.py",
-        "        if own and visibility == \"transmit\":",
-        "        if own:",
+        "        if visibility == \"transmit\":",
+        "        if True:",
     ),
     Mutation(
         "a result belongs to its proposition, not its dimension (14.2, S-24)",

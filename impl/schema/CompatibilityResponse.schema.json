@@ -120,6 +120,13 @@
     },
     "next": {
       "$ref": "#/$defs/NextBlock"
+    },
+    "contingent_on": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Contingent On",
+      "type": "array"
     }
   },
   "required": [
