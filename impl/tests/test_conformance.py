@@ -321,7 +321,7 @@ def test_criterion_6_responses_correlate_to_requests():
 def test_criterion_7_truthfulness_bounds():
     si = _interest()
     claim = Claim(
-        key="threshold", operator=ClaimOperator.WITHIN, value={"min": 200, "max": 300}
+        key="threshold", operator=ClaimOperator.OVERLAPS, value={"min": 200, "max": 300}
     )
     evaluation = evaluate_claim(si, claim)
     assert evaluation.truth is False
@@ -342,13 +342,16 @@ def test_criterion_7_evaluation_only_values_are_never_returned():
         [
             Claim(
                 key="threshold",
-                operator=ClaimOperator.WITHIN,
+                operator=ClaimOperator.OVERLAPS,
                 value={"min": 10, "max": 50},
             )
         ]
     )
     response = b.handle_compatibility_request(request)
-    serialised = response.model_dump_json()
+    # Serialise everything except the timestamp: an `expires_at` whose
+    # microseconds happen to contain "80" is not a disclosure, and asserting
+    # over it made this test fail by clock. (Seen twice before being found.)
+    serialised = response.model_dump_json(exclude={"expires_at"})
     assert "80" not in serialised
     assert response.results[0].result is ClaimResult.CONDITIONALLY_COMPATIBLE
 

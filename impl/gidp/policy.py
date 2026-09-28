@@ -37,12 +37,21 @@ class DisclosureDecision:
     needs_principal_approval: bool = False
 
 
+#: Section 10.6: attribute keys whose disclosure reveals the Principal's
+#: identity. The core vocabulary defines one; a profile may mark others.
+IDENTITY_ATTRIBUTES: frozenset[str] = frozenset({"principal_identity"})
+
+
 @dataclass
 class SessionConsents:
     """Consent granted by this side, in this session (Section 10.2)."""
 
     granted_attributes: set[str] = field(default_factory=set)
     approved_attributes: set[str] = field(default_factory=set)
+    #: Attributes granted under a consent whose action was `reveal_identity`.
+    #: Section 10.6: an identity attribute is disclosed only under that
+    #: action, whatever the message that would carry it.
+    identity_revealed: set[str] = field(default_factory=set)
 
     def has_consent(self, attribute: str) -> bool:
         return attribute in self.granted_attributes

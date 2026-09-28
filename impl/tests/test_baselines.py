@@ -387,7 +387,7 @@ def test_the_refusal_does_not_depend_on_the_value():
 
     claim = Claim(
         key="valuation_floor",
-        operator=ClaimOperator.WITHIN,
+        operator=ClaimOperator.OVERLAPS,
         value={"min": 60_000_000, "max": 60_000_000},
     )
     decisions = set()

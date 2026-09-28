@@ -107,7 +107,7 @@ def probe_with_identities(
                 threshold = sorted(floors)[(len(floors) - 1) // 2]
                 claim = Claim(
                     key="valuation_floor",
-                    operator=ClaimOperator.WITHIN,
+                    operator=ClaimOperator.OVERLAPS,
                     value={"min": threshold, "max": threshold},
                 )
             else:

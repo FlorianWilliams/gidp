@@ -376,6 +376,11 @@ class Session:
             return False
         if self.opportunity_emitted:
             return False
+        if self.state is not SessionState.PROBING:
+            # Section 17.2: a qualifying status reached while a disclosure or
+            # consent is pending neither fires nor lapses; the caller applies
+            # it on the return to PROBING.
+            return False
         self._fire(QUALIFY)
         self.opportunity_emitted = True
         return True

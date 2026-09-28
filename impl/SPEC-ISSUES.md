@@ -938,3 +938,89 @@ before emission, a fully typed first profile, an implementation-independent
 conformance corpus — are recorded in `spec/open-problems.md` for 0.2.
 
 **Resolution — applied to GIDP 0.1 on 2026-09-28.**
+
+
+---
+
+## S-33 to S-46 — third review round (28 September 2026): the reviewer's fourth pass, and a first fresh reading
+
+Two reports: the reviewer of S-22 to S-32 read the corrected text a third
+time and found four raccords; a second reviewer, reading the specification
+for the first time, found the rest. All applied to GIDP 0.1 before
+publication.
+
+**S-33 — identity could ride `disclose_attributes` (fresh reviewer; the
+most serious of the batch).** `reveal_identity` was forbidden before
+qualification, but `disclose_attributes` was permitted before it, gated on
+`DISCLOSE`, and nothing excluded `principal_identity` from its scope; a
+direct `DisclosureRequest` on an identity attribute classified plainly
+`session` had the same reading. Section 10.6 now attaches the identity
+rules to the nature of the data: an identity attribute travels only under a
+`reveal_identity` consent (INTRODUCE, post-qualification), MUST NOT appear
+in any other consent scope, and a `DisclosureRequest` naming it without
+that consent is `declined`. Enforced in `Agent.handle_consent_request` and
+`Agent.handle_disclosure_request`, with the no-gate case tested.
+
+**S-34 — a qualifying result arriving while a request is pending.**
+Probing continues during `DISCLOSURE_PENDING`/`CONSENT_PENDING`, but the
+transition to `QUALIFIED` was defined only from `PROBING`, so the case had
+three defensible readings. Decided: the status neither fires nor lapses
+while a request is pending; it fires on the return to `PROBING`, where the
+implementation MUST apply it before any further message. `Session.qualify`
+defers accordingly.
+
+**S-35 to S-37 — raccords on our own recent fixes.** Section 15.2's
+definition of `potentially_compatible` now says its conditions are
+conditions of entry and the status is kept thereafter (the freeze of S-31
+had not been propagated into the definition); Section 16.3 gains the depth
+row (Section 14.1's `declined` could otherwise fall into the approval
+branch) and a scope paragraph saying the table governs transmission, not
+local evaluation — applied literally it would have refused the very
+evaluation `evaluation_only` permits; and Section 14's "MAY close" on a
+disagreeing Opportunity recipient is harmonised with Section 14.6's "MUST
+close" on a mismatched one.
+
+**S-38 — `within` renamed `overlaps`.** The operator's semantics were
+overlap, stated in its own definition; its name suggested containment. An
+operator rename is free before publication and breaking after it. Renamed
+in the specification, the vocabulary, the schemas and every example.
+
+**S-39 to S-46 — propagation and honesty.** The A2A binding no longer
+claims `metadata` keeps objects "out of the prompt by construction" — the
+container frames, the implementation enforces. The Section 14.6 example
+showed an identity granted at the instant of qualification, before it
+could be requested. Section 14.6 now carries the fresh reviewer's
+within-one-dimension example — ceiling 80, floor 90, both `compatible`
+with 50–100 both ways, no common price — and requires (MUST, was MAY) a
+profile to state the minimum claims before its Opportunities carry
+operational meaning; absent that, an Opportunity is a screening result.
+Conformance criterion 1's broken sentence is rewritten (invariants across
+the four situations, not identical traces; the interdependent case is
+conditional on the optional feature), and criterion 3 adds the budget
+ledger to its inputs, since a shared budget and randomised refusals make a
+lone session's replay underdetermined. Section 26's closure now names its
+two profile-extensible vocabularies instead of contradicting them.
+Appendix A's `class` field, which Section 8 spends a paragraph refusing to
+define, is removed. C.1's Opportunity proposed a minority investment
+nobody had authorised; A's mandate now includes it. Three "MUST NOT infer"
+are rephrased to bind what a result means in the protocol rather than
+legislate statistics. And three sentences are softened to what is true:
+the introduction's "the only way to be found is to announce"
+(confidential islands exist — Section 1.1 describes them), the claim that
+neighbouring protocols "all assume" capability discovery (PAP's mandates
+carry search and disclosure scopes), and "[RANI2026] solves the passive
+case" (it treats one, under its own model).
+
+**Also added:** `projection_ref` (OPTIONAL) on `SessionOpen` — the routing
+key without which an endpoint representing several Standing Interests
+cannot know which interest a session is about; and the negotiation
+boundary stated operationally in Section 14.3: a claim is a test of a
+hypothesis, not a position, and a recipient MUST NOT treat it, or its
+pattern, as an offer or an indication of availability.
+
+Found while testing: one conformance test asserted a private value's
+digits were absent from a serialisation that included `expires_at`, so it
+failed whenever the clock's microseconds contained "80" — the source of
+two phantom failures. It now excludes the timestamp.
+
+**Resolution — applied to GIDP 0.1 on 2026-09-28.**

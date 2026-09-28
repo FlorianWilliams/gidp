@@ -185,12 +185,12 @@ CLAIMS = [
     Claim(key="geography", operator=ClaimOperator.INTERSECTS, value=["france"]),
     Claim(
         key="ticket",
-        operator=ClaimOperator.WITHIN,
+        operator=ClaimOperator.OVERLAPS,
         value={"min": 1_000_000, "max": 8_000_000},
     ),
     Claim(
         key="valuation_ceiling",
-        operator=ClaimOperator.WITHIN,
+        operator=ClaimOperator.OVERLAPS,
         value={"min": 70_000_000, "max": 110_000_000},
     ),
     # The dependency, asked plainly. The follower answers that it has one,

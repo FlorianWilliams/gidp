@@ -40,7 +40,7 @@ POLICY = POLICIES["default (spec 15.4)"]
 def _answer(floor: int, threshold: int) -> ClaimResult:
     claim = Claim(
         key="valuation_floor",
-        operator=ClaimOperator.WITHIN,
+        operator=ClaimOperator.OVERLAPS,
         value={"min": threshold, "max": threshold},
     )
     return next(iter(_ask(b_interest(valuation_floor=floor), claim, POLICY, False)))

@@ -39,8 +39,10 @@ Consolidates three earlier internal drafts written under the working name
 contraction collides with IPFS content identifiers inside the same layer, and incorporates two independent adversarial reviews of the consolidated
 text, twenty-one issues found while writing the reference implementation,
 five found by the first external review of the specification, read
-without the code, and six by the second, which re-read the corrected text
-(`impl/SPEC-ISSUES.md`, S-01 to S-32).
+without the code, six by the second, which re-read the corrected text,
+and fourteen by the third round — the same reviewer's fourth pass plus a
+second reviewer's first, fresh reading (`impl/SPEC-ISSUES.md`, S-01 to
+S-46).
 
 The external review is worth naming for what it found rather than for
 having happened. Three of its findings were normative contradictions that
@@ -66,6 +68,18 @@ form and the initiator merges them (S-32). The same date added the decision
 order for authorisation checks (Section 16.3) and the persistence
 requirements for the disclosure budget (Section 24.3). The review's
 structural proposals are recorded in `open-problems.md` for 0.2.
+
+The third round's sharpest findings came from fresh eyes: an identity
+attribute could ride `disclose_attributes` before qualification, so the
+identity rules now attach to the data rather than the message (S-33); a
+qualifying result arriving while a request was pending had three
+defensible readings, now one (S-34); the operator `within` tested overlap
+and said containment, renamed `overlaps` while a rename is still free
+(S-38); and the buyer-at-80 / seller-at-90 example now sits in Section
+14.6, with profile minimum coverage a MUST, because a qualification built
+from overlap claims is a screen and the document should not let a reader
+believe otherwise. `SessionOpen` gains an OPTIONAL `projection_ref`. The
+rest is propagation and honesty — the full account is in SPEC-ISSUES.
 
 The last of those, S-12, is worth naming here because it changes what the
 document claims rather than what it specifies. A comparative harness built to

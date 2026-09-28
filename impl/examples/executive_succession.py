@@ -179,14 +179,14 @@ CLAIMS = [
     Claim(key="geography", operator=ClaimOperator.INTERSECTS, value=["paris"]),
     Claim(
         key="company_scale",
-        operator=ClaimOperator.WITHIN,
+        operator=ClaimOperator.OVERLAPS,
         value={"min": 40_000_000, "max": 80_000_000},
     ),
     # The board probes the candidate's equity expectation without naming its
     # own envelope; the candidate answers from a value it never transmits.
     Claim(
         key="equity_floor",
-        operator=ClaimOperator.WITHIN,
+        operator=ClaimOperator.OVERLAPS,
         value={"min": 800_000, "max": 2_500_000},
     ),
 ]

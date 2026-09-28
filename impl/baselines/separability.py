@@ -44,7 +44,7 @@ def extraction_cost(candidates: int, step: int = 5_000_000) -> int:
         threshold = ordered[(len(ordered) - 1) // 2]
         claim = Claim(
             key="valuation_floor",
-            operator=ClaimOperator.WITHIN,
+            operator=ClaimOperator.OVERLAPS,
             value={"min": threshold, "max": threshold},
         )
         truth = _ask(b_interest(), claim, policy, False)

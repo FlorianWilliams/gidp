@@ -34,6 +34,24 @@ class Mutation:
 
 MUTATIONS = (
     Mutation(
+        "an identity attribute travels only under reveal_identity (10.6)",
+        "gidp/agent.py",
+        "            request.attribute in IDENTITY_ATTRIBUTES",
+        "            False",
+    ),
+    Mutation(
+        "identity cannot ride disclose_attributes (10.6, 14.5)",
+        "gidp/agent.py",
+        "        if request.action is not ConsentAction.REVEAL_IDENTITY and any(",
+        "        if False and any(",
+    ),
+    Mutation(
+        "qualification defers while a request is pending (17.2)",
+        "gidp/session.py",
+        "        if self.state is not SessionState.PROBING:",
+        "        if False:",
+    ),
+    Mutation(
         "the responder's stated contingencies reach the Opportunity (14.3, 14.6)",
         "gidp/session.py",
         "        self.note_dependency(*response.contingent_on)",

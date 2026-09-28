@@ -39,7 +39,12 @@ from .objects import (
     SessionOpen,
     StandingInterest,
 )
-from .policy import SessionConsents, effective_depth, evaluate_disclosure
+from .policy import (
+    IDENTITY_ATTRIBUTES,
+    SessionConsents,
+    effective_depth,
+    evaluate_disclosure,
+)
 from .session import ProtocolError, Session
 from .vocab import (
     CONSENT_ACTION_AUTHORITY,
@@ -424,6 +429,18 @@ class Agent:
             # never as the operational outcome 'unauthorized'.
             return self._declined(request, "DISCLOSE authority is false")
 
+        if (
+            request.attribute in IDENTITY_ATTRIBUTES
+            and request.attribute not in self.consents.identity_revealed
+        ):
+            # Section 10.6: the identity rules attach to the data, not to
+            # the message. An identity attribute travels only under a
+            # `reveal_identity` consent, which requires INTRODUCE and
+            # cannot precede qualification.
+            return self._declined(
+                request, "identity attribute without reveal_identity consent"
+            )
+
         # Section 16.2: where a level is `approval_required`, the response
         # MUST be `pending_principal_approval`. Authority and the Disclosure
         # Policy are different axes -- authority says whether this Agent may
@@ -539,6 +556,23 @@ class Agent:
         """
         assert self.session is not None
         self.session.begin_consent(request.action)
+
+        if request.action is not ConsentAction.REVEAL_IDENTITY and any(
+            attribute in IDENTITY_ATTRIBUTES for attribute in request.scope
+        ):
+            # Section 10.6: a scope that names an identity attribute under
+            # any action but `reveal_identity` is declined -- otherwise
+            # `disclose_attributes` before qualification would do, under
+            # DISCLOSE, what `reveal_identity` holds until after it.
+            self._log("consent_declined", f"{request.action.value} (identity in scope)")
+            return ConsentResponse(
+                session_id=self.session.session_id,
+                request_ref=request.request_id,
+                status=ConsentStatus.DECLINED,
+                granted_scope=[],
+                expires_at=_soon(),
+            )
+
         level = CONSENT_ACTION_AUTHORITY[request.action]
         gated = [
             attribute
@@ -565,6 +599,8 @@ class Agent:
             if all(attribute in self.pre_approved for attribute in gated) and gated:
                 self.consents.approved_attributes.update(gated)
                 self.consents.granted_attributes.update(request.scope)
+                if request.action is ConsentAction.REVEAL_IDENTITY:
+                    self.consents.identity_revealed.update(request.scope)
                 self._log("consent_granted", f"{request.action.value} (approved)")
                 return ConsentResponse(
                     session_id=self.session.session_id,
@@ -582,6 +618,8 @@ class Agent:
             )
 
         self.consents.granted_attributes.update(request.scope)
+        if request.action is ConsentAction.REVEAL_IDENTITY:
+            self.consents.identity_revealed.update(request.scope)
         self._log("consent_granted", request.action.value)
         return ConsentResponse(
             session_id=self.session.session_id,
@@ -611,6 +649,8 @@ class Agent:
         if granted:
             self.consents.approved_attributes.update(request.scope)
             self.consents.granted_attributes.update(request.scope)
+            if request.action is ConsentAction.REVEAL_IDENTITY:
+                self.consents.identity_revealed.update(request.scope)
         self._log(
             "consent_granted" if granted else "consent_declined",
             f"{request.action.value} (principal)",

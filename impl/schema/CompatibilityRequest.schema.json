@@ -40,7 +40,7 @@
       "enum": [
         "equals",
         "intersects",
-        "within",
+        "overlaps",
         "compatible_with"
       ],
       "title": "ClaimOperator",

@@ -75,7 +75,7 @@ def probe(attacker: Agent, target: Agent, low: int, high: int) -> ClaimResult:
         [
             Claim(
                 key="valuation_class",
-                operator=ClaimOperator.WITHIN,
+                operator=ClaimOperator.OVERLAPS,
                 value={"min": low, "max": high},
             )
         ]

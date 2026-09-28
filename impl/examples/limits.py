@@ -167,7 +167,7 @@ def limit_fungible_and_perishable() -> bool:
         mid = (lo + hi) // 2
         claim = Claim(
             key="price_floor",
-            operator=ClaimOperator.WITHIN,
+            operator=ClaimOperator.OVERLAPS,
             value={"min": mid, "max": mid + 25},
         )
         truth = evaluate_claim(carrier, claim).truth
@@ -241,7 +241,7 @@ def limit_power_asymmetry() -> bool:
             mid = (lo + hi) // 2
             claim = Claim(
                 key="salary_floor",
-                operator=ClaimOperator.WITHIN,
+                operator=ClaimOperator.OVERLAPS,
                 value={"min": mid, "max": mid + 5_000},
             )
             if evaluate_claim(candidate, claim).truth is False:
@@ -254,7 +254,7 @@ def limit_power_asymmetry() -> bool:
         # learns one band -- the same band every other candidate learns.
         claim = Claim(
             key="salary_ceiling",
-            operator=ClaimOperator.WITHIN,
+            operator=ClaimOperator.OVERLAPS,
             value={"min": 80_000, "max": 100_000},
         )
         if evaluate_claim(employer, claim).truth is not None:

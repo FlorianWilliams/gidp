@@ -235,7 +235,7 @@ def test_a_never_dependency_leaves_no_trace_at_all():
 def test_a_never_attribute_is_declined_rather_than_evaluated():
     a, b = _pair()
     b.standing_interest.disclosure_policy.attributes["threshold"] = _never()
-    response = _exchange(a, b, [Claim(key="threshold", operator=ClaimOperator.WITHIN,
+    response = _exchange(a, b, [Claim(key="threshold", operator=ClaimOperator.OVERLAPS,
                                       value={"min": 0, "max": 100})])
     assert response.results[0].result is ClaimResult.DECLINED
 
@@ -517,3 +517,101 @@ def test_a_compatibility_response_may_be_received_from_qualified():
     response = b.handle_compatibility_request(request)
     a.receive_compatibility_response(response, request)  # must not raise
     assert a.session.state is SessionState.QUALIFIED
+
+
+# ---------------------------------------------------------------------------
+# Third round: second reviewer's fresh reading (28 September 2026),
+# SPEC-ISSUES.md S-33 to S-38
+# ---------------------------------------------------------------------------
+
+
+def _identity_pair(gate: Gate = Gate.CONSENT) -> tuple[Agent, Agent]:
+    """B holds `principal_identity` at surface session, under `gate`."""
+    holder = _interest(
+        interest=ConditionalInterest(
+            action="consider",
+            conditions={
+                "domain": ["enterprise_software"],
+                "principal_identity": "Acme GmbH",
+            },
+        ),
+        disclosure_policy=DisclosurePolicy(
+            attributes={
+                "domain": DisclosureClass(surface=Surface.DISCOVERY),
+                "principal_identity": DisclosureClass(
+                    surface=Surface.SESSION, gate=gate
+                ),
+            }
+        ),
+    )
+    a = Agent(ref="agent:a", standing_interest=_interest())
+    b = Agent(ref="agent:b", standing_interest=holder)
+    opened = a.open_session("s-identity", purpose="test")
+    a.confirm_accept(b.handle_session_open(opened))
+    return a, b
+
+
+def test_identity_cannot_ride_disclose_attributes_before_qualification():
+    """S-33: `disclose_attributes` MAY precede qualification and is gated on
+    DISCLOSE; a scope smuggling `principal_identity` through it would do,
+    before qualification, what `reveal_identity` holds until after it."""
+    a, b = _identity_pair()
+    request = a.request_consent(
+        ConsentAction.DISCLOSE_ATTRIBUTES, scope=["principal_identity"]
+    )
+    response = b.handle_consent_request(request)
+    assert response.status is ConsentStatus.DECLINED
+    assert response.granted_scope == []
+
+
+def test_a_disclosure_request_on_identity_is_declined_without_reveal_consent():
+    """S-33: the rule attaches to the data, not the message. The class here
+    is `session` with no gate -- the reviewer's sharpest case, in which
+    nothing but the identity rule itself stands between the request and the
+    value."""
+    a, b = _identity_pair(gate=Gate.NONE)
+    _qualify_both(a, b)
+    request = a.request_disclosure("principal_identity", purpose="handoff")
+    response = b.handle_disclosure_request(request)
+    assert response.status is DisclosureStatus.DECLINED
+    assert "Acme" not in response.model_dump_json()
+
+
+def test_identity_travels_after_a_reveal_identity_consent():
+    """The counterpart: the same disclosure succeeds under the right action."""
+    a, b = _identity_pair()
+    _qualify_both(a, b)
+    consent = a.request_consent(
+        ConsentAction.REVEAL_IDENTITY, scope=["principal_identity"]
+    )
+    granted = b.handle_consent_request(consent)
+    assert granted.status is ConsentStatus.GRANTED
+    a.session.record_consent(granted)
+    b.session.record_consent(granted, discharge=False)
+    request = a.request_disclosure("principal_identity", purpose="handoff")
+    response = b.handle_disclosure_request(request)
+    assert response.status is DisclosureStatus.GRANTED
+
+
+def test_qualification_reached_while_a_disclosure_is_pending_defers():
+    """S-34: the qualifying result can arrive during DISCLOSURE_PENDING; the
+    transition neither fires there nor lapses -- it fires on the return to
+    PROBING."""
+    a, b = _pair()
+    # A disclosure request is outstanding...
+    request = a.request_disclosure("open_attribute", purpose="qualify")
+    assert a.session.state is SessionState.DISCLOSURE_PENDING
+    # ...when the qualifying exchange completes.
+    _exchange(a, b, [Claim(key="domain", operator=ClaimOperator.INTERSECTS,
+                           value=["enterprise_software"])])
+    assert a.session.status() is SessionStatus.POTENTIALLY_COMPATIBLE
+    assert a.session.qualify() is False, "must not fire while pending"
+    assert a.session.state is SessionState.DISCLOSURE_PENDING
+    # The terminal response returns the session to PROBING...
+    response = b.handle_disclosure_request(request)
+    a.session.record_disclosure(response)
+    assert a.session.state is SessionState.PROBING
+    # ...where the transition fires, once.
+    assert a.session.qualify() is True
+    assert a.session.state is SessionState.QUALIFIED
+    assert a.session.qualify() is False

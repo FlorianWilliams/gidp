@@ -162,7 +162,7 @@ def simulatability_report() -> dict[str, bool]:
     """Every policy in the sweep, classified."""
     claim = Claim(
         key="valuation_floor",
-        operator=ClaimOperator.WITHIN,
+        operator=ClaimOperator.OVERLAPS,
         value={"min": 40_000_000, "max": 60_000_000},
     )
     candidates = [
@@ -237,7 +237,7 @@ def probe(policy: Policy, budget: int, seed: int = 7) -> tuple[float, int]:
             threshold = ordered[(len(ordered) - 1) // 2]
             claim = Claim(
                 key="valuation_floor",
-                operator=ClaimOperator.WITHIN,
+                operator=ClaimOperator.OVERLAPS,
                 value={"min": threshold, "max": threshold},
             )
             observed = _observed(_ask(true_interest, claim, policy, False), rng)

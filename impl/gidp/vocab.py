@@ -214,7 +214,7 @@ class ClaimOperator(str, Enum):
 
     EQUALS = "equals"
     INTERSECTS = "intersects"
-    WITHIN = "within"
+    OVERLAPS = "overlaps"
     COMPATIBLE_WITH = "compatible_with"
 
 

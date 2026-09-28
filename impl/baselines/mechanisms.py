@@ -290,7 +290,7 @@ HONEST_CLAIMS = [
     Claim(key="market_access", operator=ClaimOperator.EQUALS, value="france"),
     Claim(
         key="valuation_floor",
-        operator=ClaimOperator.WITHIN,
+        operator=ClaimOperator.OVERLAPS,
         value={"min": 0, "max": A_BUDGET_CEILING},
     ),
     # A can live with either of two conditions, so it asks for both rather
@@ -376,7 +376,7 @@ def cid_adversarial(budget: int = 40) -> Outcome:
         claims.append(
             Claim(
                 key="valuation_floor",
-                operator=ClaimOperator.WITHIN,
+                operator=ClaimOperator.OVERLAPS,
                 value={"min": mid, "max": mid + 5_000_000},
             )
         )

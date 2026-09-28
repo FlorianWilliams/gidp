@@ -102,7 +102,7 @@ def extractor(auditor: Auditor, floor: int, attempts: int = 40) -> None:
         threshold = ordered[(len(ordered) - 1) // 2]
         claim = Claim(
             key="valuation_floor",
-            operator=ClaimOperator.WITHIN,
+            operator=ClaimOperator.OVERLAPS,
             value={"min": threshold, "max": threshold},
         )
         answer = auditor.ask(floor, claim)
@@ -119,7 +119,7 @@ def honest(auditor: Auditor, floor: int, counterparties: int, seed: int = 5) -> 
         ceiling = rng.choice(GRID[8:])
         claim = Claim(
             key="valuation_floor",
-            operator=ClaimOperator.WITHIN,
+            operator=ClaimOperator.OVERLAPS,
             value={"min": 0, "max": ceiling},
         )
         if auditor.ask(floor, claim) is not None:

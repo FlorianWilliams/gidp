@@ -165,6 +165,20 @@ The second review confirmed the first round of corrections, found six more defec
 
 The test the whole programme answers to: someone who did not design GIDP implements a profile, passes the scenarios and explains their decisions from the published documents alone.
 
+### From the first fresh reading (28 September 2026)
+
+A second reviewer, reading 0.1 with no history, confirmed the 0.2 programme from the outside — the state machine's overloads, the typed profile, the external conformance corpus, the second implementation — and added questions the programme should absorb:
+
+**Reciprocity needs operational semantics.** Two `granted_if_reciprocal` responses deadlock if both wait; if one releases first, the other can stop. The core must say who begins, what satisfies the condition, and how the wait ends — or say plainly that it offers sequential exchange with assumed risk for the first revealer, and leave fairness to a profile mechanism.
+
+**A permission matrix rather than an implicit scale.** Audience, exchange context, permitted operation (evaluate vs transmit) and required approval are four dimensions; the surface ladder encodes them in one. 0.1 patches the worst conflicts (Sections 14.1, 16.3); 0.2 should consider making the matrix explicit, even keeping the current names.
+
+**Requests are disclosures too.** The chosen attribute, the sequence of thresholds, `purpose`, `next.requires`, `Opportunity.structure` — each can be derived from a secret without containing its value. Output control should be symmetric across requests, responses and notifications, and should say which derivations of private data are permitted, not only that raw values must not appear.
+
+**The budget's knowledge model.** A set of candidate values is not a probability distribution, and "bits learned" names several different measures; correlations across attributes, external knowledge (projections, prior disclosures, public data) and the register's scope — the same secret held by several Standing Interests that are not replicas of one object — all remain outside the current model. The honest next step is the narrow experimental profile: one numeric threshold, restricted operators, and a precise statement of what is bounded.
+
+**What a stated anonymity choice forbids, and for whom.** Forbidding identity before qualification and direction in `relation` is the maximum-discretion profile's policy; a Principal who wants to reveal that it is a buyer while hiding its ceiling, or its name while hiding its conditions, is not thereby outside controlled disclosure. 0.2 should separate the limits of the anonymous profile from the limits of the architecture.
+
 These are the questions implementation should answer, restated compactly from Appendix E of the specification. How much of a Standing Interest should be structured rather than natural language, and how should fuzzy conditions be represented? What is the minimum useful projection, and how should projections be indexed without building the searchable database of sensitive interests the protocol exists to avoid? Where should compatibility be evaluated — locally, peer to peer, in a trusted execution environment, under secure computation? How should an Agent prove authority for a specific Standing Interest without disclosing the Principal? How should multi-party dependency discovery avoid combinatorial explosion, and when may a partial coalition be revealed? And the governance question that will be forced early: should GIDP be an extension of an agent-to-agent protocol, a protocol in its own right, or a reusable application profile?
 
 ## Part V — What would falsify this work

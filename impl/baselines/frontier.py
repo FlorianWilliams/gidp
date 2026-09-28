@@ -144,7 +144,7 @@ def _probe(policy: Policy, attempts: int = 40) -> float:
         threshold = (raw // lattice) * lattice
         claim = Claim(
             key="valuation_floor",
-            operator=ClaimOperator.WITHIN,
+            operator=ClaimOperator.OVERLAPS,
             value={"min": threshold, "max": threshold},
         )
         if not policy.admits(claim):
@@ -168,7 +168,7 @@ def _serve(policy: Policy, seed: int = 5) -> int:
         ceiling = (ceiling // lattice) * lattice  # a customer rounds to fit
         claim = Claim(
             key="valuation_floor",
-            operator=ClaimOperator.WITHIN,
+            operator=ClaimOperator.OVERLAPS,
             value={"min": 0, "max": ceiling},
         )
         if policy.admits(claim):

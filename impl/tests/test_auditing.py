@@ -61,7 +61,7 @@ def _pair(audit=None) -> tuple[Agent, Agent]:
 
 
 def _ask(a: Agent, b: Agent, bounds: dict) -> ClaimResult:
-    request = a.ask([Claim(key="valuation_floor", operator="within", value=bounds)])
+    request = a.ask([Claim(key="valuation_floor", operator="overlaps", value=bounds)])
     return b.handle_compatibility_request(request).results[0].result
 
 
@@ -117,7 +117,7 @@ def test_the_decision_never_consults_the_protected_value():
     whatever the responder happens to hold."""
     claim = Claim(
         key="valuation_floor",
-        operator="within",
+        operator="overlaps",
         value={"min": 60_000_000, "max": 60_000_000},
     )
     decisions = set()

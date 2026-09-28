@@ -259,7 +259,7 @@ def main() -> None:
         Claim(key="market_access", operator=ClaimOperator.EQUALS, value="france"),
         Claim(
             key="valuation_class",
-            operator=ClaimOperator.WITHIN,
+            operator=ClaimOperator.OVERLAPS,
             value={"min": 50_000_000, "max": 100_000_000},
         ),
         Claim(

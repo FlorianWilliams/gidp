@@ -184,10 +184,10 @@ def _apply(
             return None
         return bool(set(left) & set(right))
 
-    if operator is ClaimOperator.WITHIN:
+    if operator is ClaimOperator.OVERLAPS:
         # The canonical example of Section 15.4: a private threshold answered
         # against an asked range, without the threshold being transmitted.
-        return _within(private, asked)
+        return _overlaps(private, asked)
 
     if operator is ClaimOperator.COMPATIBLE_WITH:
         # Profile-defined predicate. The core profile has none, so the honest
@@ -197,7 +197,7 @@ def _apply(
     raise ValueError(f"unknown operator {operator!r}")
 
 
-def _within(private: Any, asked: Any) -> bool | None:
+def _overlaps(private: Any, asked: Any) -> bool | None:
     """Is a private value or range compatible with the asked range?
 
     ``asked`` is ``{"min": x, "max": y}`` or a named bucket the profile

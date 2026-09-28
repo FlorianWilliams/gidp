@@ -83,6 +83,18 @@
       ],
       "default": null,
       "title": "Trust Context"
+    },
+    "projection_ref": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Projection Ref"
     }
   },
   "required": [

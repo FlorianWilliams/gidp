@@ -263,6 +263,11 @@ class SessionOpen(Request):
     profile: str
     features: list[Feature] = Field(default_factory=list)
     trust_context: dict[str, Any] | None = None
+    #: Section 14.1: the provider-assigned reference under which the
+    #: responder's projection was retrieved -- the routing key for an
+    #: endpoint that represents several Standing Interests. Opaque to the
+    #: initiator; it reveals nothing the projection had not exposed.
+    projection_ref: str | None = None
 
     @model_validator(mode="after")
     def _depth_is_permitted(self) -> SessionOpen:
