@@ -139,6 +139,9 @@ class Session:
     #: what an Opportunity counts (Section 14.6); propositions are what the
     #: status is computed over (Section 15.2).
     dimension_of: dict[str, str] = field(default_factory=dict)
+    #: Section 15.2: dimensions the session's profile requires to have been
+    #: examined before qualification. The core profile requires none.
+    required_dimensions: set[str] = field(default_factory=set)
     #: request_id -> claim_ids that request withdraws, applied on its answer.
     pending_supersedes: dict[str, list[str]] = field(default_factory=dict)
     #: Attribute keys whose disclosure would resolve a requires_disclosure.
@@ -370,11 +373,17 @@ class Session:
         # A non-qualifying result prevents qualification, so that
         # an Opportunity never rests on silence (Section 18).
         qualifying = (ClaimResult.COMPATIBLE, ClaimResult.CONDITIONALLY_COMPATIBLE)
+        covered = {self._dimension(p) for p in self.results}
         qualifies = (
             bool(values)
             and not self.outstanding_requires
             and ClaimResult.COMPATIBLE in values
             and all(v in qualifying for v in values)
+            # Section 15.2: the profile's qualification requirements enter
+            # the entry conditions directly -- a required dimension nobody
+            # has examined blocks the transition however positively the
+            # examined ones answered.
+            and self.required_dimensions <= covered
         )
         return SessionStatus.POTENTIALLY_COMPATIBLE if qualifies else SessionStatus.OPEN
 

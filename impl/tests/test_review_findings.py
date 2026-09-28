@@ -683,3 +683,48 @@ def test_an_identity_claim_is_answerable_after_reveal_consent():
                      value="Acme GmbH")]
     )
     assert response.results[0].result is ClaimResult.COMPATIBLE
+
+
+# ---------------------------------------------------------------------------
+# Fresh reviewer, second reading (28 September 2026) -- S-49 to S-55
+# ---------------------------------------------------------------------------
+
+
+def test_a_profile_requirement_blocks_qualification_until_examined():
+    """S-49 (trace 1): a profile requiring role and location blocks the
+    transition after a compatible answer on role alone."""
+    a, b = _pair()
+    a.session.required_dimensions = {"domain", "jurisdiction"}
+    b.session.required_dimensions = {"domain", "jurisdiction"}
+    _exchange(a, b, [Claim(key="domain", operator=ClaimOperator.INTERSECTS,
+                           value=["enterprise_software"])])
+    assert a.session.status() is SessionStatus.OPEN
+    assert a.session.qualify() is False, (
+        "a required dimension nobody examined blocks qualification (15.2)"
+    )
+
+
+def test_an_incompatible_during_a_wait_is_not_held_back():
+    """S-50 (trace 3): the narrow `open` rule does not delay a known
+    contradiction -- `incompatible` overrides mid-wait."""
+    a, b = _pair()
+    a.request_disclosure("open_attribute", purpose="qualify")
+    assert a.session.state is SessionState.DISCLOSURE_PENDING
+    response = _exchange(
+        a, b, [Claim(key="domain", operator=ClaimOperator.INTERSECTS,
+                     value=["something_else_entirely"])]
+    )
+    assert response.results[0].result is ClaimResult.INCOMPATIBLE
+    assert a.session.status() is SessionStatus.INCOMPATIBLE, (
+        "an incompatible recorded during a wait is reported at once (17.2)"
+    )
+
+
+def test_the_kept_status_survives_a_pending_consent():
+    """S-50 (trace 2): QUALIFIED -> CONSENT_PENDING is the normal path and
+    does not drop the kept status back to open."""
+    a, b = _pair()
+    _qualify_both(a, b)
+    a.request_consent(ConsentAction.REVEAL_IDENTITY, scope=["identity"])
+    assert a.session.state is SessionState.CONSENT_PENDING
+    assert a.session.status() is SessionStatus.POTENTIALLY_COMPATIBLE

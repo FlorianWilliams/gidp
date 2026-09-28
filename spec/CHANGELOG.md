@@ -89,6 +89,19 @@ attribute is declined without reveal_identity consent, closing the third
 door after S-33's two. The reviewer then judged the version fit to
 stabilise and submit to implementers.
 
+The fresh reviewer's second reading (S-49 to S-55) withdrew its earlier
+criticisms and asked for consistency between the new rules: a profile's
+minimum claims now enter Section 15.2's entry conditions directly; the
+pending-open rule is narrowed to a not-yet-qualified,
+incompatibility-free session; PROBE under approval_required waits
+locally and answers terminally, by design without a provisional;
+"reciprocal" is defined as sequential exchange, initiator first, expiry
+as explicit failure; a profile may type a general value as an accepted
+set; projection routing is closed end to end; and the
+all-conditionally-compatible policy of Section 24.3 is named as a
+non-conforming comparator. Both reviewers now converge on the same two
+next steps: the editorial pass, and implementers.
+
 The last of those, S-12, is worth naming here because it changes what the
 document claims rather than what it specifies. A comparative harness built to
 test the protocol against existing mechanisms showed that the coarsening

@@ -1060,3 +1060,73 @@ touches many sections at once and deserves its own pass with nothing
 else in flight.
 
 **Resolution — applied to GIDP 0.1 on 2026-09-28.**
+
+
+---
+
+## S-49 to S-55 — the fresh reviewer's second reading (28 September 2026)
+
+Read the corrected version directly, withdrew its earlier criticisms in
+their previous form, and asked for consistency between the new rules
+rather than new protections. All applied.
+
+**S-49 — profile requirements enter the entry conditions.** Section 14.6
+required a profile to state minimum claims; Section 15.2 qualified
+without consulting them, so a compatible answer on role alone qualified
+a session whose profile also required location. The profile's
+requirements are now part of the entry conditions, in the text and in
+`Session.required_dimensions` (the core profile requires none), with a
+test and a mutation. Added alongside: naming `compatible_with` is not by
+itself the answer to buyer-at-80 — the profile must say what its
+predicate actually tests.
+
+**S-50 — the pending-`open` rule narrowed to its case.** S-47's "remains
+`open` whatever the standing results" was too broad in both directions
+the reviewer named: a wait after qualification keeps the kept status
+(the normal QUALIFIED → CONSENT_PENDING path), and an `incompatible`
+recorded mid-wait closes at once rather than waiting politely. The
+implementation already did both — its checks run in the right order —
+so this is a text-only fix, now pinned by two tests.
+
+**S-51 — `PROBE: approval_required` has one defined path.** No
+provisional CompatibilityResponse exists and none is added: the Agent
+holds the request locally until its Principal decides, answers
+terminally before `expires_at`, and silence resolves by expiry — a
+provisional "my Principal is deciding whether I may answer" would
+itself disclose the shape of the responder's authority. The reference
+implementation is a synchronous library; the wait belongs to its
+caller.
+
+**S-52 — "reciprocal" gets its guarantee.** Sequential exchange with
+assumed risk for the first revealer, nothing stronger. Where both sides
+answer `granted_if_reciprocal` on the same attribute, the session
+initiator releases first; two policies each refusing first position
+expire explicitly, which is the designed outcome. Orchestration above
+the library; spec text only.
+
+**S-53 — the hierarchy rule presumed one meaning of a general value.**
+`germany` as approximate knowledge → `unknown` to `munich` (the core's
+cautious default); `germany` as accepted set → a profile MAY direct
+`compatible`. The distinction is typed by the profile, where the
+horizontal ambition's one-word-three-meanings trap is disarmed.
+
+**S-54 — projection routing closed.** A candidate reference carries the
+`projection_ref` the SessionOpen should cite; the reference binds to
+the provider that assigned it; and a multi-interest endpoint receiving
+an open without one refuses it as ambiguous (`unsupported`) instead of
+guessing.
+
+**S-55 — the all-`conditionally_compatible` policy named for what it
+is.** Section 24.3 listed it among possible behaviours; Section 15.5
+forbids that answer over a truth of `incompatible`. It is now stated as
+a non-conforming comparator that appears in the measurements as a
+bound, not as an option.
+
+The reviewer's remaining asks are the same two as everyone's now: the
+editorial pass (history out of the normative text, one normative home
+per rule) and the handover to independent implementers, with its five
+traces — of which 1, 2 and 3 are pinned by tests here, and 4 and 5 are
+the spec-defined behaviours of S-51 and S-52, whose orchestration lives
+above this library.
+
+**Resolution — applied to GIDP 0.1 on 2026-09-28.**

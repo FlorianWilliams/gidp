@@ -34,6 +34,12 @@ class Mutation:
 
 MUTATIONS = (
     Mutation(
+        "a profile's required dimensions block qualification (15.2)",
+        "gidp/session.py",
+        "            and self.required_dimensions <= covered",
+        "            and True",
+    ),
+    Mutation(
         "an identity claim is declined without reveal_identity (10.6)",
         "gidp/agent.py",
         "                claim.key in IDENTITY_ATTRIBUTES",
