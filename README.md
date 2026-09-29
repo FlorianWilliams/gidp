@@ -33,7 +33,8 @@ stops there.
 | [`spec/GIDP-0.1.md`](spec/GIDP-0.1.md) | The specification. Normative. |
 | [`spec/explainer.md`](spec/explainer.md) | One page, for a first reader. |
 | [`spec/use-cases.md`](spec/use-cases.md) | Eight cases the protocol is meant to serve. |
-| [`spec/open-problems.md`](spec/open-problems.md) | Design rationale, the formal open problem, candidate directions. Non-normative. |
+| [`spec/rationale.md`](spec/rationale.md) | Why the rules are what they are: histories, worked failures, borrowed distinctions. Non-normative. |
+| [`spec/open-problems.md`](spec/open-problems.md) | The formal open problem, the questions 0.1 knowingly defers, and the positions taken. Non-normative. |
 | [`spec/alternatives.md`](spec/alternatives.md) | Why not use a broker, a listing, a secure comparison or a set intersection? Measured, not argued. Non-normative. |
 | [`spec/LIMITS.md`](spec/LIMITS.md) | Where this protocol should **not** be used. Non-normative. |
 | [`spec/CHANGELOG.md`](spec/CHANGELOG.md) | Versioning policy and history. |
