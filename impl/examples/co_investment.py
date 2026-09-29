@@ -41,6 +41,7 @@ from gidp.vocab import (  # noqa: E402
     ClaimOperator,
     CloseReason,
     ConsentAction,
+    ConsentStatus,
     Feature,
     Gate,
     IdentityStatus,
@@ -259,6 +260,17 @@ def run(verbose: bool = True) -> tuple[Agent, Agent, Wire]:
     # NEGOTIATE_NONBINDING is false on both sides: the handoff goes to a human,
     # not to a negotiation protocol. Section 16.1 is explicit that proposing
     # terms, even non-binding ones, happens after a Handoff and never inside.
+    hreq = wire.send(
+        "Company",
+        co.request_consent(ConsentAction.HANDOFF, ["https://example.org/human-review/v1"]),
+    )
+    hresp = wire.send("Office", fo.handle_consent_request(hreq))
+    co.record_consent(hresp)
+    fo.session.record_consent(hresp, discharge=False)
+    if hresp.status is ConsentStatus.PENDING_PRINCIPAL_APPROVAL:
+        hterm = wire.send("Office", fo.principal_answers_consent(hreq, granted=True))
+        co.record_consent(hterm)
+        fo.session.record_consent(hterm, discharge=False)
     handoff = wire.send("Company", co.handoff("https://example.org/human-review/v1"))
     fo.session.record_handoff(handoff)
     co.session.close(CloseReason.COMPLETED)

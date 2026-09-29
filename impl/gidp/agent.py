@@ -108,6 +108,12 @@ class Agent:
 
     session: Session | None = None
     consents: SessionConsents = field(default_factory=SessionConsents)
+    #: Section 14.7: target references covered by a granted `handoff`
+    #: consent in this session.
+    handoff_consents: set[str] = field(default_factory=set)
+    _consent_actions: dict[str, tuple[ConsentAction, list[str]]] = field(
+        default_factory=dict
+    )
     audit: list[AuditEntry] = field(default_factory=list)
     queries_answered: int = 0
     #: Retention modes this Agent can actually enforce on what it receives.
@@ -538,6 +544,27 @@ class Agent:
 
     # -- consent -----------------------------------------------------------
 
+    def record_consent(
+        self, response: ConsentResponse, *, discharge: bool = True
+    ) -> None:
+        """Record a peer's ConsentResponse, remembering what it authorised.
+
+        Section 14.7: a Handoff must be preceded by a granted consent whose
+        action is `handoff` and whose scope names the target. The session
+        records the transition; the Agent records which action the grant
+        was for, which the response alone does not say.
+        """
+        assert self.session is not None
+        self.session.record_consent(response, discharge=discharge)
+        if response.status is ConsentStatus.PENDING_PRINCIPAL_APPROVAL:
+            return  # provisional: the request is not discharged (Section 14)
+        pending = self._consent_actions.pop(response.request_ref, None)
+        if pending is None or response.status is not ConsentStatus.GRANTED:
+            return
+        action, _scope = pending
+        if action is ConsentAction.HANDOFF:
+            self.handoff_consents.update(response.granted_scope)
+
     def request_consent(
         self, action: ConsentAction, scope: list[str], reciprocal: bool = True
     ) -> ConsentRequest:
@@ -553,6 +580,7 @@ class Agent:
         )
         self.session.begin_consent(action)
         self.session.register_request(request.request_id, request.type)
+        self._consent_actions[request.request_id] = (action, list(scope))
         self._log("consent_request", f"{action.value}: {', '.join(scope)}")
         return request
 
@@ -699,6 +727,12 @@ class Agent:
 
     def handoff(self, protocol_ref: str) -> Handoff:
         assert self.session is not None
+        if protocol_ref not in self.handoff_consents:
+            raise ProtocolError(
+                "a Handoff must be preceded by a granted consent whose "
+                "action is `handoff` and whose scope names the target "
+                "(Section 14.7)"
+            )
         scope: list[Authority] = []
         if self._authority(Authority.NEGOTIATE_NONBINDING) is AuthorityValue.TRUE:
             scope.append(Authority.NEGOTIATE_NONBINDING)

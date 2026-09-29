@@ -1130,3 +1130,67 @@ the spec-defined behaviours of S-51 and S-52, whose orchestration lives
 above this library.
 
 **Resolution — applied to GIDP 0.1 on 2026-09-28.**
+
+
+---
+
+## S-56 to S-64 — a third fresh reading, and why the same points resurface
+
+A new reviewer, given the current version with no history, re-derived
+much of the recorded 0.2 programme — which is the expected behaviour of
+a competent reader meeting a document that states its own limits — and
+contributed what previous passes had not seen. The genuinely new items,
+applied:
+
+**S-56 — qualification is now bilateral over the wire.** Three
+reviewers independently proposed local confirmation before
+introduction; the third's scenario (one question, one `compatible`,
+identity requestable) settled it. The mechanism costs no new object:
+each side evaluates Section 15.2's entry conditions over its own view —
+own profile requirements included — and the initiator MUST NOT emit an
+Opportunity unless the responder's most recent `CompatibilityResponse`
+reported `potentially_compatible`. The responder's reported status is
+its local confirmation, given without disclosing why. Implemented
+(`Session.peer_status`), tested on the reviewer's exact sequence,
+mutation added.
+
+**S-57 — what a session is about.** A session evaluates one candidate
+configuration; an `incompatible` refutes the candidate, not the
+Principals (the executive who refuses Paris but would take London has
+not been rejected; the Paris session has). Alternatives travel inside
+one session as sets or ranges, or in a new session against the same
+budget — which is also why closure hands no bisection tool to an
+adversary. Stated in Section 17.2.
+
+**S-58 — a Handoff needs its own consent.** Being in `CONSENTED`
+establishes nothing about *this* action: a Handoff MUST be preceded by
+a granted consent whose action is `handoff` and whose scope names the
+target; a recipient not covered closes `unsupported`. The meaning of
+`scope` is now stated per action. Enforced in `Agent.handoff` (the
+emitting side), exercised by every example, negative-tested (a consent
+for something else does not do; a consent for one target does not cover
+another), mutation added. What a handoff consent does not yet carry —
+recipient identity beyond the target reference, information set,
+duration — is recorded in open-problems.
+
+**S-59 to S-64 — the local table, all real.** The PROBE-expiry path of
+S-51 is now an explicit exception to "every request is answered";
+`features` are declared *offered*, the intersection *in force*, and
+required-ness explicitly unexpressed in 0.1; the dangling "reciprocity
+note" reference S-52 introduced is removed; `until_handoff` is defined
+for the session that closes without a Handoff (falls back to
+`session_only`); the reference implementation is named a demonstration
+rather than a conforming deployment on budget persistence; and Section
+24.12 states that a trusted intermediary trades away the no-custodian
+property, which is architectural, not universal.
+
+Also added: a reading-guide paragraph in Section 7, telling a reader
+that a limit stated plainly is usually a decision with its reasoning in
+`open-problems.md` — the direct answer to why fresh readers keep
+re-deriving the deferred questions. The reviewer's remaining points
+(typed attribute meanings as profile obligations, trust-actor table,
+symmetric output control, budget knowledge model, three-document split)
+were already recorded; consent content per action and the trust
+boundary table are added to the 0.2 list.
+
+**Resolution — applied to GIDP 0.1 on 2026-09-29.**

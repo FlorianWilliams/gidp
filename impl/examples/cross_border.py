@@ -335,6 +335,21 @@ def main() -> None:
     print("Stage 8  Handoff (Section 14.7)")
     print(LINE)
 
+    hreq = wire.send(
+        "A",
+        a.request_consent(
+            ConsentAction.HANDOFF, ["https://example.org/negotiation/v1"]
+        ),
+    )
+    hresp = wire.send("B", b.handle_consent_request(hreq))
+    a.record_consent(hresp)
+    b.session.record_consent(hresp, discharge=False)
+    if hresp.status is ConsentStatus.PENDING_PRINCIPAL_APPROVAL:
+        hterm = wire.send("B", b.principal_answers_consent(hreq, granted=True))
+        a.record_consent(hterm)
+        b.session.record_consent(hterm, discharge=False)
+    say("", "a Handoff needs its own consent, naming its target (Section 14.7)")
+
     handoff = wire.send(
         "A", a.handoff(protocol_ref="https://example.org/negotiation/v1")
     )

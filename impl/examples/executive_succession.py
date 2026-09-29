@@ -47,6 +47,7 @@ from gidp.vocab import (  # noqa: E402
     ClaimOperator,
     CloseReason,
     ConsentAction,
+    ConsentStatus,
     Gate,
     IdentityStatus,
     Surface,
@@ -246,6 +247,17 @@ def run(verbose: bool = True) -> tuple[Agent, Agent, Wire]:
     if verbose:
         show("C -> B", cresp)
 
+    hreq = wire.send(
+        "Board",
+        b.request_consent(ConsentAction.HANDOFF, ["https://example.org/introduction/v1"]),
+    )
+    hresp = wire.send("Cand.", c.handle_consent_request(hreq))
+    b.record_consent(hresp)
+    c.session.record_consent(hresp, discharge=False)
+    if hresp.status is ConsentStatus.PENDING_PRINCIPAL_APPROVAL:
+        hterm = wire.send("Cand.", c.principal_answers_consent(hreq, granted=True))
+        b.record_consent(hterm)
+        c.session.record_consent(hterm, discharge=False)
     handoff = wire.send("Board", b.handoff("https://example.org/introduction/v1"))
     c.session.record_handoff(handoff)
     b.session.close(CloseReason.COMPLETED)

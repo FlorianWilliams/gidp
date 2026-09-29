@@ -74,6 +74,15 @@ def _qualify_both(a: Agent, b: Agent) -> None:
 # ---------------------------------------------------------------------------
 
 
+def _grant_handoff(a: Agent, b: Agent, target: str) -> None:
+    request = a.request_consent(ConsentAction.HANDOFF, [target])
+    response = b.handle_consent_request(request)
+    if response.status is ConsentStatus.PENDING_PRINCIPAL_APPROVAL:
+        response = b.principal_answers_consent(request, granted=True)
+    a.record_consent(response)
+    b.session.record_consent(response, discharge=False)
+
+
 def _consent_gated_pair() -> tuple[Agent, Agent]:
     """B holds an attribute A must see before anything can qualify."""
     gated = _interest(
@@ -144,6 +153,7 @@ def test_a_disclosure_after_qualification_does_not_unqualify_the_session():
 
     assert a.session.state is SessionState.QUALIFIED
     assert b.session.state is SessionState.QUALIFIED
+    _grant_handoff(a, b, "urn:example:negotiation")
     a.handoff("urn:example:negotiation")  # reachable
     assert a.session.state is SessionState.HANDED_OFF
 
@@ -362,6 +372,7 @@ def test_a_handoff_carries_the_contingency_forward_under_the_same_rule():
     b = Agent(ref="agent:b", standing_interest=_interest())
     a.confirm_accept(b.handle_session_open(a.open_session("s-h", purpose="t")))
     _qualify_both(a, b)
+    _grant_handoff(a, b, "urn:example:negotiation")
     handoff = a.handoff("urn:example:negotiation")
     assert handoff.contingent_on == ["undisclosed"]
     assert "board_vote_on_divestment" not in handoff.model_dump_json()
@@ -728,3 +739,57 @@ def test_the_kept_status_survives_a_pending_consent():
     a.request_consent(ConsentAction.REVEAL_IDENTITY, scope=["identity"])
     assert a.session.state is SessionState.CONSENT_PENDING
     assert a.session.status() is SessionStatus.POTENTIALLY_COMPATIBLE
+
+
+# ---------------------------------------------------------------------------
+# Fresh reviewer, third reading points applied same day -- S-56 to S-58
+# ---------------------------------------------------------------------------
+
+
+def test_the_initiator_does_not_emit_while_the_responder_reports_open():
+    """S-56: qualification is the conjunction of both sides' entry
+    conditions, reported through session_status. The reviewer's sequence:
+    A's one question qualifies A's view, but B's profile requires a
+    dimension nobody examined, so B reports `open` and A must not emit."""
+    a, b = _pair()
+    b.session.required_dimensions = {"domain", "open_attribute"}
+    response = _exchange(
+        a, b, [Claim(key="domain", operator=ClaimOperator.INTERSECTS,
+                     value=["enterprise_software"])]
+    )
+    assert response.session_status is SessionStatus.OPEN
+    assert a.session.qualify() is False, (
+        "the responder's reported status gates the initiator (Section 14.6)"
+    )
+    # The examining claim arrives; B's next report qualifies; A may emit.
+    response = _exchange(
+        a, b, [Claim(key="open_attribute", operator=ClaimOperator.EQUALS,
+                     value="value")]
+    )
+    assert response.session_status is SessionStatus.POTENTIALLY_COMPATIBLE
+    assert b.session.qualify() is True
+    assert a.session.qualify() is True
+
+
+def test_a_handoff_without_its_consent_is_refused():
+    """S-58: being in CONSENTED establishes nothing about *this* action."""
+    a, b = _pair()
+    _qualify_both(a, b)
+    # A consent exists -- for something else entirely.
+    consent = a.request_consent(ConsentAction.DISCLOSE_ATTRIBUTES, ["open_attribute"])
+    granted = b.handle_consent_request(consent)
+    a.record_consent(granted)
+    b.session.record_consent(granted, discharge=False)
+    with pytest.raises(ProtocolError, match="handoff"):
+        a.handoff("urn:example:negotiation")
+
+
+def test_a_handoff_consent_covers_only_its_named_target():
+    a, b = _pair()
+    _qualify_both(a, b)
+    _grant_handoff(a, b, "urn:example:negotiation")
+    with pytest.raises(ProtocolError, match="handoff"):
+        a.handoff("urn:example:other-target")
+    assert a.handoff("urn:example:negotiation").target.protocol_ref == (
+        "urn:example:negotiation"
+    )

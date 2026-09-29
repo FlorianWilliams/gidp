@@ -457,6 +457,16 @@ def test_criterion_12_handoff_never_carries_commit():
         )
 
 
+def _grant_handoff(a, b, target: str) -> None:
+    """Section 14.7: a Handoff needs a granted consent naming its target."""
+    request = a.request_consent(ConsentAction.HANDOFF, [target])
+    response = b.handle_consent_request(request)
+    if response.status is ConsentStatus.PENDING_PRINCIPAL_APPROVAL:
+        response = b.principal_answers_consent(request, granted=True)
+    a.record_consent(response)
+    b.session.record_consent(response, discharge=False)
+
+
 def test_criterion_12_handoff_requires_protocol_ref_for_a_protocol_target():
     with pytest.raises(ValidationError):
         HandoffTarget(kind=HandoffKind.PROTOCOL)
@@ -466,6 +476,9 @@ def test_criterion_12_handoff_is_terminal():
     a, b = _pair()
     a.session.results["domain"] = ClaimResult.COMPATIBLE
     a.session.qualify()
+    b.session.results["domain"] = ClaimResult.COMPATIBLE
+    b.session.qualify()
+    _grant_handoff(a, b, "https://example.org/negotiation/v1")
     handoff = a.handoff("https://example.org/negotiation/v1")
     assert a.session.state is SessionState.HANDED_OFF
     a.session.close(CloseReason.COMPLETED)

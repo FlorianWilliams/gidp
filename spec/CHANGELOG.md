@@ -102,6 +102,19 @@ all-conditionally-compatible policy of Section 24.3 is named as a
 non-conforming comparator. Both reviewers now converge on the same two
 next steps: the editorial pass, and implementers.
 
+A third fresh reading re-derived much of the deferred programme — the
+expected behaviour of a good reader meeting a document that states its
+own limits, and the reason Section 7 now points such a reader at
+open-problems.md — and contributed three real changes (S-56 to S-64):
+qualification is bilateral over the wire, the initiator emitting only
+when the responder's reported status qualifies, which is the local
+confirmation three reviewers independently asked for at zero new
+objects; a session is explicitly about one candidate configuration,
+which is what an incompatible refutes; and a Handoff requires a granted
+consent naming its target, CONSENTED alone establishing nothing about
+that action. Plus six local raccords, including the dangling reference
+and the too-broad pending rule that this week's own fixes had left.
+
 The last of those, S-12, is worth naming here because it changes what the
 document claims rather than what it specifies. A comparative harness built to
 test the protocol against existing mechanisms showed that the coarsening

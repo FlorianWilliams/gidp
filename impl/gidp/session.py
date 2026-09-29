@@ -163,6 +163,11 @@ class Session:
     #: request_id -> True while a request is undischarged (Section 14).
     open_requests: dict[str, str] = field(default_factory=dict)
     opportunity_emitted: bool = False
+    #: Section 14.6: the session_status the peer last reported in a
+    #: CompatibilityResponse. Qualification is the conjunction of both
+    #: sides' entry conditions, and this is the initiator's view of the
+    #: responder's.
+    peer_status: SessionStatus | None = None
 
     # -- transitions -------------------------------------------------------
 
@@ -251,6 +256,7 @@ class Session:
 
     def record_compatibility(self, response: CompatibilityResponse) -> None:
         self._fire(COMPATIBILITY)
+        self.peer_status = response.session_status
         self._discharge(response.request_ref)
         self.withdraw("sent", self.pending_supersedes.pop(response.request_ref, []))
         self.record_results(response.results, direction="sent")
@@ -401,6 +407,19 @@ class Session:
             # Section 17.2: a qualifying status reached while a disclosure or
             # consent is pending neither fires nor lapses; the caller applies
             # it on the return to PROBING.
+            return False
+        if (
+            self.is_initiator
+            and self.peer_status is not None
+            and self.peer_status is not SessionStatus.POTENTIALLY_COMPATIBLE
+        ):
+            # A result set directly, as the conformance suite does, leaves
+            # peer_status None; on the wire every result arrives with a
+            # report, so None never occurs in a real exchange.
+            # Section 14.6: qualification is the conjunction of both sides'
+            # entry conditions. The responder confirms its own -- profile
+            # requirements included -- through the status it reports, and
+            # the initiator does not emit until that report qualifies.
             return False
         self._fire(QUALIFY)
         self.opportunity_emitted = True

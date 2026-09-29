@@ -105,6 +105,16 @@ def _run() -> tuple[Agent, Agent, Wire]:
     b.session.record_consent(cresp, discharge=False)
     assert cresp.status is ConsentStatus.GRANTED
 
+    hreq = wire.send(
+        "A", a.request_consent(ConsentAction.HANDOFF, ["https://example.org/negotiation/v1"])
+    )
+    hresp = wire.send("B", b.handle_consent_request(hreq))
+    a.record_consent(hresp)
+    b.session.record_consent(hresp, discharge=False)
+    if hresp.status is ConsentStatus.PENDING_PRINCIPAL_APPROVAL:
+        hterm = wire.send("B", b.principal_answers_consent(hreq, granted=True))
+        a.record_consent(hterm)
+        b.session.record_consent(hterm, discharge=False)
     handoff = wire.send("A", a.handoff("https://example.org/negotiation/v1"))
     b.session.record_handoff(handoff)
     a.session.close(CloseReason.COMPLETED)

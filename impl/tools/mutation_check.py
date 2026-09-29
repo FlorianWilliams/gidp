@@ -34,6 +34,18 @@ class Mutation:
 
 MUTATIONS = (
     Mutation(
+        "the responder's reported status gates the initiator (14.6)",
+        "gidp/session.py",
+        "            and self.peer_status is not None",
+        "            and False",
+    ),
+    Mutation(
+        "a Handoff needs a granted consent naming its target (14.7)",
+        "gidp/agent.py",
+        "        if protocol_ref not in self.handoff_consents:",
+        "        if False:",
+    ),
+    Mutation(
         "a profile's required dimensions block qualification (15.2)",
         "gidp/session.py",
         "            and self.required_dimensions <= covered",
