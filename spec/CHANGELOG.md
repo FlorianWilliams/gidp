@@ -102,6 +102,19 @@ all-conditionally-compatible policy of Section 24.3 is named as a
 non-conforming comparator. Both reviewers now converge on the same two
 next steps: the editorial pass, and implementers.
 
+The editorial pass followed, surgically rather than wholesale: the
+histories of corrected failures, the naming history, the borrowed
+XACML distinction and the measured-curve narratives moved to a new
+`rationale.md`, leaving one-line traces where the reasoning was
+load-bearing; the specification's experimental figures now cite
+`alternatives.md` and their own populations; the one full statement of
+the capability-discovery distinction is Appendix D. The three-document
+shape the reviewers asked for — specification, design rationale,
+experimental record — now exists as GIDP-0.1.md, rationale.md and
+alternatives.md. Deeper shortening is deliberately left for the 0.2
+edition: with the substance frozen, each further compression is pure
+risk against no deadline.
+
 A third fresh reading re-derived much of the deferred programme — the
 expected behaviour of a good reader meeting a document that states its
 own limits, and the reason Section 7 now points such a reader at
