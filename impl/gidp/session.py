@@ -109,9 +109,20 @@ class Session:
     #: requests this side asked, RECEIVED for requests it was asked), each
     #: holding PENDING_DISCLOSURE or PENDING_CONSENT.
     pending_requests: dict[str, str] = field(default_factory=dict)
-    #: Axis 3 (consents): True once a consent was granted after
-    #: qualification — what the 0.1 wire view calls CONSENTED.
-    post_qualification_consent: bool = False
+    #: Axis 3 (consents): the directions (SENT/RECEIVED) in which a
+    #: consent was granted after qualification — what the 0.1 wire view
+    #: calls CONSENTED, per directional view. The phase is read before the
+    #: grant is processed, so a pre-qualification grant that unblocks a
+    #: deferred qualification never becomes retrospectively
+    #: post-qualification.
+    post_qualification_consents: set[str] = field(default_factory=set)
+    #: Unanswered propositions, in either direction: a claim of ours whose
+    #: request expired with no terminal, or a claim we received and hold
+    #: for a PROBE approval (Section 16.3). They are unresolved, block
+    #: qualification on the side that records them — a question that went
+    #: unanswered must not make a session qualifiable — and clear when
+    #: superseded (the one extension 0.2 makes to supersedes).
+    unanswered: set[str] = field(default_factory=set)
 
     #: Proposition -> its result, for every claim still standing in either
     #: direction (S-24). A proposition is "sent:<claim_id>" or
@@ -152,12 +163,13 @@ class Session:
 
     # -- the derived 0.1 view ----------------------------------------------
 
-    @property
-    def state(self) -> SessionState | None:
-        """The 0.1 wire state, derived from the three axes.
+    def state_of(self, direction: str) -> SessionState | None:
+        """The faithful 0.1 projection of ONE directional view (17.2).
 
-        Kept so that the 0.1 state names remain meaningful on the wire and
-        in the conformance corpus; nothing inside this module reads it.
+        This, not the aggregate below, is what reproduces the 0.1 table:
+        each direction's view moves on its own requests and its own
+        grants. Admission never reads a projection — the guards read the
+        axes — so neither projection can mask an admissible event.
         """
         if self.phase is None:
             return None
@@ -167,11 +179,7 @@ class Session:
             return SessionState.HANDED_OFF
         if self.phase is Phase.REQUESTED:
             return SessionState.REQUESTED
-        # The 0.1 view is per direction; a single view reports its own
-        # sent request first, a received one otherwise.
-        in_flight = self.pending_requests.get(SENT) or self.pending_requests.get(
-            RECEIVED
-        )
+        in_flight = self.pending_requests.get(direction)
         if in_flight == PENDING_DISCLOSURE:
             return SessionState.DISCLOSURE_PENDING
         if in_flight == PENDING_CONSENT:
@@ -179,10 +187,32 @@ class Session:
         if self.phase is Phase.QUALIFIED:
             return (
                 SessionState.CONSENTED
-                if self.post_qualification_consent
+                if direction in self.post_qualification_consents
                 else SessionState.QUALIFIED
             )
         return SessionState.PROBING
+
+    @property
+    def state(self) -> SessionState | None:
+        """An aggregate display view: this side's own sent request first,
+        a received one otherwise. A convenience, not the 0.1 projection —
+        ``state_of(direction)`` is — and never a basis for admission.
+        """
+        own = self.state_of(SENT)
+        if own in (SessionState.DISCLOSURE_PENDING, SessionState.CONSENT_PENDING):
+            return own
+        received = self.state_of(RECEIVED)
+        if received in (
+            SessionState.DISCLOSURE_PENDING,
+            SessionState.CONSENT_PENDING,
+        ):
+            return received
+        if (
+            self.phase is Phase.QUALIFIED
+            and self.post_qualification_consents
+        ):
+            return SessionState.CONSENTED
+        return own
 
     def _refuse(self, event: str) -> ProtocolError:
         state = self.state
@@ -310,6 +340,11 @@ class Session:
         """
         for claim_id in claim_ids:
             proposition = f"{direction}:{claim_id}"
+            if proposition in self.unanswered:
+                # The 0.2 extension: our own claim that expired unanswered
+                # may be superseded -- the non-answer taught nothing, so
+                # there is no bisection to protect against.
+                continue
             if proposition not in self.results:
                 raise ProtocolError(
                     f"cannot supersede {claim_id!r}: a claim may supersede only "
@@ -329,6 +364,7 @@ class Session:
             proposition = f"{direction}:{claim_id}"
             self.results.pop(proposition, None)
             self.dimension_of.pop(proposition, None)
+            self.unanswered.discard(proposition)
 
     def _dimension(self, proposition: str) -> str:
         # A result set directly, as the conformance suite does, is its own
@@ -372,8 +408,41 @@ class Session:
         if response.status is ConsentStatus.GRANTED and self.phase is Phase.QUALIFIED:
             # A grant before qualification opens a gate (Section 10.2); it
             # does not make the session CONSENTED, which is the stage from
-            # which a Handoff may leave.
-            self.post_qualification_consent = True
+            # which a Handoff may leave. The fact is per direction: a grant
+            # in one directional view does not make the other CONSENTED.
+            self.post_qualification_consents.add(direction)
+
+    def expire_request(
+        self, request_id: str, claim_ids: Iterable[str] = ()
+    ) -> None:
+        """A request of ours whose ``expires_at`` passed with no terminal.
+
+        0.2 semantics, stated as such (not as 0.1 equivalence): the wait
+        ends without closing the session, and a terminal that arrives
+        later names a discharged request and is refused by correlation.
+        For a CompatibilityRequest, each of its claims becomes an
+        unresolved proposition that blocks qualification until superseded
+        (Section 14.2, the 0.2 extension) — expiring an awkward question
+        must not make the session qualifiable.
+        """
+        kind = self.open_requests.get(request_id)
+        if kind is None:
+            raise ProtocolError(
+                f"cannot expire unknown request {request_id!r} (Section 14)"
+            )
+        del self.open_requests[request_id]
+        if kind in (PENDING_DISCLOSURE, PENDING_CONSENT):
+            if self.pending_requests.get(SENT) == kind:
+                del self.pending_requests[SENT]
+        self.note_unanswered(SENT, claim_ids)
+        self.pending_supersedes.pop(request_id, None)
+
+    def note_unanswered(self, direction: str, claim_ids: Iterable[str]) -> None:
+        """Record claims that stand without a result: our own expired
+        questions, or questions we received and hold for a Principal's
+        PROBE decision (Section 16.3). Both block qualification."""
+        for claim_id in claim_ids:
+            self.unanswered.add(f"{direction}:{claim_id}")
 
     def record_handoff(self, message: Handoff) -> None:
         if self.phase is not Phase.QUALIFIED or self.pending_requests:
@@ -424,6 +493,7 @@ class Session:
             # and an Opportunity must not be emitted over it. Expiry
             # discharges the request without making it a result (S-59).
             and "CompatibilityRequest" not in self.open_requests.values()
+            and not self.unanswered
             and ClaimResult.COMPATIBLE in values
             and all(v in qualifying for v in values)
             # Section 15.2: the profile's qualification requirements enter

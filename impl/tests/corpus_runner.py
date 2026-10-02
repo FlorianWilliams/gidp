@@ -102,6 +102,7 @@ class Corpus:
         }
         self.pending_disclosure: tuple | None = None
         self.pending_consent: tuple | None = None
+        self.held_ask: tuple | None = None
 
     def run(self, steps: list[dict]) -> None:
         for i, step in enumerate(steps):
@@ -130,6 +131,15 @@ class Corpus:
             answerer = b if asker is a else a
             claims = [Claim(**c) for c in spec["claims"]]
             request = asker.ask(claims)
+            if spec.get("hold"):
+                # The responder receives the question and holds it for a
+                # PROBE approval (Section 16.3): no response is produced,
+                # and the holder records the unanswered propositions.
+                answerer.session.note_unanswered(
+                    "received", [c.claim_id for c in request.claims]
+                )
+                self.held_ask = (asker, answerer, request)
+                return
             response = answerer.handle_compatibility_request(request)
             asker.receive_compatibility_response(response, request)
             _check(step, response, label)
@@ -145,6 +155,15 @@ class Corpus:
                     f"{label}: reported status {response.session_status.value}, "
                     f"expected {step['expect_status']}"
                 )
+            return
+
+        if "expire_ask" in step:
+            asker, answerer, request = self.held_ask
+            self.held_ask = None
+            asker.session.expire_request(
+                request.request_id,
+                claim_ids=[c.claim_id for c in request.claims],
+            )
             return
 
         if "request_disclosure" in step:

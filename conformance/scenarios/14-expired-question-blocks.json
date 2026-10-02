@@ -1,0 +1,145 @@
+{
+  "scenario": "expired-question-blocks",
+  "notes": "The decided 0.2 deadline semantics (draft revision 3). A question held for a PROBE approval (Section 16.3) and never answered expires: the wait ends without closing the session, but the proposition remains unresolved on BOTH sides and blocks qualification -- expiring an awkward question must not make a session qualifiable. Recovery in the same session: its own sender supersedes the expired claim (the one 0.2 extension to supersedes; superseding an incompatible result remains forbidden).",
+  "spec": [
+    "14",
+    "14.2",
+    "15.2",
+    "16.3",
+    "17.2"
+  ],
+  "setup": {
+    "A": {
+      "conditions": {
+        "domain": [
+          "enterprise_software"
+        ],
+        "open_attribute": "value"
+      },
+      "policy": {
+        "domain": "discovery",
+        "open_attribute": "session"
+      },
+      "authority": {
+        "PROBE": "true",
+        "DISCLOSE": "true",
+        "INTRODUCE": "true"
+      }
+    },
+    "B": {
+      "conditions": {
+        "domain": [
+          "enterprise_software"
+        ],
+        "open_attribute": "value"
+      },
+      "policy": {
+        "domain": "discovery",
+        "open_attribute": "session"
+      },
+      "authority": {
+        "PROBE": "approval_required",
+        "DISCLOSE": "true",
+        "INTRODUCE": "true"
+      }
+    }
+  },
+  "steps": [
+    {
+      "open": {
+        "purpose": "test"
+      }
+    },
+    {
+      "ask": {
+        "from": "A",
+        "claims": [
+          {
+            "claim_id": "c1",
+            "key": "domain",
+            "operator": "intersects",
+            "value": [
+              "enterprise_software"
+            ]
+          }
+        ]
+      },
+      "expect_results": [
+        {
+          "claim_id": "c1",
+          "result": "compatible"
+        }
+      ]
+    },
+    {
+      "ask": {
+        "from": "A",
+        "hold": true,
+        "claims": [
+          {
+            "claim_id": "c2",
+            "key": "open_attribute",
+            "operator": "equals",
+            "value": "value"
+          }
+        ]
+      }
+    },
+    {
+      "qualify": {
+        "role": "A",
+        "expect": false
+      }
+    },
+    {
+      "expire_ask": {}
+    },
+    {
+      "qualify": {
+        "role": "A",
+        "expect": false
+      }
+    },
+    {
+      "qualify": {
+        "role": "B",
+        "expect": false
+      }
+    },
+    {
+      "ask": {
+        "from": "A",
+        "claims": [
+          {
+            "claim_id": "c3",
+            "key": "open_attribute",
+            "operator": "equals",
+            "value": "value",
+            "supersedes": [
+              "c2"
+            ]
+          }
+        ]
+      },
+      "expect_results": [
+        {
+          "claim_id": "c3",
+          "result": "compatible"
+        }
+      ],
+      "expect_status": "potentially_compatible"
+    },
+    {
+      "qualify": {
+        "role": "B",
+        "expect": true
+      }
+    },
+    {
+      "qualify": {
+        "role": "A",
+        "expect": true
+      }
+    }
+  ]
+}

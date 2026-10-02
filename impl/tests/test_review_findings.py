@@ -909,3 +909,101 @@ def test_one_request_in_flight_per_direction():
         a.request_disclosure("domain", purpose="second")
     with pytest.raises(ProtocolError, match="no transition"):
         a.request_consent(ConsentAction.DISCLOSE_ATTRIBUTES, ["domain"])
+
+
+# ---------------------------------------------------------------------------
+# Second round on the session-model draft (3 October 2026)
+# ---------------------------------------------------------------------------
+
+
+def test_the_directional_projection_is_faithful():
+    """R1's trace: A's sent consent is provisional, a received disclosure
+    is simultaneously provisional, then the consent is declined. The
+    directional views must read PROBING (A->B) and DISCLOSURE_PENDING
+    (B->A); the aggregate is display only and never drives admission."""
+    from gidp.objects import ConsentResponse
+    from gidp.session import RECEIVED, SENT
+
+    a, _ = _pair()
+    consent = a.request_consent(
+        ConsentAction.DISCLOSE_ATTRIBUTES, ["open_attribute"]
+    )
+    a.session.record_consent(
+        ConsentResponse(
+            session_id=a.session.session_id,
+            request_ref=consent.request_id,
+            status=ConsentStatus.PENDING_PRINCIPAL_APPROVAL,
+            expires_at=_soon(),
+        )
+    )
+    a.session.begin_disclosure(RECEIVED)  # B's request arrives meanwhile
+    a.session.record_consent(
+        ConsentResponse(
+            session_id=a.session.session_id,
+            request_ref=consent.request_id,
+            status=ConsentStatus.DECLINED,
+            expires_at=_soon(),
+        )
+    )
+    assert a.session.state_of(SENT) is SessionState.PROBING
+    assert a.session.state_of(RECEIVED) is SessionState.DISCLOSURE_PENDING
+
+
+def test_a_grant_in_one_direction_does_not_consent_the_other():
+    from gidp.session import RECEIVED, SENT
+
+    a, b = _pair()
+    _qualify_both(a, b)
+    consent = a.request_consent(ConsentAction.REVEAL_IDENTITY, ["open_attribute"])
+    granted = b.handle_consent_request(consent)
+    assert granted.status is ConsentStatus.GRANTED
+    a.session.record_consent(granted)
+    b.session.record_consent(granted, discharge=False)
+    assert a.session.state_of(SENT) is SessionState.CONSENTED
+    assert a.session.state_of(RECEIVED) is SessionState.QUALIFIED
+    assert b.session.state_of(RECEIVED) is SessionState.CONSENTED
+    assert b.session.state_of(SENT) is SessionState.QUALIFIED
+
+
+def test_an_expired_wait_frees_the_session_without_closing_it():
+    """The decided 0.2 deadline semantics: the requester's expired consent
+    wait is discharged, the session stays open, a late terminal is
+    refused by correlation, and a new request is admissible."""
+    a, b = _pair()
+    _qualify_both(a, b)
+    consent = a.request_consent(ConsentAction.REVEAL_IDENTITY, ["identity"])
+    provisional = b.handle_consent_request(consent)
+    assert provisional.status is ConsentStatus.PENDING_PRINCIPAL_APPROVAL
+    a.session.expire_request(consent.request_id)
+    assert a.session.state is SessionState.QUALIFIED
+    with pytest.raises(ProtocolError, match="no transition"):
+        # The late terminal names a wait that no longer exists.
+        a.session.record_consent(provisional)
+    # A new request in the freed direction is admissible.
+    a.request_disclosure("open_attribute", purpose="after-expiry")
+
+
+def test_an_expired_question_blocks_until_superseded():
+    """The decided fate of an expired unanswered claim: the proposition
+    remains unresolved and blocks qualification; the 0.2 extension lets
+    its own sender supersede it, which restores the path."""
+    a, b = _pair()
+    _exchange(a, b, [Claim(key="domain", operator=ClaimOperator.INTERSECTS,
+                           value=["enterprise_software"])])
+    held = a.ask([Claim(key="open_attribute", operator=ClaimOperator.EQUALS,
+                        value="value")])
+    claim_id = held.claims[0].claim_id
+    a.session.expire_request(held.request_id, claim_ids=[claim_id])
+    # B received and holds the question: its own view records it
+    # unanswered too (Section 16.3), and must not qualify over it.
+    b.session.note_unanswered("received", [claim_id])
+    assert a.session.qualify() is False, (
+        "an expired unanswered question still blocks qualification"
+    )
+    assert b.session.qualify() is False, (
+        "the holder does not qualify over a question it is sitting on"
+    )
+    # Recovery in the same session: supersede the expired claim.
+    _exchange(a, b, [Claim(key="open_attribute", operator=ClaimOperator.EQUALS,
+                           value="value", supersedes=[claim_id])])
+    assert a.session.qualify() is True

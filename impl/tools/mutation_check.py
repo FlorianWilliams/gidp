@@ -34,6 +34,12 @@ class Mutation:
 
 MUTATIONS = (
     Mutation(
+        "an unanswered proposition blocks qualification (15.2, 16.3)",
+        "gidp/session.py",
+        "            and not self.unanswered",
+        "            and True",
+    ),
+    Mutation(
         "an unanswered question of ours blocks qualification (15.2, 16.3)",
         "gidp/session.py",
         "            and \"CompatibilityRequest\" not in self.open_requests.values()",
