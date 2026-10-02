@@ -761,6 +761,12 @@ def test_the_initiator_does_not_emit_while_the_responder_reports_open():
     assert a.session.qualify() is False, (
         "the responder's reported status gates the initiator (Section 14.6)"
     )
+    assert a.session.state is SessionState.PROBING, (
+        "the gate holds the TRANSITION, not only the emission: no "
+        "QUALIFIED-without-Opportunity intermediate state exists"
+    )
+    with pytest.raises(ProtocolError, match="before qualification"):
+        a.request_consent(ConsentAction.REVEAL_IDENTITY, ["open_attribute"])
     # The examining claim arrives; B's next report qualifies; A may emit.
     response = _exchange(
         a, b, [Claim(key="open_attribute", operator=ClaimOperator.EQUALS,

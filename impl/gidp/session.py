@@ -342,8 +342,10 @@ class Session:
             proposition = f"{direction}:{claim_id}"
             if proposition in self.unanswered:
                 # The 0.2 extension: our own claim that expired unanswered
-                # may be superseded -- the non-answer taught nothing, so
-                # there is no bisection to protect against.
+                # may be superseded. The rule rests on its invariants --
+                # no recorded incompatible is removed, no budget refunded
+                # -- not on silence being information-free (it is not;
+                # Section 24.7).
                 continue
             if proposition not in self.results:
                 raise ProtocolError(

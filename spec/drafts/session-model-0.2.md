@@ -1,13 +1,14 @@
-# The session model in three axes (0.2 draft, revision 3)
+# The session model in three axes (0.2 draft, revision 4)
 
 Status: draft for GIDP 0.2. The 0.1 state machine (specification, Section
 17.2) remains normative until 0.2 is published. The reference
 implementation runs on this model with the 0.1 states kept as derived
 views; reproducing 0.1's observable behaviour — every transition, refusal
 and emission — is the model's **objective**, and the conformance corpus is
-its **current verification**. Two rules in this revision are new 0.2
+its **current verification**. Three rules in this revision are new 0.2
 semantics rather than 0.1 equivalence, and are marked as such where they
-appear.
+appear: the deadline semantics, the supersession of an expired claim,
+and the Handoff quiescence barrier.
 
 ## The model
 
@@ -89,7 +90,7 @@ clears the pending axis and `CLOSED` admits nothing that would reopen it.
 | qualification conditions met | EXPLORING→QUALIFIED | requires both slots empty | status becomes kept |
 | `incompatible` recorded — received *or locally produced* | →CLOSED, pending or not | cleared by closing | observable effect: `SessionClose(reason: incompatible)` is emitted (Section 17.2) |
 | request expiry (see *Deadlines*) | — | clears the expired wait | an expired question's propositions remain unanswered |
-| `Handoff` | QUALIFIED→HANDED_OFF, both slots empty, its consent granted | — | — |
+| `Handoff` | QUALIFIED→HANDED_OFF, **both directions quiescent** (0.2 semantics, below), its consent granted | — | — |
 | `SessionClose` / session expiry | →CLOSED | cleared | a Principal decision still in flight outside the session produces nothing on any axis when it lands |
 
 ## Unanswered propositions
@@ -107,11 +108,16 @@ An unanswered proposition blocks qualification on every side that knows
 of it: a question that went unanswered must not make a session
 qualifiable, and expiring an awkward question is not a qualification
 tactic. **0.2 semantics:** the sender of an expired, unanswered claim MAY
-supersede it (Section 14.2 extended to exactly this case — the
-non-answer taught nothing, so there is no bisection to protect), which
-is the in-session recovery; superseding an `incompatible` result remains
-forbidden. Without supersession, the proposition blocks for the life of
-the session and recovery is a new session against the same budget.
+supersede it — Section 14.2 extended to exactly this case — which is
+the in-session recovery; superseding an `incompatible` result remains
+forbidden. The rule rests on its operational invariants, not on any
+claim that a non-answer is information-free (it is not: silence and its
+timing can leak, as Section 24.7 acknowledges, and a terminal received
+after expiry was refused by the machine yet read by the Agent):
+supersession removes no recorded `incompatible`, refunds and resets no
+disclosure budget, and leaves the responder's contradiction-closing
+duty intact. Without supersession, the proposition blocks for the life
+of the session and recovery is a new session against the same budget.
 
 ## Qualification: roles, trigger, and emission order
 
@@ -125,16 +131,24 @@ Three things, defined separately because conflating them is circular:
   reports `potentially_compatible` in its next `CompatibilityResponse`.
   This needs nothing from the peer: it is how the first positive status
   enters the session.
-- **The initiator's emission lock.** The initiator additionally emits the
-  Opportunity only when the responder's *last reported* status qualifies
-  (Section 14.6). The responder never applies this lock; its
-  qualification transition follows its local conditions alone.
+- **The responder's transition** follows its local conditions alone.
+- **The initiator's transition, kept status and emission are one
+  event**, conditioned together on its local conditions *and* the
+  responder's last reported status being `potentially_compatible`
+  (Section 14.6). While the responder's last report is `open`, the
+  initiator remains in `EXPLORING` whatever its local conditions: it is
+  not `QUALIFIED` without an Opportunity, no post-qualification action
+  (an identity request, say) is admissible, and its unique transition is
+  not consumed. When a later response carries the responder's positive
+  status, the next re-evaluation fires transition and emission together.
 
 **Trigger:** after every event that changes the evaluation axis or
 empties a pending slot, and before emitting any further message, a side
-re-evaluates its local conditions over the propositions standing at that
-moment; nothing met mid-wait is remembered. Where they hold, the
-transition fires once and the status becomes kept.
+re-evaluates its qualification conditions — local ones, plus the
+responder's last reported status on the initiator's side — over the
+propositions standing at that moment; nothing met mid-wait is
+remembered. Where they hold, the transition fires once and the status
+becomes kept.
 
 **Emission order:** when a locally prepared terminal response is what
 empties the last slot and enables qualification, the observable order is
@@ -160,6 +174,20 @@ that expires closes (`reason: expired`), clearing the pending axis. For a
   where expiry is the defined terminal outcome and the requester learns
   nothing from it beyond the absence of an answer, which stays on the
   evaluation axis as an unanswered proposition.
+
+## The Handoff quiescence barrier (0.2 semantics, stated as such)
+
+The 0.1 table, read per direction, admits `CONSENTED → HANDED_OFF` in
+one directional view while the other direction holds a pending
+disclosure. 0.2 adds a barrier and declares it: a `Handoff` requires
+**both** directions quiescent — no request in flight either way. A
+Handoff ends GIDP's responsibility for the interaction (Section 14.7),
+and an unresolved wait cannot cross that boundary: once the session is
+`HANDED_OFF`, the protocol no longer provides the response that would
+resolve it. Requiring quiescence is the honest alternative to defining
+the fate of an orphaned wait on the far side. This is a deliberate
+coupling between directions — the only one: admission of requests
+remains per direction.
 
 ## The bounded wait the concurrency rule keeps
 
@@ -194,7 +222,8 @@ state(d) = CLOSED | HANDED_OFF | REQUESTED        (phase, verbatim)
 ```
 
 The projection is deterministic and many-to-one; the property claimed is
-preservation of 0.1's observable behaviour, with the corpus as the
+preservation of 0.1's observable behaviour **outside the three
+explicitly marked 0.2 semantic changes**, with the corpus as the
 current check. It needs exactly one datum beyond the current axes — the
 per-grant phase-at-grant metadatum — because the current phase plus the
 currently effective consents cannot distinguish a grant made before
