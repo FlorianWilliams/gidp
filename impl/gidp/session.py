@@ -75,9 +75,13 @@ class Phase(str, enum.Enum):
     CLOSED = "closed"
 
 
-#: The pending axis holds at most one of these at a time per view — 0.1's
-#: implicit concurrency rule, now explicit: a new disclosure or consent
-#: cannot be opened while one is in flight.
+#: The pending axis is keyed per direction — Section 17.2 holds state per
+#: side *and per direction of request*, so an Agent whose own consent is
+#: awaiting the peer Principal's decision can still receive and answer a
+#: disclosure the peer asks meanwhile. Within one direction, at most one
+#: request is in flight at a time: 0.1's concurrency rule, explicit.
+SENT = "sent"
+RECEIVED = "received"
 PENDING_DISCLOSURE = "DisclosureRequest"
 PENDING_CONSENT = "ConsentRequest"
 
@@ -101,9 +105,10 @@ class Session:
 
     #: Axis 1 — the phase. None until a SessionOpen is seen.
     phase: Phase | None = None
-    #: Axis 2 — the request in flight: None, PENDING_DISCLOSURE or
-    #: PENDING_CONSENT.
-    pending: str | None = None
+    #: Axis 2 — the requests in flight, keyed by direction (SENT for
+    #: requests this side asked, RECEIVED for requests it was asked), each
+    #: holding PENDING_DISCLOSURE or PENDING_CONSENT.
+    pending_requests: dict[str, str] = field(default_factory=dict)
     #: Axis 3 (consents): True once a consent was granted after
     #: qualification — what the 0.1 wire view calls CONSENTED.
     post_qualification_consent: bool = False
@@ -162,9 +167,14 @@ class Session:
             return SessionState.HANDED_OFF
         if self.phase is Phase.REQUESTED:
             return SessionState.REQUESTED
-        if self.pending is PENDING_DISCLOSURE:
+        # The 0.1 view is per direction; a single view reports its own
+        # sent request first, a received one otherwise.
+        in_flight = self.pending_requests.get(SENT) or self.pending_requests.get(
+            RECEIVED
+        )
+        if in_flight == PENDING_DISCLOSURE:
             return SessionState.DISCLOSURE_PENDING
-        if self.pending is PENDING_CONSENT:
+        if in_flight == PENDING_CONSENT:
             return SessionState.CONSENT_PENDING
         if self.phase is Phase.QUALIFIED:
             return (
@@ -227,19 +237,23 @@ class Session:
             )
         del self.open_requests[request_ref]
 
-    def _begin_pending(self, kind: str) -> None:
-        """Open the pending axis: one request in flight at a time per view.
+    def _begin_pending(self, kind: str, direction: str) -> None:
+        """Open the pending axis: one request in flight per direction.
 
         The phase does not move — a disclosure or a consent is a request
         made *within* a stage, not a stage of its own (Section 17.2) — so
         there is nothing to remember and nothing to restore on the answer.
+        The directions are independent (Section 17.2): a request received
+        while one's own is awaiting the peer is admitted.
         """
         self._require_open(kind)
-        if self.pending is not None:
+        if direction in self.pending_requests:
             raise self._refuse(kind)
-        self.pending = kind
+        self.pending_requests[direction] = kind
 
-    def begin_consent(self, action: ConsentAction | None = None) -> None:
+    def begin_consent(
+        self, action: ConsentAction | None = None, direction: str = SENT
+    ) -> None:
         """Open a consent request.
 
         Before qualification only `disclose_attributes` is permitted:
@@ -256,11 +270,11 @@ class Session:
                 "qualification; only disclose_attributes may be (Sections 5, "
                 "14.5, 17.2)"
             )
-        self._begin_pending(PENDING_CONSENT)
+        self._begin_pending(PENDING_CONSENT, direction)
 
-    def begin_disclosure(self) -> None:
+    def begin_disclosure(self, direction: str = SENT) -> None:
         """Open a disclosure request, in any open phase."""
-        self._begin_pending(PENDING_DISCLOSURE)
+        self._begin_pending(PENDING_DISCLOSURE, direction)
 
     def note_compatibility(self) -> None:
         """Probing continues in any open phase, pending or not (Section 17.2)."""
@@ -330,33 +344,39 @@ class Session:
         belongs to the peer, so there is nothing of ours to discharge, but
         the pending axis still clears (Section 17.2).
         """
-        if self.pending is not PENDING_DISCLOSURE:
+        direction = SENT if discharge else RECEIVED
+        if self.pending_requests.get(direction) != PENDING_DISCLOSURE:
             raise self._refuse("DisclosureResponse")
         provisional = response.status in PROVISIONAL_DISCLOSURE_STATUSES
         if not provisional:
-            self.pending = None
             if discharge:
+                # Correlate before clearing: a delayed duplicate of an
+                # earlier response names a request already discharged and
+                # must not clear the wait a newer request opened.
                 self._discharge(response.request_ref)
+            del self.pending_requests[direction]
         self.outstanding_requires.discard(response.attribute)
 
     def record_consent(
         self, response: ConsentResponse, *, discharge: bool = True
     ) -> None:
-        if self.pending is not PENDING_CONSENT:
+        direction = SENT if discharge else RECEIVED
+        if self.pending_requests.get(direction) != PENDING_CONSENT:
             raise self._refuse("ConsentResponse")
         if response.status is ConsentStatus.PENDING_PRINCIPAL_APPROVAL:
             return  # provisional: the request stays in flight (Section 14)
-        self.pending = None
+        if discharge:
+            # Correlate before clearing (see record_disclosure).
+            self._discharge(response.request_ref)
+        del self.pending_requests[direction]
         if response.status is ConsentStatus.GRANTED and self.phase is Phase.QUALIFIED:
             # A grant before qualification opens a gate (Section 10.2); it
             # does not make the session CONSENTED, which is the stage from
             # which a Handoff may leave.
             self.post_qualification_consent = True
-        if discharge:
-            self._discharge(response.request_ref)
 
     def record_handoff(self, message: Handoff) -> None:
-        if self.phase is not Phase.QUALIFIED or self.pending is not None:
+        if self.phase is not Phase.QUALIFIED or self.pending_requests:
             raise ProtocolError(
                 "a recipient that receives a Handoff in an earlier state MUST "
                 "close the session with reason 'unsupported' (Section 17.2)"
@@ -387,7 +407,7 @@ class Session:
         # is not yet reported qualifying -- it is recomputed when the
         # pending axis empties, over the propositions then standing, so
         # that status, phase and Opportunity advance together.
-        if self.phase is not Phase.EXPLORING or self.pending is not None:
+        if self.phase is not Phase.EXPLORING or self.pending_requests:
             return SessionStatus.OPEN
 
         # Section 15.2: every claim must have resolved `compatible` or
@@ -399,6 +419,11 @@ class Session:
         qualifies = (
             bool(values)
             and not self.outstanding_requires
+            # A question of ours that has no answer yet -- held for a PROBE
+            # approval, say (Section 16.3) -- is an unresolved proposition,
+            # and an Opportunity must not be emitted over it. Expiry
+            # discharges the request without making it a result (S-59).
+            and "CompatibilityRequest" not in self.open_requests.values()
             and ClaimResult.COMPATIBLE in values
             and all(v in qualifying for v in values)
             # Section 15.2: the profile's qualification requirements enter

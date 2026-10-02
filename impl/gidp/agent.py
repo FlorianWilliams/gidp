@@ -429,7 +429,7 @@ class Agent:
             expires_at=_soon(),
         )
         self.session.register_request(request.request_id, request.type)
-        self.session.begin_disclosure()
+        self.session.begin_disclosure()  # SENT: our own request in flight
         self._log("disclosure_request", f"{attribute} ({purpose})")
         return request
 
@@ -437,7 +437,9 @@ class Agent:
         self, request: DisclosureRequest
     ) -> DisclosureResponse:
         assert self.session is not None
-        self.session.begin_disclosure()
+        from .session import RECEIVED
+
+        self.session.begin_disclosure(RECEIVED)
 
         if self._authority(Authority.DISCLOSE) is AuthorityValue.FALSE:
             # Section 18: an authority refusal is reported as 'declined',
@@ -592,7 +594,9 @@ class Agent:
         attribute in scope carries the `principal_approval` gate.
         """
         assert self.session is not None
-        self.session.begin_consent(request.action)
+        from .session import RECEIVED
+
+        self.session.begin_consent(request.action, RECEIVED)
 
         if request.action is not ConsentAction.REVEAL_IDENTITY and any(
             attribute in IDENTITY_ATTRIBUTES for attribute in request.scope

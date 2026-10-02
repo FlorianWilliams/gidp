@@ -815,3 +815,97 @@ def test_a_pre_qualification_grant_does_not_preload_consented():
         "the earlier gate-opening grant must not surface as CONSENTED"
     )
     assert b.session.state is SessionState.QUALIFIED
+
+
+# ---------------------------------------------------------------------------
+# Reviews of the 0.2 session-model draft (2 October 2026)
+# ---------------------------------------------------------------------------
+
+
+def test_directions_are_independent_waits():
+    """Both draft reviews, same trace: A's consent awaits B's Principal;
+    B may still ask A for a disclosure meanwhile. Section 17.2 holds state
+    per direction, and the pending axis now does too."""
+    from gidp.objects import AuthoritySpec
+    from gidp.vocab import Authority, AuthorityValue
+
+    approval = _interest(
+        authority=AuthoritySpec(
+            levels={
+                Authority.PROBE: AuthorityValue.TRUE,
+                Authority.DISCLOSE: AuthorityValue.TRUE,
+                Authority.INTRODUCE: AuthorityValue.APPROVAL_REQUIRED,
+            }
+        )
+    )
+    a = Agent(ref="agent:a", standing_interest=_interest())
+    b = Agent(ref="agent:b", standing_interest=approval)
+    a.confirm_accept(b.handle_session_open(a.open_session("s-x", purpose="t")))
+    _qualify_both(a, b)
+
+    # A asks a consent; B's Principal is thinking.
+    consent = a.request_consent(ConsentAction.REVEAL_IDENTITY, scope=["identity"])
+    provisional = b.handle_consent_request(consent)
+    assert provisional.status is ConsentStatus.PENDING_PRINCIPAL_APPROVAL
+    a.session.record_consent(provisional)
+    b.session.record_consent(provisional, discharge=False)
+
+    # Meanwhile B asks A for a disclosure -- the reverse direction, which
+    # a single shared wait slot would wrongly refuse.
+    request = b.request_disclosure("open_attribute", purpose="meanwhile")
+    response = a.handle_disclosure_request(request)
+    assert response.status is DisclosureStatus.GRANTED
+    b.session.record_disclosure(response)
+
+    # The Principal's decision still lands where it was awaited.
+    terminal = b.principal_answers_consent(consent, granted=True)
+    a.session.record_consent(terminal)
+    b.session.record_consent(terminal, discharge=False)
+    assert a.session.state is SessionState.CONSENTED
+
+
+def test_an_unanswered_question_blocks_qualification():
+    """A claim held for a PROBE approval (S-51) is an unresolved
+    proposition: no Opportunity over it. Expiry discharges the request
+    without making it a result."""
+    a, b = _pair()
+    _exchange(a, b, [Claim(key="domain", operator=ClaimOperator.INTERSECTS,
+                           value=["enterprise_software"])])
+    # A second question leaves A's side; B holds it (no response yet).
+    a.ask([Claim(key="open_attribute", operator=ClaimOperator.EQUALS,
+                 value="value")])
+    assert a.session.status() is SessionStatus.OPEN
+    assert a.session.qualify() is False, (
+        "an Opportunity must not be emitted while our own question is "
+        "unanswered"
+    )
+
+
+def test_a_delayed_duplicate_response_cannot_clear_a_newer_wait():
+    """Second draft review: a terminal response clears the MATCHING
+    request. A replayed answer to D1 must not clear the wait D2 opened."""
+    a, b = _pair()
+    d1 = a.request_disclosure("open_attribute", purpose="first")
+    r1 = b.handle_disclosure_request(d1)
+    a.session.record_disclosure(r1)
+    d2 = a.request_disclosure("open_attribute", purpose="second")
+    with pytest.raises(ProtocolError, match="unknown request"):
+        a.session.record_disclosure(r1)  # the delayed duplicate
+    assert a.session.state is SessionState.DISCLOSURE_PENDING, (
+        "D2's wait survives the replayed answer to D1"
+    )
+    r2 = b.handle_disclosure_request(d2)
+    a.session.record_disclosure(r2)
+    assert a.session.state is SessionState.PROBING
+
+
+def test_one_request_in_flight_per_direction():
+    """Within one direction, a second disclosure or consent cannot be
+    opened while the first is in flight (17.2, the explicit concurrency
+    rule). Independence across directions does not mean none within one."""
+    a, b = _pair()
+    a.request_disclosure("open_attribute", purpose="first")
+    with pytest.raises(ProtocolError, match="no transition"):
+        a.request_disclosure("domain", purpose="second")
+    with pytest.raises(ProtocolError, match="no transition"):
+        a.request_consent(ConsentAction.DISCLOSE_ATTRIBUTES, ["domain"])

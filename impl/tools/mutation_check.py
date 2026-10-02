@@ -34,6 +34,18 @@ class Mutation:
 
 MUTATIONS = (
     Mutation(
+        "an unanswered question of ours blocks qualification (15.2, 16.3)",
+        "gidp/session.py",
+        "            and \"CompatibilityRequest\" not in self.open_requests.values()",
+        "            and True",
+    ),
+    Mutation(
+        "one request in flight per direction, not zero (17.2)",
+        "gidp/session.py",
+        "        if direction in self.pending_requests:",
+        "        if False:",
+    ),
+    Mutation(
         "the responder's reported status gates the initiator (14.6)",
         "gidp/session.py",
         "            and self.peer_status is not None",
@@ -60,7 +72,7 @@ MUTATIONS = (
     Mutation(
         "no qualifying status is reported while a request is pending (17.2)",
         "gidp/session.py",
-        "        if self.phase is not Phase.EXPLORING or self.pending is not None:",
+        "        if self.phase is not Phase.EXPLORING or self.pending_requests:",
         "        if self.phase is not Phase.EXPLORING:",
     ),
     Mutation(
@@ -180,8 +192,8 @@ MUTATIONS = (
     Mutation(
         "answering a disclosure never moves the phase (17.2, S-22)",
         "gidp/session.py",
-        "        if not provisional:\n            self.pending = None",
-        "        if not provisional:\n            self.pending = None\n            self.phase = Phase.EXPLORING",
+        "                self._discharge(response.request_ref)\n            del self.pending_requests[direction]",
+        "                self._discharge(response.request_ref)\n            del self.pending_requests[direction]\n            self.phase = Phase.EXPLORING",
     ),
     Mutation(
         "a shape mismatch answers unknown rather than failing (14.2, S-13)",
