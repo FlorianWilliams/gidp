@@ -582,8 +582,10 @@ def test_a_principal_may_refuse_consent_and_the_request_is_discharged():
     from gidp.vocab import ConsentStatus, SessionState
 
     a, b = _pair()
-    a.session.state = SessionState.QUALIFIED
-    b.session.state = SessionState.QUALIFIED
+    from gidp.session import Phase
+
+    a.session.phase = Phase.QUALIFIED
+    b.session.phase = Phase.QUALIFIED
 
     wire = Wire()
     request = wire.send(
@@ -620,11 +622,13 @@ def test_an_opportunity_records_that_identity_was_actually_granted():
     """`IdentityStatus.GRANTED` is the normal end of a consented session and
     no worked domain reached it: the examples all stop at `not_requested`.
     A status nothing ever sets is a status no reader can trust."""
-    from gidp.vocab import ConsentStatus, IdentityStatus, SessionState
+    from gidp.vocab import ConsentStatus, IdentityStatus
 
     a, b = _pair()
-    a.session.state = SessionState.QUALIFIED
-    b.session.state = SessionState.QUALIFIED
+    from gidp.session import Phase
+
+    a.session.phase = Phase.QUALIFIED
+    b.session.phase = Phase.QUALIFIED
     request = a.request_consent(ConsentAction.REVEAL_IDENTITY, ["identity"])
     provisional = b.handle_consent_request(request)
     a.session.record_consent(provisional)

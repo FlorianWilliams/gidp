@@ -1,18 +1,40 @@
-"""The Compatibility Session: state machine and status (Sections 15.2, 17.2).
+"""The Compatibility Session as three axes (0.2 model; Sections 15.2, 17.2).
 
-The transition table of Section 17.2 is normative and says an implementation
-MUST implement exactly those transitions and no others, so it is reproduced
-here as data rather than scattered through control flow: ``TRANSITIONS`` below
-is the table, and every state change goes through it.
+0.1 encoded three different things in one state: the session's *phase*, the
+*request in flight*, and the *consents and evaluation*. Every reviewer found
+the seams — the ``_RETURN`` bookkeeping that remembered where a request was
+asked from, the special case for a qualification reached mid-wait, the
+grant-before-qualification exception. This module is the 0.2 refactoring the
+reviews converged on. ``Session`` now holds:
 
-Section 17.2 also states that the state is held per session *and per direction
-of request*: each Agent tracks the state of the requests it has sent, so both
-Agents may hold an outstanding request at the same time without the session
-having two conflicting states. ``Session`` here models one side's view.
+- **phase** — the monotonic life of the session:
+  ``REQUESTED → EXPLORING → QUALIFIED → HANDED_OFF``, with ``CLOSED``
+  reachable from anywhere. A disclosure or a consent never changes it.
+- **pending** — the request in flight (at most one at a time per view,
+  which is 0.1's concurrency rule made explicit). Answering a request
+  clears it; the phase was never moved, so nothing needs restoring.
+- **evaluation and consents** — standing propositions, the peer's reported
+  status, granted consents (held by the Agent), dependencies.
+
+The 0.1 wire states remain as a **derived view** (the ``state`` property):
+``PROBING`` is ``EXPLORING`` with nothing pending, ``DISCLOSURE_PENDING``
+and ``CONSENT_PENDING`` are the pending axis, ``CONSENTED`` is ``QUALIFIED``
+plus a post-qualification grant. The rules that needed stating as patches
+in 0.1 fall out of the shape: a disclosure returns the session to the stage
+it was asked from *because the phase never left it*; a qualification reached
+mid-wait defers to the return *because qualification requires the pending
+axis empty and recomputes then*; an ``incompatible`` closes mid-wait
+*because closing reads the evaluation axis, not the pending one*.
+
+The state is held per session and per direction of request: each Agent
+tracks the requests it has sent, so both Agents may hold an outstanding
+request at the same time without the session having two conflicting states.
+``Session`` models one side's view.
 """
 
 from __future__ import annotations
 
+import enum
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 
@@ -43,77 +65,25 @@ class ProtocolError(Exception):
     """A message that the specification does not allow in the current state."""
 
 
-class Event(str):
-    """Event names used as keys in the transition table."""
+class Phase(str, enum.Enum):
+    """The session's monotonic life — one of the three axes."""
+
+    REQUESTED = "requested"
+    EXPLORING = "exploring"
+    QUALIFIED = "qualified"
+    HANDED_OFF = "handed_off"
+    CLOSED = "closed"
 
 
-SESSION_OPEN = Event("SessionOpen")
-SESSION_ACCEPT = Event("SessionAccept")
-COMPATIBILITY = Event("Compatibility")  # request or response
-DISCLOSURE_REQUEST = Event("DisclosureRequest")
-DISCLOSURE_TERMINAL = Event("DisclosureResponse.terminal")
-DISCLOSURE_PROVISIONAL = Event("DisclosureResponse.provisional")
-QUALIFY = Event("session_status=potentially_compatible")
-INCOMPATIBLE = Event("session_status=incompatible")
-CONSENT_REQUEST = Event("ConsentRequest")
-CONSENT_GRANTED = Event("ConsentResponse.granted")
-CONSENT_DECLINED = Event("ConsentResponse.declined")
-CONSENT_PROVISIONAL = Event("ConsentResponse.provisional")
-HANDOFF = Event("Handoff")
-CLOSE = Event("SessionClose")
+#: The pending axis holds at most one of these at a time per view — 0.1's
+#: implicit concurrency rule, now explicit: a new disclosure or consent
+#: cannot be opened while one is in flight.
+PENDING_DISCLOSURE = "DisclosureRequest"
+PENDING_CONSENT = "ConsentRequest"
 
-
-#: Target meaning "return to the state the pending request was sent from".
-#: A disclosure or a consent is a request inside a stage of the session, not a
-#: stage of its own; answering it must not move the session to a different
-#: stage than the one it was asked in (S-22).
-_RETURN = object()
-
-#: The normative transition table of Section 17.2. ``None`` as the target
-#: means "state unchanged"; ``_RETURN`` means "the state the pending request
-#: was sent from".
-TRANSITIONS: dict[tuple[SessionState | None, Event], object] = {
-    (None, SESSION_OPEN): SessionState.REQUESTED,
-    (SessionState.REQUESTED, SESSION_ACCEPT): SessionState.PROBING,
-    (SessionState.REQUESTED, CLOSE): SessionState.CLOSED,
-    (SessionState.PROBING, COMPATIBILITY): None,
-    # A disclosure may be asked in any open stage and returns to it.
-    (SessionState.PROBING, DISCLOSURE_REQUEST): SessionState.DISCLOSURE_PENDING,
-    (SessionState.QUALIFIED, DISCLOSURE_REQUEST): SessionState.DISCLOSURE_PENDING,
-    (SessionState.CONSENTED, DISCLOSURE_REQUEST): SessionState.DISCLOSURE_PENDING,
-    (SessionState.DISCLOSURE_PENDING, DISCLOSURE_TERMINAL): _RETURN,
-    (SessionState.DISCLOSURE_PENDING, DISCLOSURE_PROVISIONAL): None,
-    (SessionState.DISCLOSURE_PENDING, COMPATIBILITY): None,
-    (SessionState.PROBING, QUALIFY): SessionState.QUALIFIED,
-    (SessionState.PROBING, INCOMPATIBLE): SessionState.CLOSED,
-    (SessionState.DISCLOSURE_PENDING, INCOMPATIBLE): SessionState.CLOSED,
-    (SessionState.CONSENT_PENDING, INCOMPATIBLE): SessionState.CLOSED,
-    (SessionState.QUALIFIED, INCOMPATIBLE): SessionState.CLOSED,
-    (SessionState.CONSENTED, INCOMPATIBLE): SessionState.CLOSED,
-    (SessionState.QUALIFIED, COMPATIBILITY): None,
-    # Consent to disclose attributes may be sought while probing, because a
-    # `session/consent` attribute can be what qualification needs. Every
-    # other consent action waits for qualification (Section 5, 14.5).
-    (SessionState.PROBING, CONSENT_REQUEST): SessionState.CONSENT_PENDING,
-    (SessionState.QUALIFIED, CONSENT_REQUEST): SessionState.CONSENT_PENDING,
-    (SessionState.CONSENTED, CONSENT_REQUEST): SessionState.CONSENT_PENDING,
-    (SessionState.CONSENT_PENDING, CONSENT_GRANTED): SessionState.CONSENTED,
-    (SessionState.CONSENT_PENDING, CONSENT_DECLINED): _RETURN,
-    (SessionState.CONSENT_PENDING, CONSENT_PROVISIONAL): None,
-    (SessionState.CONSENT_PENDING, COMPATIBILITY): None,
-    (SessionState.CONSENTED, COMPATIBILITY): None,
-    (SessionState.QUALIFIED, HANDOFF): SessionState.HANDED_OFF,
-    (SessionState.CONSENTED, HANDOFF): SessionState.HANDED_OFF,
-    (SessionState.HANDED_OFF, CLOSE): SessionState.CLOSED,
-}
-
-#: Every state except CLOSED may transition to CLOSED on SessionClose or on
-#: expiry (Section 17.2, final row).
 #: The token an Opportunity carries in `contingent_on` for dependencies its
 #: sender holds but may not name (Section 14.6, S-23).
 UNDISCLOSED_DEPENDENCY = "undisclosed"
-
-_CLOSEABLE = tuple(s for s in SessionState if s is not SessionState.CLOSED)
 
 
 @dataclass
@@ -127,8 +97,16 @@ class Session:
     #: Optional features in force, i.e. the intersection both sides support
     #: (Section 14.1). The bilateral core is implied and never listed.
     features: set = field(default_factory=set)
-    state: SessionState | None = None
     close_reason: CloseReason | None = None
+
+    #: Axis 1 — the phase. None until a SessionOpen is seen.
+    phase: Phase | None = None
+    #: Axis 2 — the request in flight: None, PENDING_DISCLOSURE or
+    #: PENDING_CONSENT.
+    pending: str | None = None
+    #: Axis 3 (consents): True once a consent was granted after
+    #: qualification — what the 0.1 wire view calls CONSENTED.
+    post_qualification_consent: bool = False
 
     #: Proposition -> its result, for every claim still standing in either
     #: direction (S-24). A proposition is "sent:<claim_id>" or
@@ -158,8 +136,6 @@ class Session:
     #: granted later in the session is taken into account: "transmit",
     #: "withhold" (evaluation-only, or gated and not yet opened) or "never".
     dependency_visibility: Callable[[], str] | None = None
-    #: The stage a pending disclosure or consent was asked from (S-22).
-    return_to: SessionState | None = None
     #: request_id -> True while a request is undischarged (Section 14).
     open_requests: dict[str, str] = field(default_factory=dict)
     opportunity_emitted: bool = False
@@ -169,45 +145,68 @@ class Session:
     #: responder's.
     peer_status: SessionStatus | None = None
 
-    # -- transitions -------------------------------------------------------
+    # -- the derived 0.1 view ----------------------------------------------
 
-    def _fire(self, event: Event) -> None:
-        key = (self.state, event)
-        if key not in TRANSITIONS:
-            raise ProtocolError(
-                f"no transition for event {event!r} in state "
-                f"{self.state.value if self.state else 'None'} (Section 17.2)"
+    @property
+    def state(self) -> SessionState | None:
+        """The 0.1 wire state, derived from the three axes.
+
+        Kept so that the 0.1 state names remain meaningful on the wire and
+        in the conformance corpus; nothing inside this module reads it.
+        """
+        if self.phase is None:
+            return None
+        if self.phase is Phase.CLOSED:
+            return SessionState.CLOSED
+        if self.phase is Phase.HANDED_OFF:
+            return SessionState.HANDED_OFF
+        if self.phase is Phase.REQUESTED:
+            return SessionState.REQUESTED
+        if self.pending is PENDING_DISCLOSURE:
+            return SessionState.DISCLOSURE_PENDING
+        if self.pending is PENDING_CONSENT:
+            return SessionState.CONSENT_PENDING
+        if self.phase is Phase.QUALIFIED:
+            return (
+                SessionState.CONSENTED
+                if self.post_qualification_consent
+                else SessionState.QUALIFIED
             )
-        target = TRANSITIONS[key]
-        if event in (DISCLOSURE_REQUEST, CONSENT_REQUEST):
-            self.return_to = self.state
-        if target is _RETURN:
-            target = self.return_to
-        elif event is CONSENT_GRANTED and self.return_to is SessionState.PROBING:
-            # A grant before qualification opens a gate (Section 10.2); it
-            # does not make the session CONSENTED, which is the stage from
-            # which a Handoff may leave.
-            target = SessionState.PROBING
-        if target is not None:
-            self.state = target  # type: ignore[assignment]
+        return SessionState.PROBING
+
+    def _refuse(self, event: str) -> ProtocolError:
+        state = self.state
+        return ProtocolError(
+            f"no transition for event {event!r} in state "
+            f"{state.value if state else 'None'} (Section 17.2)"
+        )
+
+    def _require_open(self, event: str) -> None:
+        """The exploring and qualified phases are where exchange happens."""
+        if self.phase not in (Phase.EXPLORING, Phase.QUALIFIED):
+            raise self._refuse(event)
+
+    # -- phase transitions --------------------------------------------------
 
     def open(self, message: SessionOpen) -> None:
-        self._fire(SESSION_OPEN)
+        if self.phase is not None:
+            raise self._refuse("SessionOpen")
+        self.phase = Phase.REQUESTED
         self.open_requests[message.request_id] = message.type
 
     def accept(self, message: SessionAccept) -> None:
-        self._fire(SESSION_ACCEPT)
+        if self.phase is not Phase.REQUESTED:
+            raise self._refuse("SessionAccept")
+        self.phase = Phase.EXPLORING
         self._discharge(message.request_ref)
 
     def close(self, reason: CloseReason) -> None:
-        if self.state is SessionState.CLOSED:
+        if self.phase is Phase.CLOSED:
             raise ProtocolError(
                 "CLOSED is terminal; a new interaction needs a new "
                 "session_id (Section 17.2)"
             )
-        if self.state not in _CLOSEABLE:
-            raise ProtocolError(f"cannot close from {self.state}")
-        self.state = SessionState.CLOSED
+        self.phase = Phase.CLOSED
         self.close_reason = reason
 
     # -- requests and responses -------------------------------------------
@@ -228,14 +227,27 @@ class Session:
             )
         del self.open_requests[request_ref]
 
-    def begin_consent(self, action: ConsentAction | None = None) -> None:
-        """Enter CONSENT_PENDING.
+    def _begin_pending(self, kind: str) -> None:
+        """Open the pending axis: one request in flight at a time per view.
 
-        From PROBING only `disclose_attributes` is permitted: identity,
-        direct contact and handoff remain behind qualification (Section 5).
+        The phase does not move — a disclosure or a consent is a request
+        made *within* a stage, not a stage of its own (Section 17.2) — so
+        there is nothing to remember and nothing to restore on the answer.
+        """
+        self._require_open(kind)
+        if self.pending is not None:
+            raise self._refuse(kind)
+        self.pending = kind
+
+    def begin_consent(self, action: ConsentAction | None = None) -> None:
+        """Open a consent request.
+
+        Before qualification only `disclose_attributes` is permitted:
+        identity, direct contact and handoff remain behind qualification
+        (Sections 5, 14.5).
         """
         if (
-            self.state is SessionState.PROBING
+            self.phase is Phase.EXPLORING
             and action is not None
             and action is not ConsentAction.DISCLOSE_ATTRIBUTES
         ):
@@ -244,18 +256,18 @@ class Session:
                 "qualification; only disclose_attributes may be (Sections 5, "
                 "14.5, 17.2)"
             )
-        self._fire(CONSENT_REQUEST)
+        self._begin_pending(PENDING_CONSENT)
 
     def begin_disclosure(self) -> None:
-        """PROBING, QUALIFIED or CONSENTED + DisclosureRequest -> pending."""
-        self._fire(DISCLOSURE_REQUEST)
+        """Open a disclosure request, in any open phase."""
+        self._begin_pending(PENDING_DISCLOSURE)
 
     def note_compatibility(self) -> None:
-        """Probing continues; the state is unchanged (Section 17.2)."""
-        self._fire(COMPATIBILITY)
+        """Probing continues in any open phase, pending or not (Section 17.2)."""
+        self._require_open("Compatibility")
 
     def record_compatibility(self, response: CompatibilityResponse) -> None:
-        self._fire(COMPATIBILITY)
+        self._require_open("Compatibility")
         self.peer_status = response.session_status
         self._discharge(response.request_ref)
         self.withdraw("sent", self.pending_supersedes.pop(response.request_ref, []))
@@ -315,36 +327,41 @@ class Session:
         """Apply a DisclosureResponse.
 
         ``discharge`` is False on the responder's own view: the request_id
-        belongs to the peer, so there is nothing of ours to discharge, but the
-        state still moves (Section 17.2).
+        belongs to the peer, so there is nothing of ours to discharge, but
+        the pending axis still clears (Section 17.2).
         """
+        if self.pending is not PENDING_DISCLOSURE:
+            raise self._refuse("DisclosureResponse")
         provisional = response.status in PROVISIONAL_DISCLOSURE_STATUSES
-        self._fire(DISCLOSURE_PROVISIONAL if provisional else DISCLOSURE_TERMINAL)
-        if not provisional and discharge:
-            self._discharge(response.request_ref)
+        if not provisional:
+            self.pending = None
+            if discharge:
+                self._discharge(response.request_ref)
         self.outstanding_requires.discard(response.attribute)
 
     def record_consent(
         self, response: ConsentResponse, *, discharge: bool = True
     ) -> None:
+        if self.pending is not PENDING_CONSENT:
+            raise self._refuse("ConsentResponse")
         if response.status is ConsentStatus.PENDING_PRINCIPAL_APPROVAL:
-            self._fire(CONSENT_PROVISIONAL)
-            return
-        self._fire(
-            CONSENT_GRANTED
-            if response.status is ConsentStatus.GRANTED
-            else CONSENT_DECLINED
-        )
+            return  # provisional: the request stays in flight (Section 14)
+        self.pending = None
+        if response.status is ConsentStatus.GRANTED and self.phase is Phase.QUALIFIED:
+            # A grant before qualification opens a gate (Section 10.2); it
+            # does not make the session CONSENTED, which is the stage from
+            # which a Handoff may leave.
+            self.post_qualification_consent = True
         if discharge:
             self._discharge(response.request_ref)
 
     def record_handoff(self, message: Handoff) -> None:
-        if self.state not in (SessionState.QUALIFIED, SessionState.CONSENTED):
+        if self.phase is not Phase.QUALIFIED or self.pending is not None:
             raise ProtocolError(
                 "a recipient that receives a Handoff in an earlier state MUST "
                 "close the session with reason 'unsupported' (Section 17.2)"
             )
-        self._fire(HANDOFF)
+        self.phase = Phase.HANDED_OFF
 
     def record_close(self, message: SessionClose) -> None:
         self.close(message.reason)
@@ -353,7 +370,7 @@ class Session:
 
     def status(self) -> SessionStatus:
         """Compute ``session_status`` per the table of Section 15.2."""
-        if self.state is SessionState.CLOSED:
+        if self.phase is Phase.CLOSED:
             return SessionStatus.CLOSED
 
         values = list(self.results.values())
@@ -367,17 +384,16 @@ class Session:
             return SessionStatus.POTENTIALLY_COMPATIBLE
 
         # Section 17.2: while a disclosure or consent is pending, the status
-        # is not yet reported qualifying -- it is recomputed on the return
-        # to PROBING, over the propositions then standing, so that status,
-        # state and Opportunity advance together.
-        if self.state is not SessionState.PROBING:
+        # is not yet reported qualifying -- it is recomputed when the
+        # pending axis empties, over the propositions then standing, so
+        # that status, phase and Opportunity advance together.
+        if self.phase is not Phase.EXPLORING or self.pending is not None:
             return SessionStatus.OPEN
 
         # Section 15.2: every claim must have resolved `compatible` or
         # `conditionally_compatible`, and at least one `compatible`. A
-        # `declined`, `unknown`, `requires_disclosure` or
-        # A non-qualifying result prevents qualification, so that
-        # an Opportunity never rests on silence (Section 18).
+        # non-qualifying result prevents qualification, so that an
+        # Opportunity never rests on silence (Section 18).
         qualifying = (ClaimResult.COMPATIBLE, ClaimResult.CONDITIONALLY_COMPATIBLE)
         covered = {self._dimension(p) for p in self.results}
         qualifies = (
@@ -394,19 +410,17 @@ class Session:
         return SessionStatus.POTENTIALLY_COMPATIBLE if qualifies else SessionStatus.OPEN
 
     def qualify(self) -> bool:
-        """Apply the PROBING -> QUALIFIED transition if the status warrants it.
+        """Apply the EXPLORING -> QUALIFIED transition if the status warrants.
 
-        Returns True exactly once per session, on the transition that produces
-        the Opportunity (Sections 14.6, 17.2).
+        Returns True exactly once per session, on the transition that
+        produces the Opportunity (Sections 14.6, 17.2). ``status()`` already
+        requires the pending axis empty and the phase EXPLORING, so a
+        qualification reached mid-wait defers and is recomputed at the
+        return by construction.
         """
         if self.status() is not SessionStatus.POTENTIALLY_COMPATIBLE:
             return False
         if self.opportunity_emitted:
-            return False
-        if self.state is not SessionState.PROBING:
-            # Section 17.2: a qualifying status reached while a disclosure or
-            # consent is pending neither fires nor lapses; the caller applies
-            # it on the return to PROBING.
             return False
         if (
             self.is_initiator
@@ -421,12 +435,14 @@ class Session:
             # requirements included -- through the status it reports, and
             # the initiator does not emit until that report qualifies.
             return False
-        self._fire(QUALIFY)
+        self.phase = Phase.QUALIFIED
         self.opportunity_emitted = True
         return True
 
     def fail_incompatible(self) -> None:
-        self._fire(INCOMPATIBLE)
+        if self.phase not in (Phase.EXPLORING, Phase.QUALIFIED):
+            raise self._refuse("session_status=incompatible")
+        self.phase = Phase.CLOSED
         self.close_reason = CloseReason.INCOMPATIBLE
 
     # -- opportunity -------------------------------------------------------

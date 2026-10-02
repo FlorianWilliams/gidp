@@ -60,8 +60,8 @@ MUTATIONS = (
     Mutation(
         "no qualifying status is reported while a request is pending (17.2)",
         "gidp/session.py",
-        "        if self.state is not SessionState.PROBING:\n            return SessionStatus.OPEN",
-        "        if False:\n            return SessionStatus.OPEN",
+        "        if self.phase is not Phase.EXPLORING or self.pending is not None:",
+        "        if self.phase is not Phase.EXPLORING:",
     ),
     Mutation(
         "session_status is kept after qualification (15.2)",
@@ -82,10 +82,10 @@ MUTATIONS = (
         "        if False and any(",
     ),
     Mutation(
-        "qualification defers while a request is pending (17.2)",
+        "a grant before qualification opens a gate, not CONSENTED (10.2, 17.2)",
         "gidp/session.py",
-        "        if self.state is not SessionState.PROBING:",
-        "        if False:",
+        "        if response.status is ConsentStatus.GRANTED and self.phase is Phase.QUALIFIED:",
+        "        if response.status is ConsentStatus.GRANTED:",
     ),
     Mutation(
         "the responder's stated contingencies reach the Opportunity (14.3, 14.6)",
@@ -178,10 +178,10 @@ MUTATIONS = (
         "            if True\n            else ClaimResult.UNKNOWN",
     ),
     Mutation(
-        "a disclosure returns to the stage it was asked in (17.2, S-22)",
+        "answering a disclosure never moves the phase (17.2, S-22)",
         "gidp/session.py",
-        "        if target is _RETURN:\n            target = self.return_to",
-        "        if target is _RETURN:\n            target = SessionState.PROBING",
+        "        if not provisional:\n            self.pending = None",
+        "        if not provisional:\n            self.pending = None\n            self.phase = Phase.EXPLORING",
     ),
     Mutation(
         "a shape mismatch answers unknown rather than failing (14.2, S-13)",

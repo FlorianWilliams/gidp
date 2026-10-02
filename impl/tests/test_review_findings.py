@@ -793,3 +793,25 @@ def test_a_handoff_consent_covers_only_its_named_target():
     assert a.handoff("urn:example:negotiation").target.protocol_ref == (
         "urn:example:negotiation"
     )
+
+
+def test_a_pre_qualification_grant_does_not_preload_consented():
+    """A consent granted before qualification opens a gate (10.2); it must
+    not make the session read CONSENTED once qualification is later
+    reached -- CONSENTED is a post-qualification grant, not a remembered
+    one."""
+    a, b = _consent_gated_pair()
+    request = a.request_consent(
+        ConsentAction.DISCLOSE_ATTRIBUTES, scope=["data_room"]
+    )
+    granted = b.handle_consent_request(request)
+    assert granted.status is ConsentStatus.GRANTED
+    a.session.record_consent(granted)
+    b.session.record_consent(granted, discharge=False)
+    assert a.session.state is SessionState.PROBING
+
+    _qualify_both(a, b)
+    assert a.session.state is SessionState.QUALIFIED, (
+        "the earlier gate-opening grant must not surface as CONSENTED"
+    )
+    assert b.session.state is SessionState.QUALIFIED
