@@ -1,0 +1,167 @@
+{
+  "manifest": "gidp-profile/0.1",
+  "profile": {
+    "id": "gidp.profile.executive-succession",
+    "version": "0.1",
+    "wire": "gidp/0.1",
+    "title": "Executive succession",
+    "description": "Private discovery between an executive who is not looking and an organisation that has no announced search: person-to-organisation, asymmetric by nature, identity gated on both sides."
+  },
+  "attributes": {
+    "role": {
+      "subject": "side_dependent",
+      "subject_note": "A fact for the candidate (roles they can credibly hold), a requirement for the organisation (the role to fill).",
+      "type": "enum",
+      "values": [
+        "ceo",
+        "coo",
+        "cto",
+        "cfo",
+        "cro"
+      ],
+      "general_value_means": "accepted_set",
+      "operators": [
+        "equals",
+        "intersects"
+      ],
+      "absent_means": "unknown",
+      "retrieval": true
+    },
+    "sector": {
+      "subject": "side_dependent",
+      "subject_note": "A fact for the organisation, an accepted set for the candidate.",
+      "type": "set",
+      "values": [
+        "b2b_software",
+        "fintech",
+        "industrial",
+        "consumer",
+        "healthtech"
+      ],
+      "general_value_means": "accepted_set",
+      "operators": [
+        "intersects"
+      ],
+      "absent_means": "unknown",
+      "retrieval": true
+    },
+    "company_arr_eur": {
+      "subject": "side_dependent",
+      "subject_note": "A fact for the organisation (its ARR), a preference for the candidate (the scale they will consider).",
+      "type": "range",
+      "unit": "EUR",
+      "general_value_means": "approximate_knowledge",
+      "operators": [
+        "overlaps"
+      ],
+      "absent_means": "unknown"
+    },
+    "location": {
+      "subject": "side_dependent",
+      "subject_note": "A fact for the organisation (where the role sits), an accepted set for the candidate.",
+      "type": "set",
+      "values": [
+        "paris",
+        "london",
+        "berlin",
+        "amsterdam",
+        "france",
+        "uk",
+        "dach",
+        "europe"
+      ],
+      "general_value_means": "accepted_set",
+      "operators": [
+        "intersects"
+      ],
+      "absent_means": "unknown",
+      "retrieval": true,
+      "description": "Hierarchical: a candidate holding `france` under accepted_set answers compatible to `paris`. An organisation holding `paris` as a fact answers compatible to `france` by the hierarchy rule."
+    },
+    "equity_pct": {
+      "subject": "side_dependent",
+      "subject_note": "A requirement for the candidate (minimum equity), a preference for the organisation (the envelope it can offer).",
+      "type": "range",
+      "unit": "percent",
+      "bounds": {
+        "min": 0,
+        "max": 25
+      },
+      "general_value_means": "approximate_knowledge",
+      "operators": [
+        "overlaps",
+        "compatible_with"
+      ],
+      "absent_means": "declined",
+      "description": "Typically evaluation_only on both sides."
+    },
+    "timing": {
+      "subject": "preference",
+      "type": "enum",
+      "values": [
+        "immediate",
+        "within_6_months",
+        "within_12_months",
+        "exploratory"
+      ],
+      "general_value_means": "accepted_set",
+      "operators": [
+        "equals",
+        "intersects"
+      ],
+      "absent_means": "unknown"
+    },
+    "principal_identity": {
+      "subject": "fact",
+      "type": "string",
+      "general_value_means": "approximate_knowledge",
+      "operators": [
+        "equals"
+      ],
+      "absent_means": "declined",
+      "identifying": true,
+      "retrieval": false,
+      "description": "Declared so its handling is explicit: identifying, never retrievable, travels only under reveal_identity (specification Section 10.6)."
+    }
+  },
+  "qualification": {
+    "required_dimensions": [
+      "role",
+      "sector",
+      "company_arr_eur",
+      "location"
+    ],
+    "joint_predicates": [
+      {
+        "name": "package_feasible",
+        "over": [
+          "equity_pct"
+        ],
+        "semantics": "There exists an equity level inside both the candidate's floor and the organisation's envelope. Each side evaluates the other's candidate package privately; overlap with an asked band proves nothing on its own.",
+        "computable_from": "private_evaluation"
+      }
+    ],
+    "opportunity_meaning": "A qualified Opportunity asserts that role, sector, scale and location are compatible and that package_feasible held for at least one candidate package. It asserts neither identity, nor availability, nor that either Principal has decided anything."
+  },
+  "budget": {
+    "granularity": {
+      "company_arr_eur": {
+        "min_bucket_width": 5000000
+      },
+      "equity_pct": {
+        "min_bucket_width": 1
+      }
+    },
+    "bits_per_attribute": {
+      "company_arr_eur": 3,
+      "equity_pct": 3
+    },
+    "scope": "per_standing_interest"
+  },
+  "extensions": {
+    "intended_use": [
+      "gidp.profile.executive-succession:reference_check_preparation"
+    ],
+    "operators": []
+  }
+}

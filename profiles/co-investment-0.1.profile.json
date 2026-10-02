@@ -1,0 +1,134 @@
+{
+  "manifest": "gidp-profile/0.1",
+  "profile": {
+    "id": "gidp.profile.co-investment",
+    "version": "0.1",
+    "wire": "gidp/0.1",
+    "title": "Co-investment",
+    "description": "Private discovery of co-investment counterparties: a follower with a ticket range and sector scope seeks rounds with a committed institutional lead, without announcing that it is deploying."
+  },
+  "attributes": {
+    "sector": {
+      "subject": "preference",
+      "type": "set",
+      "values": [
+        "ai_infrastructure",
+        "enterprise_software",
+        "fintech",
+        "healthtech",
+        "climate",
+        "deeptech"
+      ],
+      "general_value_means": "accepted_set",
+      "operators": [
+        "intersects"
+      ],
+      "absent_means": "unknown",
+      "retrieval": true,
+      "description": "Sectors the Principal accepts. A general value is an accepted set: holding the whole list means any sector is acceptable."
+    },
+    "geography": {
+      "subject": "preference",
+      "type": "set",
+      "values": [
+        "france",
+        "dach",
+        "benelux",
+        "nordics",
+        "southern_europe",
+        "europe"
+      ],
+      "general_value_means": "accepted_set",
+      "operators": [
+        "intersects"
+      ],
+      "absent_means": "unknown",
+      "retrieval": true,
+      "description": "Holding `europe` accepts every European geography (accepted_set), so a claim on `france` answers compatible."
+    },
+    "ticket_eur": {
+      "subject": "preference",
+      "type": "range",
+      "unit": "EUR",
+      "bounds": {
+        "min": 10000,
+        "max": 10000000
+      },
+      "general_value_means": "approximate_knowledge",
+      "operators": [
+        "overlaps",
+        "compatible_with"
+      ],
+      "absent_means": "declined",
+      "description": "The Principal's investable range per deal. Typically evaluation_only in the holder's Disclosure Policy; the manifest types it, the Principal protects it."
+    },
+    "lead_commitment_eur": {
+      "subject": "requirement",
+      "type": "money",
+      "unit": "EUR",
+      "general_value_means": "approximate_knowledge",
+      "operators": [
+        "overlaps"
+      ],
+      "absent_means": "unknown",
+      "description": "Minimum committed institutional lead the follower requires in the round. A condition on the counterparty's round, not a property of the holder."
+    },
+    "stage": {
+      "subject": "fact",
+      "type": "enum",
+      "values": [
+        "pre_seed",
+        "seed",
+        "series_a",
+        "series_b_plus"
+      ],
+      "general_value_means": "approximate_knowledge",
+      "operators": [
+        "equals",
+        "intersects"
+      ],
+      "absent_means": "unknown",
+      "retrieval": true
+    }
+  },
+  "qualification": {
+    "required_dimensions": [
+      "sector",
+      "geography",
+      "ticket_eur",
+      "lead_commitment_eur"
+    ],
+    "joint_predicates": [
+      {
+        "name": "ticket_meets",
+        "over": [
+          "ticket_eur"
+        ],
+        "semantics": "There exists a single ticket amount acceptable to both sides: inside the follower's investable range AND inside the allocation the round offers. Overlap of each private range with an asked range proves nothing (a follower capped at 80k and a round requiring 90k minimum both overlap 50k-100k); this predicate is answered by each side evaluating the other's stated candidate allocation against its own private range.",
+        "computable_from": "private_evaluation"
+      }
+    ],
+    "opportunity_meaning": "A qualified Opportunity asserts that sector, geography and stage are compatible, that a committed lead meeting the follower's floor exists as claimed, and that the ticket_meets predicate held for at least one candidate allocation. It asserts nothing about terms, valuation or the parties' identities."
+  },
+  "budget": {
+    "granularity": {
+      "ticket_eur": {
+        "min_bucket_width": 100000
+      },
+      "lead_commitment_eur": {
+        "min_bucket_width": 250000
+      }
+    },
+    "bits_per_attribute": {
+      "ticket_eur": 3,
+      "lead_commitment_eur": 2
+    },
+    "scope": "per_standing_interest"
+  },
+  "extensions": {
+    "intended_use": [
+      "gidp.profile.co-investment:allocation_check"
+    ],
+    "operators": []
+  }
+}
