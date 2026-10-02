@@ -171,6 +171,10 @@ class Corpus:
             asker = self.agents[spec["from"]]
             answerer = b if asker is a else a
             request = asker.request_disclosure(spec["attribute"], purpose=spec["purpose"])
+            if spec.get("undelivered"):
+                # The request leaves the sender and is still in transit:
+                # the other side never sees it.
+                return
             if spec.get("hold"):
                 self.pending_disclosure = (asker, answerer, request)
                 return
@@ -271,6 +275,16 @@ class Corpus:
                 return
             handoff = agent.handoff(spec["target"])
             other = b if agent is a else a
+            if spec.get("expect_recipient_error"):
+                from gidp.vocab import CloseReason
+
+                with pytest.raises(ProtocolError):
+                    other.session.record_handoff(handoff)
+                # 0.1's recipient rule: close unsupported, ending the wait;
+                # the emitter moves HANDED_OFF -> CLOSED on the close.
+                other.session.close(CloseReason.UNSUPPORTED)
+                agent.session.close(CloseReason.UNSUPPORTED)
+                return
             other.session.record_handoff(handoff)
             return
 

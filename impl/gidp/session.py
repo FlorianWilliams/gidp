@@ -446,7 +446,43 @@ class Session:
         for claim_id in claim_ids:
             self.unanswered.add(f"{direction}:{claim_id}")
 
+    def emit_handoff(self) -> None:
+        """The emitter's side of the quiescence barrier (0.2 semantics).
+
+        A local guard, scoped as such: both pending slots empty and no
+        locally known active CompatibilityRequest in either direction --
+        an own question still undischarged, or a received question held
+        unanswered. An expired-but-unsuperseded proposition is an
+        evaluation fact, not an active request, and does not block. The
+        guard cannot see a request in transit; emission is therefore NOT
+        a bilateral acceptance of the transfer, and the collision is
+        decided on the recipient's side (record_handoff).
+        """
+        if self.phase is not Phase.QUALIFIED or self.pending_requests:
+            raise ProtocolError(
+                "a Handoff requires the qualified phase and both pending "
+                "slots empty (Sections 14.7, 17.2)"
+            )
+        if "CompatibilityRequest" in self.open_requests.values() or any(
+            proposition.startswith(f"{RECEIVED}:")
+            for proposition in self.unanswered
+        ):
+            raise ProtocolError(
+                "a Handoff requires no locally known active compatibility "
+                "request in either direction (0.2 quiescence barrier)"
+            )
+        self.phase = Phase.HANDED_OFF
+
     def record_handoff(self, message: Handoff) -> None:
+        """The recipient's side: 0.1's own rule decides the collision.
+
+        A recipient whose directional view is not QUALIFIED or CONSENTED
+        -- a pending slot occupied, a request of its own in transit --
+        refuses: it closes the session with reason 'unsupported', which
+        also ends its wait, and the emitter moves HANDED_OFF -> CLOSED on
+        receiving that close. Recovery is a new session against the same
+        budget.
+        """
         if self.phase is not Phase.QUALIFIED or self.pending_requests:
             raise ProtocolError(
                 "a recipient that receives a Handoff in an earlier state MUST "

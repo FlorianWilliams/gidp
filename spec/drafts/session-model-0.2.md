@@ -1,4 +1,4 @@
-# The session model in three axes (0.2 draft, revision 4)
+# The session model in three axes (0.2 draft, revision 5)
 
 Status: draft for GIDP 0.2. The 0.1 state machine (specification, Section
 17.2) remains normative until 0.2 is published. The reference
@@ -121,7 +121,7 @@ of the session and recovery is a new session against the same budget.
 
 ## Qualification: roles, trigger, and emission order
 
-Three things, defined separately because conflating them is circular:
+Four things, defined separately because conflating them is circular:
 
 - **Local conditions.** Each side evaluates the entry conditions of
   Section 15.2 over the propositions *it* knows, in both directions,
@@ -179,15 +179,33 @@ that expires closes (`reason: expired`), clearing the pending axis. For a
 
 The 0.1 table, read per direction, admits `CONSENTED → HANDED_OFF` in
 one directional view while the other direction holds a pending
-disclosure. 0.2 adds a barrier and declares it: a `Handoff` requires
-**both** directions quiescent — no request in flight either way. A
-Handoff ends GIDP's responsibility for the interaction (Section 14.7),
-and an unresolved wait cannot cross that boundary: once the session is
-`HANDED_OFF`, the protocol no longer provides the response that would
-resolve it. Requiring quiescence is the honest alternative to defining
-the fate of an orphaned wait on the far side. This is a deliberate
-coupling between directions — the only one: admission of requests
-remains per direction.
+disclosure. 0.2 adds a barrier and declares it — and declares its
+**scope: a local guard**, nothing more. A `Handoff` may be emitted only
+when, *in the emitter's local knowledge*, both pending slots are empty
+and no CompatibilityRequest is active in either direction — an own
+question still undischarged, or a received question held unanswered. An
+expired-but-unsuperseded proposition is an evaluation fact, not an
+active request, and does not block. A Handoff ends GIDP's
+responsibility for the interaction (Section 14.7), and an unresolved
+wait should not cross that boundary; requiring local quiescence is the
+honest alternative to defining the fate of an orphaned wait on the far
+side. This is a deliberate coupling between directions; admission of
+requests remains per direction.
+
+A local guard cannot see a request in transit, so **emission is not a
+bilateral acceptance of the transfer**, and the collision is defined:
+when a Handoff arrives while the recipient's own request is still in
+flight, the recipient's directional view is not `QUALIFIED` or
+`CONSENTED`, and 0.1's own recipient rule decides — it closes the
+session with `reason: unsupported`, which also ends its wait, and the
+emitter moves `HANDED_OFF → CLOSED` on receiving that close (the
+transition exists in the 0.1 table). A request that reaches a session
+already `HANDED_OFF` is not processed and expires at its sender.
+Recovery from the race is a new session against the same budget. A
+deployment that wants a *guaranteed* absence of requests in transit
+needs coordination this document does not provide — an
+admission-closing exchange confirming both sides ready — and no local
+inspection of registers can substitute for it.
 
 ## The bounded wait the concurrency rule keeps
 

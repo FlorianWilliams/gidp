@@ -1,0 +1,121 @@
+{
+  "scenario": "handoff-collision",
+  "notes": "Both reviewers' race (draft revision 5). B's DisclosureRequest is in transit when A, whose local views are quiescent, emits the Handoff. The quiescence barrier is a LOCAL guard, so emission is not a bilateral acceptance: B, whose sent slot is occupied, refuses by 0.1's own recipient rule and closes `unsupported`, which also ends its wait; the emitter moves HANDED_OFF to CLOSED on receiving the close. Recovery is a new session against the same budget.",
+  "spec": [
+    "14.7",
+    "17.2"
+  ],
+  "setup": {
+    "A": {
+      "conditions": {
+        "domain": [
+          "enterprise_software"
+        ],
+        "open_attribute": "value"
+      },
+      "policy": {
+        "domain": "discovery",
+        "open_attribute": "session"
+      },
+      "authority": {
+        "PROBE": "true",
+        "DISCLOSE": "true",
+        "INTRODUCE": "true"
+      }
+    },
+    "B": {
+      "conditions": {
+        "domain": [
+          "enterprise_software"
+        ],
+        "open_attribute": "value"
+      },
+      "policy": {
+        "domain": "discovery",
+        "open_attribute": "session"
+      },
+      "authority": {
+        "PROBE": "true",
+        "DISCLOSE": "true",
+        "INTRODUCE": "true"
+      }
+    }
+  },
+  "steps": [
+    {
+      "open": {
+        "purpose": "test"
+      }
+    },
+    {
+      "ask": {
+        "from": "A",
+        "claims": [
+          {
+            "claim_id": "c1",
+            "key": "domain",
+            "operator": "intersects",
+            "value": [
+              "enterprise_software"
+            ]
+          }
+        ]
+      },
+      "expect_results": [
+        {
+          "claim_id": "c1",
+          "result": "compatible"
+        }
+      ]
+    },
+    {
+      "qualify": {
+        "role": "B",
+        "expect": true
+      }
+    },
+    {
+      "qualify": {
+        "role": "A",
+        "expect": true
+      }
+    },
+    {
+      "request_consent": {
+        "from": "A",
+        "action": "handoff",
+        "scope": [
+          "urn:example:negotiation"
+        ]
+      },
+      "expect_consent": "granted"
+    },
+    {
+      "request_disclosure": {
+        "from": "B",
+        "attribute": "open_attribute",
+        "purpose": "in-transit",
+        "undelivered": true
+      }
+    },
+    {
+      "handoff": {
+        "from": "A",
+        "target": "urn:example:negotiation",
+        "expect_recipient_error": true
+      }
+    },
+    {
+      "state": {
+        "role": "A",
+        "expect": "CLOSED"
+      }
+    },
+    {
+      "state": {
+        "role": "B",
+        "expect": "CLOSED"
+      }
+    }
+  ]
+}

@@ -748,6 +748,6 @@ class Agent:
             contingent_on=self.session.contingent_on(),
             expires_at=_soon(60 * 24),
         )
-        self.session.record_handoff(message)
+        self.session.emit_handoff()
         self._log("handoff", protocol_ref)
         return message

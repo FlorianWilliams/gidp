@@ -34,6 +34,12 @@ class Mutation:
 
 MUTATIONS = (
     Mutation(
+        "the Handoff barrier counts active compatibility requests (14.7, 0.2)",
+        "gidp/session.py",
+        "        if \"CompatibilityRequest\" in self.open_requests.values() or any(",
+        "        if False and any(",
+    ),
+    Mutation(
         "an unanswered proposition blocks qualification (15.2, 16.3)",
         "gidp/session.py",
         "            and not self.unanswered",

@@ -1013,3 +1013,75 @@ def test_an_expired_question_blocks_until_superseded():
     _exchange(a, b, [Claim(key="open_attribute", operator=ClaimOperator.EQUALS,
                            value="value", supersedes=[claim_id])])
     assert a.session.qualify() is True
+
+
+# ---------------------------------------------------------------------------
+# Fourth round on the session-model draft: the Handoff collision
+# ---------------------------------------------------------------------------
+
+
+def _handoff_ready() -> tuple[Agent, Agent]:
+    a, b = _pair()
+    _qualify_both(a, b)
+    _grant_handoff(a, b, "urn:example:negotiation")
+    return a, b
+
+
+def test_the_handoff_collision_is_decided_by_the_recipient():
+    """Both reviewers' race, resolved by 0.1's own recipient rule: B's
+    request is in transit when A emits; B, whose sent slot is occupied,
+    refuses and closes unsupported; the close also ends B's wait, and A
+    moves HANDED_OFF -> CLOSED on receiving it. Emission is not a
+    bilateral acceptance of the transfer."""
+    from gidp.vocab import CloseReason
+
+    a, b = _handoff_ready()
+    # Step 2: B's request leaves, but is NOT yet delivered to A.
+    b.request_disclosure("open_attribute", purpose="in-transit")
+    # Step 3: A's local views are quiescent; A emits.
+    handoff = a.handoff("urn:example:negotiation")
+    assert a.session.state is SessionState.HANDED_OFF
+    # Step 4: B receives the Handoff with its sent slot occupied.
+    with pytest.raises(ProtocolError, match="unsupported"):
+        b.session.record_handoff(handoff)
+    b.session.close(CloseReason.UNSUPPORTED)
+    assert b.session.state is SessionState.CLOSED
+    # Step 5: the emitter moves HANDED_OFF -> CLOSED on the close.
+    a.session.close(CloseReason.UNSUPPORTED)
+    assert a.session.state is SessionState.CLOSED
+
+
+def test_the_barrier_counts_an_unanswered_own_question():
+    """The local guard covers active CompatibilityRequests, not only the
+    two pending slots: our own question without a terminal blocks the
+    emission."""
+    a, b = _handoff_ready()
+    a.ask([Claim(key="open_attribute", operator=ClaimOperator.EQUALS,
+                 value="value")])
+    with pytest.raises(ProtocolError, match="quiescence"):
+        a.handoff("urn:example:negotiation")
+
+
+def test_the_barrier_counts_a_held_received_question():
+    from gidp.session import RECEIVED
+
+    a, b = _handoff_ready()
+    a.session.note_unanswered(RECEIVED, ["q-held"])
+    with pytest.raises(ProtocolError, match="quiescence"):
+        a.handoff("urn:example:negotiation")
+
+
+def test_an_expired_unsuperseded_proposition_does_not_block_a_handoff():
+    """An evaluation fact is not an active request: the barrier counts
+    requests, and the expired question already blocked qualification
+    where it mattered."""
+
+    a, b = _handoff_ready()
+    # A post-qualification question expires unanswered.
+    held = a.ask([Claim(key="open_attribute", operator=ClaimOperator.EQUALS,
+                        value="value")])
+    a.session.expire_request(held.request_id,
+                             claim_ids=[held.claims[0].claim_id])
+    assert a.session.unanswered, "the evaluation fact stands"
+    a.handoff("urn:example:negotiation")
+    assert a.session.state is SessionState.HANDED_OFF
