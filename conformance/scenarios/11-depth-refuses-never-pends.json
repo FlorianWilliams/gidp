@@ -1,0 +1,67 @@
+{
+  "scenario": "depth-refuses-never-pends",
+  "notes": "An attribute whose surface is deeper than the session's depth is declined, never pending: no approval can widen a session's depth (14.1, 16.3). The session here is opened at network depth; open_attribute is a session-surface attribute.",
+  "spec": [
+    "14.1",
+    "16.3"
+  ],
+  "setup": {
+    "A": {
+      "conditions": {
+        "domain": [
+          "enterprise_software"
+        ],
+        "open_attribute": "value"
+      },
+      "policy": {
+        "domain": "discovery",
+        "open_attribute": "session"
+      },
+      "authority": {
+        "PROBE": "true",
+        "DISCLOSE": "true",
+        "INTRODUCE": "true",
+        "PUBLISH_PROJECTION": "true",
+        "NEGOTIATE_NONBINDING": "true"
+      }
+    },
+    "B": {
+      "conditions": {
+        "domain": [
+          "enterprise_software"
+        ],
+        "open_attribute": "sensitive-payload"
+      },
+      "policy": {
+        "domain": "discovery",
+        "open_attribute": "session"
+      },
+      "authority": {
+        "PROBE": "true",
+        "DISCLOSE": "true",
+        "INTRODUCE": "true",
+        "PUBLISH_PROJECTION": "true",
+        "NEGOTIATE_NONBINDING": "true"
+      }
+    }
+  },
+  "steps": [
+    {
+      "open": {
+        "purpose": "test",
+        "max_depth": "network"
+      }
+    },
+    {
+      "request_disclosure": {
+        "from": "A",
+        "attribute": "open_attribute",
+        "purpose": "test"
+      },
+      "expect_disclosure": "declined",
+      "forbid_substrings": [
+        "sensitive-payload"
+      ]
+    }
+  ]
+}

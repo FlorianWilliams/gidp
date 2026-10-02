@@ -1,0 +1,119 @@
+{
+  "scenario": "profile-minimum-coverage",
+  "notes": "A profile requiring two dimensions blocks qualification after a compatible answer on one (15.2). The responder's own requirements gate the initiator through the reported status (14.6): B reports open, A must not emit.",
+  "spec": [
+    "14.6",
+    "15.2"
+  ],
+  "setup": {
+    "A": {
+      "conditions": {
+        "domain": [
+          "enterprise_software"
+        ],
+        "open_attribute": "value"
+      },
+      "policy": {
+        "domain": "discovery",
+        "open_attribute": "session"
+      },
+      "authority": {
+        "PROBE": "true",
+        "DISCLOSE": "true",
+        "INTRODUCE": "true",
+        "PUBLISH_PROJECTION": "true",
+        "NEGOTIATE_NONBINDING": "true"
+      }
+    },
+    "B": {
+      "conditions": {
+        "domain": [
+          "enterprise_software"
+        ],
+        "open_attribute": "value"
+      },
+      "policy": {
+        "domain": "discovery",
+        "open_attribute": "session"
+      },
+      "authority": {
+        "PROBE": "true",
+        "DISCLOSE": "true",
+        "INTRODUCE": "true",
+        "PUBLISH_PROJECTION": "true",
+        "NEGOTIATE_NONBINDING": "true"
+      },
+      "required_dimensions": [
+        "domain",
+        "open_attribute"
+      ]
+    }
+  },
+  "steps": [
+    {
+      "open": {
+        "purpose": "test"
+      }
+    },
+    {
+      "ask": {
+        "from": "A",
+        "claims": [
+          {
+            "claim_id": "c1",
+            "key": "domain",
+            "operator": "intersects",
+            "value": [
+              "enterprise_software"
+            ]
+          }
+        ]
+      },
+      "expect_results": [
+        {
+          "claim_id": "c1",
+          "result": "compatible"
+        }
+      ],
+      "expect_status": "open"
+    },
+    {
+      "qualify": {
+        "role": "A",
+        "expect": false
+      }
+    },
+    {
+      "ask": {
+        "from": "A",
+        "claims": [
+          {
+            "claim_id": "c2",
+            "key": "open_attribute",
+            "operator": "equals",
+            "value": "value"
+          }
+        ]
+      },
+      "expect_results": [
+        {
+          "claim_id": "c2",
+          "result": "compatible"
+        }
+      ],
+      "expect_status": "potentially_compatible"
+    },
+    {
+      "qualify": {
+        "role": "B",
+        "expect": true
+      }
+    },
+    {
+      "qualify": {
+        "role": "A",
+        "expect": true
+      }
+    }
+  ]
+}

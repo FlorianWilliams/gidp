@@ -1,0 +1,106 @@
+{
+  "scenario": "responder-only-dependency",
+  "notes": "A dependency known only to the responder, protected evaluation_only, must still mark the Opportunity as contingent -- as the token `undisclosed`, never by name. The responder states it in its CompatibilityResponse (14.3); the initiator merges it (14.6).",
+  "spec": [
+    "10.3",
+    "14.3",
+    "14.6"
+  ],
+  "setup": {
+    "A": {
+      "conditions": {
+        "domain": [
+          "enterprise_software"
+        ],
+        "open_attribute": "value"
+      },
+      "policy": {
+        "domain": "discovery",
+        "open_attribute": "session"
+      },
+      "authority": {
+        "PROBE": "true",
+        "DISCLOSE": "true",
+        "INTRODUCE": "true",
+        "PUBLISH_PROJECTION": "true",
+        "NEGOTIATE_NONBINDING": "true"
+      }
+    },
+    "B": {
+      "conditions": {
+        "domain": [
+          "enterprise_software"
+        ],
+        "open_attribute": "value"
+      },
+      "policy": {
+        "domain": "discovery",
+        "open_attribute": "session"
+      },
+      "authority": {
+        "PROBE": "true",
+        "DISCLOSE": "true",
+        "INTRODUCE": "true",
+        "PUBLISH_PROJECTION": "true",
+        "NEGOTIATE_NONBINDING": "true"
+      },
+      "conditional_on": [
+        "anchor_investor_commitment"
+      ]
+    }
+  },
+  "steps": [
+    {
+      "open": {
+        "purpose": "test"
+      }
+    },
+    {
+      "ask": {
+        "from": "A",
+        "claims": [
+          {
+            "claim_id": "c1",
+            "key": "domain",
+            "operator": "intersects",
+            "value": [
+              "enterprise_software"
+            ]
+          }
+        ]
+      },
+      "expect_results": [
+        {
+          "claim_id": "c1",
+          "result": "compatible"
+        }
+      ],
+      "forbid_substrings": [
+        "anchor_investor_commitment"
+      ]
+    },
+    {
+      "qualify": {
+        "role": "B",
+        "expect": true
+      }
+    },
+    {
+      "qualify": {
+        "role": "A",
+        "expect": true
+      }
+    },
+    {
+      "opportunity": {
+        "role": "A",
+        "expect_contingent_on": [
+          "undisclosed"
+        ],
+        "forbid_substrings": [
+          "anchor_investor_commitment"
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,93 @@
+{
+  "scenario": "consent-before-qualification",
+  "notes": "disclose_attributes MAY precede qualification (it can be what qualification needs); every other action MUST NOT be requested before it (14.5). The sender's own implementation refuses to emit the premature request.",
+  "spec": [
+    "5",
+    "14.5",
+    "17.2"
+  ],
+  "setup": {
+    "A": {
+      "conditions": {
+        "domain": [
+          "enterprise_software"
+        ],
+        "open_attribute": "value"
+      },
+      "policy": {
+        "domain": "discovery",
+        "open_attribute": "session"
+      },
+      "authority": {
+        "PROBE": "true",
+        "DISCLOSE": "true",
+        "INTRODUCE": "true",
+        "PUBLISH_PROJECTION": "true",
+        "NEGOTIATE_NONBINDING": "true"
+      }
+    },
+    "B": {
+      "conditions": {
+        "domain": [
+          "enterprise_software"
+        ],
+        "open_attribute": "value",
+        "data_room": "vdr-7"
+      },
+      "policy": {
+        "domain": "discovery",
+        "open_attribute": "session",
+        "data_room": "session/consent"
+      },
+      "authority": {
+        "PROBE": "true",
+        "DISCLOSE": "true",
+        "INTRODUCE": "true",
+        "PUBLISH_PROJECTION": "true",
+        "NEGOTIATE_NONBINDING": "true"
+      }
+    }
+  },
+  "steps": [
+    {
+      "open": {
+        "purpose": "test"
+      }
+    },
+    {
+      "request_consent": {
+        "from": "A",
+        "action": "reveal_identity",
+        "scope": [
+          "principal_identity"
+        ]
+      },
+      "expect_error": true
+    },
+    {
+      "request_consent": {
+        "from": "A",
+        "action": "disclose_attributes",
+        "scope": [
+          "data_room"
+        ]
+      },
+      "expect_consent": "granted"
+    },
+    {
+      "state": {
+        "role": "A",
+        "expect": "PROBING"
+      },
+      "_comment": "a consent granted before qualification opens the gate; it does not advance the session"
+    },
+    {
+      "request_disclosure": {
+        "from": "A",
+        "attribute": "data_room",
+        "purpose": "qualify"
+      },
+      "expect_disclosure": "granted"
+    }
+  ]
+}

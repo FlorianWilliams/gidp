@@ -1,0 +1,175 @@
+{
+  "scenario": "identity-three-doors",
+  "notes": "The identity rules attach to the data, not the message (10.6). Door one: a DisclosureRequest on principal_identity is declined without a reveal_identity consent, even when its class carries no gate. Door two: a disclose_attributes scope naming it is declined. Door three: a claim on it is declined, because `compatible` to an equals claim confirms the identity. After a granted reveal_identity consent, all three open. The qualifying claim supersedes the declined identity claim (14.2): a declined proposition otherwise stands and blocks qualification.",
+  "spec": [
+    "10.6",
+    "14.4",
+    "14.5",
+    "16.1"
+  ],
+  "setup": {
+    "A": {
+      "conditions": {
+        "domain": [
+          "enterprise_software"
+        ],
+        "open_attribute": "value"
+      },
+      "policy": {
+        "domain": "discovery",
+        "open_attribute": "session"
+      },
+      "authority": {
+        "PROBE": "true",
+        "DISCLOSE": "true",
+        "INTRODUCE": "true",
+        "PUBLISH_PROJECTION": "true",
+        "NEGOTIATE_NONBINDING": "true"
+      }
+    },
+    "B": {
+      "conditions": {
+        "domain": [
+          "enterprise_software"
+        ],
+        "open_attribute": "value",
+        "principal_identity": "Acme GmbH"
+      },
+      "policy": {
+        "domain": "discovery",
+        "open_attribute": "session",
+        "principal_identity": "session"
+      },
+      "authority": {
+        "PROBE": "true",
+        "DISCLOSE": "true",
+        "INTRODUCE": "true",
+        "PUBLISH_PROJECTION": "true",
+        "NEGOTIATE_NONBINDING": "true"
+      }
+    }
+  },
+  "steps": [
+    {
+      "open": {
+        "purpose": "test"
+      }
+    },
+    {
+      "ask": {
+        "from": "A",
+        "claims": [
+          {
+            "claim_id": "c1",
+            "key": "principal_identity",
+            "operator": "equals",
+            "value": "Acme GmbH"
+          }
+        ]
+      },
+      "expect_results": [
+        {
+          "claim_id": "c1",
+          "result": "declined"
+        }
+      ],
+      "forbid_substrings": [
+        "Acme"
+      ]
+    },
+    {
+      "request_consent": {
+        "from": "A",
+        "action": "disclose_attributes",
+        "scope": [
+          "principal_identity"
+        ]
+      },
+      "expect_consent": "declined"
+    },
+    {
+      "ask": {
+        "from": "A",
+        "claims": [
+          {
+            "claim_id": "c2",
+            "key": "domain",
+            "operator": "intersects",
+            "value": [
+              "enterprise_software"
+            ],
+            "supersedes": [
+              "c1"
+            ]
+          }
+        ]
+      },
+      "expect_results": [
+        {
+          "claim_id": "c2",
+          "result": "compatible"
+        }
+      ]
+    },
+    {
+      "qualify": {
+        "role": "B",
+        "expect": true
+      }
+    },
+    {
+      "qualify": {
+        "role": "A",
+        "expect": true
+      }
+    },
+    {
+      "request_disclosure": {
+        "from": "A",
+        "attribute": "principal_identity",
+        "purpose": "handoff"
+      },
+      "expect_disclosure": "declined",
+      "forbid_substrings": [
+        "Acme"
+      ]
+    },
+    {
+      "request_consent": {
+        "from": "A",
+        "action": "reveal_identity",
+        "scope": [
+          "principal_identity"
+        ]
+      },
+      "expect_consent": "granted"
+    },
+    {
+      "request_disclosure": {
+        "from": "A",
+        "attribute": "principal_identity",
+        "purpose": "handoff"
+      },
+      "expect_disclosure": "granted"
+    },
+    {
+      "ask": {
+        "from": "A",
+        "claims": [
+          {
+            "claim_id": "c9",
+            "key": "principal_identity",
+            "operator": "equals",
+            "value": "Acme GmbH"
+          }
+        ]
+      },
+      "expect_results": [
+        {
+          "claim_id": "c9",
+          "result": "compatible"
+        }
+      ]
+    }
+  ]
+}

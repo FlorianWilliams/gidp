@@ -1,0 +1,107 @@
+{
+  "scenario": "authority-false-is-a-refusal",
+  "notes": "A refused authority is a refusal, not an approval pending (14.5, 16.3, 18): consent under INTRODUCE=false answers declined; disclosure under DISCLOSE=false answers declined; approval_required answers pending until the Principal decides.",
+  "spec": [
+    "14.5",
+    "16.3",
+    "18"
+  ],
+  "setup": {
+    "A": {
+      "conditions": {
+        "domain": [
+          "enterprise_software"
+        ],
+        "open_attribute": "value"
+      },
+      "policy": {
+        "domain": "discovery",
+        "open_attribute": "session"
+      },
+      "authority": {
+        "PROBE": "true",
+        "DISCLOSE": "true",
+        "INTRODUCE": "true",
+        "PUBLISH_PROJECTION": "true",
+        "NEGOTIATE_NONBINDING": "true"
+      }
+    },
+    "B": {
+      "conditions": {
+        "domain": [
+          "enterprise_software"
+        ],
+        "open_attribute": "value"
+      },
+      "policy": {
+        "domain": "discovery",
+        "open_attribute": "session"
+      },
+      "authority": {
+        "PROBE": "true",
+        "DISCLOSE": "false",
+        "INTRODUCE": "false",
+        "PUBLISH_PROJECTION": "true",
+        "NEGOTIATE_NONBINDING": "true"
+      }
+    }
+  },
+  "steps": [
+    {
+      "open": {
+        "purpose": "test"
+      }
+    },
+    {
+      "ask": {
+        "from": "A",
+        "claims": [
+          {
+            "claim_id": "c1",
+            "key": "domain",
+            "operator": "intersects",
+            "value": [
+              "enterprise_software"
+            ]
+          }
+        ]
+      },
+      "expect_results": [
+        {
+          "claim_id": "c1",
+          "result": "compatible"
+        }
+      ]
+    },
+    {
+      "qualify": {
+        "role": "B",
+        "expect": true
+      }
+    },
+    {
+      "qualify": {
+        "role": "A",
+        "expect": true
+      }
+    },
+    {
+      "request_disclosure": {
+        "from": "A",
+        "attribute": "open_attribute",
+        "purpose": "test"
+      },
+      "expect_disclosure": "declined"
+    },
+    {
+      "request_consent": {
+        "from": "A",
+        "action": "reveal_identity",
+        "scope": [
+          "open_attribute"
+        ]
+      },
+      "expect_consent": "declined"
+    }
+  ]
+}

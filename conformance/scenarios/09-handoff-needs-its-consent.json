@@ -1,0 +1,134 @@
+{
+  "scenario": "handoff-needs-its-consent",
+  "notes": "A Handoff MUST be preceded by a granted consent whose action is handoff and whose scope names this target (14.7). CONSENTED via another action establishes nothing; a consent for one target does not cover another.",
+  "spec": [
+    "14.5",
+    "14.7"
+  ],
+  "setup": {
+    "A": {
+      "conditions": {
+        "domain": [
+          "enterprise_software"
+        ],
+        "open_attribute": "value"
+      },
+      "policy": {
+        "domain": "discovery",
+        "open_attribute": "session"
+      },
+      "authority": {
+        "PROBE": "true",
+        "DISCLOSE": "true",
+        "INTRODUCE": "true",
+        "PUBLISH_PROJECTION": "true",
+        "NEGOTIATE_NONBINDING": "true"
+      }
+    },
+    "B": {
+      "conditions": {
+        "domain": [
+          "enterprise_software"
+        ],
+        "open_attribute": "value"
+      },
+      "policy": {
+        "domain": "discovery",
+        "open_attribute": "session"
+      },
+      "authority": {
+        "PROBE": "true",
+        "DISCLOSE": "true",
+        "INTRODUCE": "true",
+        "PUBLISH_PROJECTION": "true",
+        "NEGOTIATE_NONBINDING": "true"
+      }
+    }
+  },
+  "steps": [
+    {
+      "open": {
+        "purpose": "test"
+      }
+    },
+    {
+      "ask": {
+        "from": "A",
+        "claims": [
+          {
+            "claim_id": "c1",
+            "key": "domain",
+            "operator": "intersects",
+            "value": [
+              "enterprise_software"
+            ]
+          }
+        ]
+      },
+      "expect_results": [
+        {
+          "claim_id": "c1",
+          "result": "compatible"
+        }
+      ]
+    },
+    {
+      "qualify": {
+        "role": "B",
+        "expect": true
+      }
+    },
+    {
+      "qualify": {
+        "role": "A",
+        "expect": true
+      }
+    },
+    {
+      "request_consent": {
+        "from": "A",
+        "action": "disclose_attributes",
+        "scope": [
+          "open_attribute"
+        ]
+      },
+      "expect_consent": "granted"
+    },
+    {
+      "handoff": {
+        "from": "A",
+        "target": "urn:example:negotiation",
+        "expect_error": true
+      }
+    },
+    {
+      "request_consent": {
+        "from": "A",
+        "action": "handoff",
+        "scope": [
+          "urn:example:negotiation"
+        ]
+      },
+      "expect_consent": "granted"
+    },
+    {
+      "handoff": {
+        "from": "A",
+        "target": "urn:example:other",
+        "expect_error": true
+      }
+    },
+    {
+      "handoff": {
+        "from": "A",
+        "target": "urn:example:negotiation"
+      }
+    },
+    {
+      "state": {
+        "role": "A",
+        "expect": "HANDED_OFF"
+      }
+    }
+  ]
+}

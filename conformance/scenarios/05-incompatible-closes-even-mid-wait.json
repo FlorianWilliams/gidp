@@ -1,0 +1,96 @@
+{
+  "scenario": "incompatible-closes-even-mid-wait",
+  "notes": "An incompatible is a known contradiction of the session's candidate and is never held back: recorded while a disclosure is pending, it is reported at once (17.2, narrowed rule of S-50).",
+  "spec": [
+    "15.2",
+    "17.2"
+  ],
+  "setup": {
+    "A": {
+      "conditions": {
+        "domain": [
+          "enterprise_software"
+        ],
+        "open_attribute": "value"
+      },
+      "policy": {
+        "domain": "discovery",
+        "open_attribute": "session"
+      },
+      "authority": {
+        "PROBE": "true",
+        "DISCLOSE": "true",
+        "INTRODUCE": "true",
+        "PUBLISH_PROJECTION": "true",
+        "NEGOTIATE_NONBINDING": "true"
+      }
+    },
+    "B": {
+      "conditions": {
+        "domain": [
+          "enterprise_software"
+        ],
+        "open_attribute": "value"
+      },
+      "policy": {
+        "domain": "discovery",
+        "open_attribute": "session"
+      },
+      "authority": {
+        "PROBE": "true",
+        "DISCLOSE": "true",
+        "INTRODUCE": "true",
+        "PUBLISH_PROJECTION": "true",
+        "NEGOTIATE_NONBINDING": "true"
+      }
+    }
+  },
+  "steps": [
+    {
+      "open": {
+        "purpose": "test"
+      }
+    },
+    {
+      "request_disclosure": {
+        "from": "A",
+        "attribute": "open_attribute",
+        "purpose": "qualify",
+        "hold": true
+      }
+    },
+    {
+      "state": {
+        "role": "A",
+        "expect": "DISCLOSURE_PENDING"
+      }
+    },
+    {
+      "ask": {
+        "from": "A",
+        "claims": [
+          {
+            "claim_id": "c1",
+            "key": "domain",
+            "operator": "intersects",
+            "value": [
+              "something_else"
+            ]
+          }
+        ]
+      },
+      "expect_results": [
+        {
+          "claim_id": "c1",
+          "result": "incompatible"
+        }
+      ]
+    },
+    {
+      "status": {
+        "role": "A",
+        "expect": "incompatible"
+      }
+    }
+  ]
+}

@@ -1,0 +1,128 @@
+{
+  "scenario": "post-qualification-freeze",
+  "notes": "Qualification is reached at most once; the status is kept; a later unknown changes neither (15.2 entry vs kept, 17.2). A later incompatible would close (scenario 05).",
+  "spec": [
+    "14.6",
+    "15.2",
+    "17.2"
+  ],
+  "setup": {
+    "A": {
+      "conditions": {
+        "domain": [
+          "enterprise_software"
+        ],
+        "open_attribute": "value"
+      },
+      "policy": {
+        "domain": "discovery",
+        "open_attribute": "session"
+      },
+      "authority": {
+        "PROBE": "true",
+        "DISCLOSE": "true",
+        "INTRODUCE": "true",
+        "PUBLISH_PROJECTION": "true",
+        "NEGOTIATE_NONBINDING": "true"
+      }
+    },
+    "B": {
+      "conditions": {
+        "domain": [
+          "enterprise_software"
+        ],
+        "open_attribute": "value"
+      },
+      "policy": {
+        "domain": "discovery",
+        "open_attribute": "session"
+      },
+      "authority": {
+        "PROBE": "true",
+        "DISCLOSE": "true",
+        "INTRODUCE": "true",
+        "PUBLISH_PROJECTION": "true",
+        "NEGOTIATE_NONBINDING": "true"
+      }
+    }
+  },
+  "steps": [
+    {
+      "open": {
+        "purpose": "test"
+      }
+    },
+    {
+      "ask": {
+        "from": "A",
+        "claims": [
+          {
+            "claim_id": "c1",
+            "key": "domain",
+            "operator": "intersects",
+            "value": [
+              "enterprise_software"
+            ]
+          }
+        ]
+      },
+      "expect_results": [
+        {
+          "claim_id": "c1",
+          "result": "compatible"
+        }
+      ]
+    },
+    {
+      "qualify": {
+        "role": "B",
+        "expect": true
+      }
+    },
+    {
+      "qualify": {
+        "role": "A",
+        "expect": true
+      }
+    },
+    {
+      "ask": {
+        "from": "A",
+        "claims": [
+          {
+            "claim_id": "c2",
+            "key": "unknown_dimension",
+            "operator": "intersects",
+            "value": [
+              "x"
+            ]
+          }
+        ]
+      },
+      "expect_results": [
+        {
+          "claim_id": "c2",
+          "result": "unknown"
+        }
+      ]
+    },
+    {
+      "state": {
+        "role": "A",
+        "expect": "QUALIFIED"
+      }
+    },
+    {
+      "status": {
+        "role": "A",
+        "expect": "potentially_compatible"
+      }
+    },
+    {
+      "qualify": {
+        "role": "A",
+        "expect": false
+      }
+    }
+  ]
+}
