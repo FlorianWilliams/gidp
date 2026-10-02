@@ -1,0 +1,102 @@
+{
+  "scenario": "t10",
+  "setup": {
+    "A": {
+      "conditions": {
+        "domain": [
+          "enterprise_software"
+        ],
+        "open_attribute": "value"
+      },
+      "policy": {
+        "domain": "discovery",
+        "open_attribute": "session"
+      },
+      "authority": {
+        "PROBE": "true",
+        "DISCLOSE": "true",
+        "INTRODUCE": "true",
+        "PUBLISH_PROJECTION": "true",
+        "NEGOTIATE_NONBINDING": "true"
+      }
+    },
+    "B": {
+      "conditions": {
+        "domain": [
+          "enterprise_software"
+        ],
+        "open_attribute": "value",
+        "toxic_secret": "radioactive"
+      },
+      "policy": {
+        "domain": "discovery",
+        "open_attribute": "session",
+        "toxic_secret": "never"
+      },
+      "authority": {
+        "PROBE": "true",
+        "DISCLOSE": "true",
+        "INTRODUCE": "true",
+        "PUBLISH_PROJECTION": "true",
+        "NEGOTIATE_NONBINDING": "true"
+      },
+      "conditional_on": [
+        "board_vote"
+      ],
+      "conditional_on_policy": "never"
+    }
+  },
+  "steps": [
+    {
+      "open": {
+        "purpose": "test"
+      }
+    },
+    {
+      "ask": {
+        "from": "A",
+        "claims": [
+          {
+            "claim_id": "c1",
+            "key": "toxic_secret",
+            "operator": "equals",
+            "value": "radioactive"
+          }
+        ]
+      }
+    },
+    {
+      "ask": {
+        "from": "A",
+        "claims": [
+          {
+            "claim_id": "c2",
+            "key": "domain",
+            "operator": "intersects",
+            "value": [
+              "enterprise_software"
+            ],
+            "supersedes": [
+              "c1"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "qualify": {
+        "role": "B"
+      }
+    },
+    {
+      "qualify": {
+        "role": "A"
+      }
+    },
+    {
+      "opportunity": {
+        "role": "A"
+      }
+    }
+  ]
+}

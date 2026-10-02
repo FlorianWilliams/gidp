@@ -1,0 +1,82 @@
+{
+  "scenario": "t02",
+  "setup": {
+    "A": {
+      "conditions": {
+        "domain": [
+          "enterprise_software"
+        ],
+        "open_attribute": "value"
+      },
+      "policy": {
+        "domain": "discovery",
+        "open_attribute": "session"
+      },
+      "authority": {
+        "PROBE": "true",
+        "DISCLOSE": "true",
+        "INTRODUCE": "true",
+        "PUBLISH_PROJECTION": "true",
+        "NEGOTIATE_NONBINDING": "true"
+      }
+    },
+    "B": {
+      "conditions": {
+        "domain": [
+          "enterprise_software"
+        ],
+        "open_attribute": "value",
+        "data_room": "vdr-7"
+      },
+      "policy": {
+        "domain": "discovery",
+        "open_attribute": "session",
+        "data_room": "session/consent"
+      },
+      "authority": {
+        "PROBE": "true",
+        "DISCLOSE": "true",
+        "INTRODUCE": "true",
+        "PUBLISH_PROJECTION": "true",
+        "NEGOTIATE_NONBINDING": "true"
+      }
+    }
+  },
+  "steps": [
+    {
+      "open": {
+        "purpose": "test"
+      }
+    },
+    {
+      "request_consent": {
+        "from": "A",
+        "action": "reveal_identity",
+        "scope": [
+          "principal_identity"
+        ]
+      }
+    },
+    {
+      "request_consent": {
+        "from": "A",
+        "action": "disclose_attributes",
+        "scope": [
+          "data_room"
+        ]
+      }
+    },
+    {
+      "state": {
+        "role": "A"
+      }
+    },
+    {
+      "request_disclosure": {
+        "from": "A",
+        "attribute": "data_room",
+        "purpose": "qualify"
+      }
+    }
+  ]
+}

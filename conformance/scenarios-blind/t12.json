@@ -1,0 +1,91 @@
+{
+  "scenario": "t12",
+  "setup": {
+    "A": {
+      "conditions": {
+        "domain": [
+          "enterprise_software"
+        ],
+        "open_attribute": "value"
+      },
+      "policy": {
+        "domain": "discovery",
+        "open_attribute": "session"
+      },
+      "authority": {
+        "PROBE": "true",
+        "DISCLOSE": "true",
+        "INTRODUCE": "true",
+        "PUBLISH_PROJECTION": "true",
+        "NEGOTIATE_NONBINDING": "true"
+      }
+    },
+    "B": {
+      "conditions": {
+        "domain": [
+          "enterprise_software"
+        ],
+        "open_attribute": "value"
+      },
+      "policy": {
+        "domain": "discovery",
+        "open_attribute": "session"
+      },
+      "authority": {
+        "PROBE": "true",
+        "DISCLOSE": "false",
+        "INTRODUCE": "false",
+        "PUBLISH_PROJECTION": "true",
+        "NEGOTIATE_NONBINDING": "true"
+      }
+    }
+  },
+  "steps": [
+    {
+      "open": {
+        "purpose": "test"
+      }
+    },
+    {
+      "ask": {
+        "from": "A",
+        "claims": [
+          {
+            "claim_id": "c1",
+            "key": "domain",
+            "operator": "intersects",
+            "value": [
+              "enterprise_software"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "qualify": {
+        "role": "B"
+      }
+    },
+    {
+      "qualify": {
+        "role": "A"
+      }
+    },
+    {
+      "request_disclosure": {
+        "from": "A",
+        "attribute": "open_attribute",
+        "purpose": "test"
+      }
+    },
+    {
+      "request_consent": {
+        "from": "A",
+        "action": "reveal_identity",
+        "scope": [
+          "open_attribute"
+        ]
+      }
+    }
+  ]
+}

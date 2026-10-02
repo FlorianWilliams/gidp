@@ -1,0 +1,138 @@
+{
+  "scenario": "t03",
+  "setup": {
+    "A": {
+      "conditions": {
+        "domain": [
+          "enterprise_software"
+        ],
+        "open_attribute": "value"
+      },
+      "policy": {
+        "domain": "discovery",
+        "open_attribute": "session"
+      },
+      "authority": {
+        "PROBE": "true",
+        "DISCLOSE": "true",
+        "INTRODUCE": "true",
+        "PUBLISH_PROJECTION": "true",
+        "NEGOTIATE_NONBINDING": "true"
+      }
+    },
+    "B": {
+      "conditions": {
+        "domain": [
+          "enterprise_software"
+        ],
+        "open_attribute": "value",
+        "principal_identity": "Acme GmbH"
+      },
+      "policy": {
+        "domain": "discovery",
+        "open_attribute": "session",
+        "principal_identity": "session"
+      },
+      "authority": {
+        "PROBE": "true",
+        "DISCLOSE": "true",
+        "INTRODUCE": "true",
+        "PUBLISH_PROJECTION": "true",
+        "NEGOTIATE_NONBINDING": "true"
+      }
+    }
+  },
+  "steps": [
+    {
+      "open": {
+        "purpose": "test"
+      }
+    },
+    {
+      "ask": {
+        "from": "A",
+        "claims": [
+          {
+            "claim_id": "c1",
+            "key": "principal_identity",
+            "operator": "equals",
+            "value": "Acme GmbH"
+          }
+        ]
+      }
+    },
+    {
+      "request_consent": {
+        "from": "A",
+        "action": "disclose_attributes",
+        "scope": [
+          "principal_identity"
+        ]
+      }
+    },
+    {
+      "ask": {
+        "from": "A",
+        "claims": [
+          {
+            "claim_id": "c2",
+            "key": "domain",
+            "operator": "intersects",
+            "value": [
+              "enterprise_software"
+            ],
+            "supersedes": [
+              "c1"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "qualify": {
+        "role": "B"
+      }
+    },
+    {
+      "qualify": {
+        "role": "A"
+      }
+    },
+    {
+      "request_disclosure": {
+        "from": "A",
+        "attribute": "principal_identity",
+        "purpose": "handoff"
+      }
+    },
+    {
+      "request_consent": {
+        "from": "A",
+        "action": "reveal_identity",
+        "scope": [
+          "principal_identity"
+        ]
+      }
+    },
+    {
+      "request_disclosure": {
+        "from": "A",
+        "attribute": "principal_identity",
+        "purpose": "handoff"
+      }
+    },
+    {
+      "ask": {
+        "from": "A",
+        "claims": [
+          {
+            "claim_id": "c9",
+            "key": "principal_identity",
+            "operator": "equals",
+            "value": "Acme GmbH"
+          }
+        ]
+      }
+    }
+  ]
+}
