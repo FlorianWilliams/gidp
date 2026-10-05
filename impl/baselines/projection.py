@@ -1,12 +1,12 @@
-"""Section 11.4 says there is a fundamental trade-off. Here it is, measured.
+"""Section 11.4 says there is a fundamental trade-off. This module measures it.
 
     "Agents SHOULD minimise projections while preserving sufficient retrieval
     quality. This is a fundamental trade-off: more specific projections
     improve retrieval and increase inference risk; less specific projections
     do the reverse. GIDP 0.1 does not prescribe an optimum."
 
-That is asserted, not shown, and the shape of the curve decides whether the
-advice is useful. Run it:
+The specification asserts this without showing it, and the shape of the curve
+decides whether the advice is useful. To run it:
 
     python -m baselines.projection
 
@@ -65,8 +65,8 @@ DIRECTIONS = ("acquire", "divest")
 #: What a publisher risks, before anyone reads anything.
 PRIOR_BITS = log2(len(SECTORS)) + log2(len(CITIES)) + log2(len(SIZE_BUCKETS)) + 1.0
 
-#: Measured, not assumed: the private facts an honest six-claim session gives
-#: up to its counterparty, from `baselines.mechanisms.cid_honest` with the two
+#: Measured: the private facts an honest six-claim session gives
+#: up to its counterparty, from `baselines.mechanisms.gidp_honest` with the two
 #: existence bits removed, since being in the index already conceded those.
 SESSION_BITS = 2.30
 
@@ -106,7 +106,7 @@ def queries(count: int = 300, seed: int = 5) -> list[Interest]:
 
     A publisher is not read by one querent. It is read by everyone whose
     query its projection answers, and that is the quantity a coarsening
-    decision actually moves.
+    decision moves.
     """
     rng = random.Random(seed)
     return [
@@ -131,7 +131,7 @@ def _opposite(direction: str) -> str:
 
 
 def truly_relevant(candidate: Interest, query: Interest) -> bool:
-    """What a querent actually wants: same sector, same country, adjacent
+    """What a querent wants: same sector, same country, adjacent
     size, opposite direction."""
     return (
         candidate.sector == query.sector
@@ -146,10 +146,10 @@ def resolving(level: Level) -> Level:
 
     `InMemoryProvider` matches retrieval attributes by exact token equality:
     a publisher that said `munich` is never returned to a querent that said
-    `germany`. That is not a property of the protocol — Section 12 leaves
+    `germany`. That is not a property of the protocol (Section 12 leaves
     retrieval to the provider and Section 5 puts domain ontologies out of
-    scope — but it is a property of every number this harness produces, so
-    the alternative has to be measured rather than assumed away.
+    scope), but it is a property of every number this harness produces, so
+    the alternative has to be measured instead of assumed away.
 
     This variant resolves both sides of the geography to the coarsest common
     level before comparing, which is the cheapest thing a provider can do
@@ -288,15 +288,15 @@ def main() -> None:
         f"and finds only {rows[0][1]:.0%} of the matches available to it. That is the"
     )
     print("result Section 11.4 does not lead a reader to expect: an over-precise")
-    print("projection is not merely risky, it is *retrieved less*, because it only")
+    print("projection is risky and is also *retrieved less*, because it only")
     print("answers querents who happened to describe the target in the same terms.")
-    print("Precision in a projection is not accuracy, it is a narrower agreement")
+    print("Precision in a projection does not mean accuracy; it means a narrower agreement")
     print("about vocabulary, and a querent who says `germany` never meets a")
     print("publisher who said `munich`.")
     print()
     print(
-        f"At the vague end, {rows[-1][0].name.strip()} concedes the least — "
-        f"{rows[-1][0].projection_bits:.2f} bits —"
+        f"At the vague end, {rows[-1][0].name.strip()} concedes the least "
+        f"({rows[-1][0].projection_bits:.2f} bits)"
     )
     print(
         f"and is retrieved {rows[-1][2]:.0f} times per publisher. At "
@@ -308,11 +308,11 @@ def main() -> None:
     print()
     if usable:
         band = ", ".join(r[0].name.strip().split("  ")[0] for r in usable)
-        print(f"What is left is a band — {band} — where recall is high and the")
+        print(f"What is left is a band ({band}) where recall is high and the")
         print("publisher is not drained. That band is the stopping rule Section 11.4")
         print("is missing. It is not a constant: it is wherever the marginal session")
         print("costs more than the marginal index disclosure saves, which depends")
-        print("entirely on how crowded the index is.")
+        print("on how crowded the index is.")
     resolved = resolving(LEVELS[0])
     r_recall, r_sessions, r_drained = _measure(resolved, people, asks, matchable)
     print()
@@ -324,30 +324,30 @@ def main() -> None:
     print("-" * 98)
     print()
     print("That last row is the same precise publisher, read by a provider that")
-    print("resolves a city to its country before comparing — one hierarchy, no")
+    print("resolves a city to its country before comparing: one hierarchy, no")
     print(
         f"embeddings, no ontology. Recall goes from {rows[0][1]:.0%} to {r_recall:.0%} "
         f"without the"
     )
     print("publisher changing anything it publishes.")
     print()
-    print("Which relocates the problem. The low recall of a precise projection is")
-    print("not a fact about projections, it is a fact about a provider that")
-    print("compares strings. Coarsening is the publisher's way of compensating for")
-    print("a provider that cannot resolve vocabulary — and it compensates by")
+    print("This relocates the problem. The low recall of a precise projection is")
+    print("a fact about a provider that compares strings, and not about")
+    print("projections. Coarsening is the publisher's way of compensating for")
+    print("a provider that cannot resolve vocabulary, and it compensates by")
     print("disclosing less precisely to an index, which is the one thing the")
     print("publisher should not have to trade for retrieval. Where a provider")
     print("resolves, recall stops arguing for coarsening at all, and the only")
     print("pressure left is the one that argues against it: sessions.")
     print()
-    print("Which is the awkward part. A publishing Agent cannot compute its own")
-    print("optimum, because the quantity that decides it — how many other")
+    print("A publishing Agent cannot compute its own")
+    print("optimum, because the quantity that decides it (how many other")
     print("publishers this projection will be confused with, and how many querents")
-    print("will therefore arrive — is visible only to the Discovery Provider.")
+    print("will therefore arrive) is visible only to the Discovery Provider.")
     print("Section 12 gives a provider no way to tell it, and a provider that")
     print("returned the size of the matching set would be helping an adversary")
     print("calibrate at the same time. That is a real open engineering question")
-    print("and it is recorded as one rather than patched.")
+    print("and it is recorded as one instead of being patched.")
 
 
 if __name__ == "__main__":

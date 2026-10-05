@@ -1,4 +1,4 @@
-"""Section 24.4, demonstrated rather than asserted.
+"""Section 24.4, demonstrated by measurement.
 
 The specification says an attacker may operate many Agents or Principals to
 bypass query limits, and Section 24.3 offers query budgets as the mitigation
@@ -10,7 +10,7 @@ comfortable at once, and neither had been measured.
 
 Two questions. Does a budget keyed to the counterparty bound anything at all
 against an adversary that can mint counterparties? And is there any budget
-that does — including ones the specification does not currently offer?
+that does, including ones the specification does not currently offer?
 """
 
 from __future__ import annotations
@@ -217,9 +217,9 @@ def main() -> None:
                 f"{attack.questions_answered:>9} {attack.bits:>7.2f}"
             )
     print()
-    print("The bits track the product, not the budget. A counterparty allowance of")
+    print("The bits track the product of budget and identities. A counterparty allowance of")
     print("two, which looks severe, is undone by four identities. Nothing in the")
-    print("protocol connects the two, because opaque endpoints are the point: the")
+    print("protocol connects the two, because opaque endpoints are intended: the")
     print("same property that stops a responder profiling its counterparties stops")
     print("it recognising that it is being profiled.")
     print()
@@ -258,7 +258,7 @@ def main() -> None:
     print("already paid for a complete extraction, and a cap mean enough to stop")
     print("the extraction serves nobody. There is no setting in between, because")
     print("the responder cannot tell the two populations apart while it answers")
-    print("them — which is the same blindness that made the per-counterparty")
+    print("them. This is the same blindness that made the per-counterparty")
     print("budget worthless one table up, arriving from the other direction.")
     print()
     print("=" * 92)
@@ -268,8 +268,8 @@ def main() -> None:
     print("Section 24.3 names query budgets as the mitigation against probing and")
     print("Section 24.4 names Sybil identities as the way around them. Read")
     print("together they say that GIDP 0.1's only bounding lever is bypassed by a")
-    print("threat the same document acknowledges. That is now measured rather")
-    print("than implied, and it narrows the open problem usefully: a responder")
+    print("threat the same document acknowledges. That is now measured and no")
+    print("longer only implied, and it narrows the open problem usefully: a responder")
     print("policy that bounds adaptive leakage must either meter something other")
     print("than the asker's identity, or accept refusing honest counterparties")
     print("at a rate it cannot distinguish from refusing adversaries.")

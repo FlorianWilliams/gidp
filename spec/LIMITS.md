@@ -8,8 +8,8 @@ other half of that exercise: four cases chosen because they looked like they
 would break, each attacking a different assumption, each with a hypothesis
 stated before the run.
 
-All four confirmed their hypothesis. None of them is a bug; each is a
-boundary the specification did not state, and stating a boundary is cheaper
+All four confirmed their hypothesis. Each exposes a boundary the
+specification did not state, and none is a bug; stating a boundary is cheaper
 than having a reviewer find it. The cases are reproducible:
 `impl/examples/limits.py`, and `impl/tests/test_limits.py` checks that they still hold.
 
@@ -29,12 +29,12 @@ does not say they must. An Agent holding `PUBLISH_PROJECTION: false` and a polic
 The disclosure model is monotonically permissive: every class is an upper
 bound on exposure and none is a lower bound. The design is intentional, since a
 protocol whose purpose is to withhold has no business compelling disclosure. It
-does mean that regimes built on mandatory transparency are more than poorly
-served: they cannot be stated in this vocabulary at all.
+follows that the obligations of regimes built on mandatory transparency
+cannot be stated in this vocabulary at all.
 
 *A correction to an earlier version of this document, which said the conflict
-was inexpressible.* It is inexpressible *here*, which is not the same as
-inexpressible.
+was inexpressible.* It is inexpressible *in this vocabulary*, and other
+vocabularies already express it.
 W3C's ODRL Information Model 2.2 has carried the distinction since 2018: a
 Permission permits an action, a Prohibition forbids one, and a **Duty**
 obligates one, with a Policy attaching obligations by reference. A deployment
@@ -66,7 +66,7 @@ made the threshold *worth* hiding. Where price is the only axis, a compatibility
 session is price discovery conducted slowly and with worse guarantees than a
 sealed-bid auction, which is the mechanism that market already uses.
 
-The second failure is simpler and harder. A `principal_approval` gate means a
+The second failure is simpler to state and harder to fix. A `principal_approval` gate means a
 human decides. A slot that expires in two hours cannot wait, and an Agent that
 pre-approves everything to keep up has switched the gate off while still
 claiming it.
@@ -88,11 +88,11 @@ nil when there is one number.
 ## L-3 · Where the two sides are not comparably exposed
 
 **Attacked:** reciprocity as a defence against probing, the candidate
-direction the companion note calls the most promising. **Verdict: the lever
+direction the companion note calls the most promising. **Verdict: reciprocity
 inverts, and this is the most uncomfortable finding of the four.**
 
 One employer, twenty candidates. The employer probes each candidate's salary
-floor: four questions brackets it. Reciprocity lets each candidate ask the
+floor: four questions bracket it. Reciprocity lets each candidate ask the
 same of the employer, and each learns *the same band*: the employer spends
 one fact twenty times, while each candidate spends a scarce and personal one.
 After twenty sessions the employer has narrowed twenty private values and
@@ -134,7 +134,7 @@ it, because profiles may not weaken the core semantics of Sections 10, 15.5,
 
 **Consequence.** Regulated markets requiring pre-engagement screening are out
 of scope for GIDP 0.1. Whether a future version should permit an identity-first
-profile is a real and substantial question, since it would invert the
+profile is a substantial question, since it would invert the
 property the whole design exists to provide.
 
 ---
@@ -149,5 +149,5 @@ markets, consumer-facing asymmetries, regulated disclosure and screened
 markets sit outside it.
 
 A protocol that claims everything invites the reviewer to find the one thing
-it cannot do. Naming four of them first is cheaper, and gives a more accurate
-account of what the four working domains demonstrate.
+it cannot do. Naming four such things first is cheaper, and it gives a more
+accurate account of what the four working domains demonstrate.

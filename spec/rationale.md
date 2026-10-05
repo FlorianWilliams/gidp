@@ -70,22 +70,22 @@ Section 10.7 requires a requester not to state a retention it cannot
 discharge, and an implementation that can discharge none to omit the field.
 The distinction behind this comes from XACML. An *obligation* is something an
 enforcement point must carry out, and a conforming XACML enforcement point
-must deny access outright when it cannot discharge an obligation attached
+must deny access when it cannot discharge an obligation attached
 to a permit; *advice* it may ignore. A field that a recipient may state and
 then disregard is advice whatever the specification calls it, and the only
 lever a protocol has is to make disregarding it non-conformant. GIDP cannot
 verify discharge and does not claim to. It can refuse to call something a
 limit when nothing turns on it; hence the omission rule, which leaves the
-responder to decline, the safe outcome.
+responder to decline, which is the safe outcome.
 
 ## The minimisation curve, and who can see its deciding quantity
 
 Section 11.4 advises minimising projections and warns that minimisation
-past a point reverses. The fuller argument, measured on a synthetic index
-(`alternatives.md`), runs as follows. An over-precise projection is retrieved
+past a point reverses. The fuller argument was measured on a synthetic index
+(`alternatives.md`). An over-precise projection is retrieved
 *less* because it answers only querents who described the target in the same
 terms, though that effect is a property of a token-comparing provider, and
-a provider that resolves one hierarchy removes it entirely (Section 12.4).
+a provider that resolves one hierarchy removes it (Section 12.4).
 A projection coarse enough to be retrieved by everyone is retrieved by
 everyone, and each retrieval is a session with a counterparty that had no
 business finding this Principal, which is an opportunity to probe under Section
@@ -93,7 +93,7 @@ business finding this Principal, which is an opportunity to probe under Section
 the projection saved it. The quantity that decides where that point falls
 is how many other publishers a given projection will be confused with. The
 Discovery Provider can observe it; the publishing Agent cannot.
-Section 12 gives a provider no way to report it, by design: a provider
+Section 12 intentionally gives a provider no way to report it: a provider
 that told publishers the size of a matching set would also be calibrating
 an adversary.
 

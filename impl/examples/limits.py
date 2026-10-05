@@ -3,7 +3,7 @@
 The four worked domains were chosen because they fit. These four are chosen
 because they look like they should not, each attacking a different assumption.
 Each carries a hypothesis of what will break, stated before the run, so that a
-case which passes is informative rather than reassuring.
+case which passes is informative and is not taken as reassurance.
 
     python examples/limits.py
 
@@ -45,7 +45,7 @@ RULE = "-" * 78
 def head(number: str, title: str, hypothesis: str) -> None:
     print()
     print(LINE)
-    print(f"{number} — {title}")
+    print(f"{number}: {title}")
     print(LINE)
     print(f"Hypothesis before the run: {hypothesis}")
     print(RULE)
@@ -119,9 +119,9 @@ def limit_mandatory_disclosure() -> bool:
     print("So an Agent that publishes nothing at all is perfectly conformant")
     print("while its Principal is in breach of procurement law. The protocol")
     print(
-        "has no way to say MUST publish -- `public` means 'may appear",
+        "has no way to say MUST publish: `public` means 'may appear",
     )
-    print("without authentication', which is a ceiling, not a floor.")
+    print("without authentication', which is a ceiling and never a floor.")
     print()
 
     finding(
@@ -152,14 +152,14 @@ def limit_fungible_and_perishable() -> bool:
         authority=FULL,
     )
 
-    # One dimension, so the bisection of examples/probing.py is the whole
-    # game: there is nothing else for the session to be about.
+    # One dimension, so the session consists of the bisection of
+    # examples/probing.py: there is nothing else for it to be about.
     #
     # Note the direction. examples/probing.py locates a *ceiling*, where a
     # range above the bound is incompatible. Here the private value is a
     # *floor*, so it is the ranges below it that are incompatible and the
     # inequality reverses. Getting this backwards converges on the search
-    # bound rather than the secret, which is worth stating: an attacker who
+    # bound instead of the secret. An attacker who
     # does not know which side of the bound it is on spends a few queries
     # finding out, and no more.
     lo, hi, queries = 0, 4_000, 0
@@ -196,7 +196,7 @@ def limit_fungible_and_perishable() -> bool:
         "where the interest reduces to one comparable dimension, the "
         "protocol offers no protection a sealed-bid mechanism would not "
         "offer better; and where the interest perishes faster than a human "
-        "answers, the principal_approval gate is unusable by construction."
+        "answers, the principal_approval gate is unusable."
     )
     return True
 
@@ -217,7 +217,7 @@ def limit_power_asymmetry() -> bool:
     employer_secret = {"salary_ceiling": {"min": 0, "max": 95_000}}
     employer = _interest(
         conditions=employer_secret,
-        # An employer's band is semi-public in practice: it appears in job
+        # An employer's band is semi-public: it appears in job
         # ads, in benchmarks, and it is the same for every candidate.
         policy={"salary_ceiling": DisclosureClass(surface=Surface.SESSION)},
         authority=FULL,
@@ -251,7 +251,7 @@ def limit_power_asymmetry() -> bool:
         learned_about_candidates += 1
 
         # Reciprocity: the candidate may ask the same of the employer. It
-        # learns one band -- the same band every other candidate learns.
+        # learns one band, the same band every other candidate learns.
         claim = Claim(
             key="salary_ceiling",
             operator=ClaimOperator.OVERLAPS,
@@ -332,14 +332,14 @@ def limit_identity_first() -> bool:
         "the authority ladder's ordering is enforced by the state machine "
         "and is not a profile matter. Markets that must identify before "
         "engaging are out of scope, and the specification should say so "
-        "rather than let an implementer discover it."
+        "instead of letting an implementer discover it."
     )
     return True
 
 
 def main() -> None:
     print(LINE)
-    print("Limit cases — four domains chosen because they should break")
+    print("Limit cases: four domains chosen because they should break")
     print(LINE)
     print()
     print("The four worked domains were chosen because they fit. These are")

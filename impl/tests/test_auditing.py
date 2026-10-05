@@ -1,4 +1,4 @@
-"""The two controls of Section 24.3, in the core rather than in a harness.
+"""The two controls of Section 24.3, in the core instead of a harness.
 
 `baselines/` measured them and the measurement lives there. These check the
 properties a conforming implementation must have: that a refusal is a
@@ -79,7 +79,7 @@ def test_a_claim_on_the_lattice_is_answered():
 
 
 def test_the_lattice_keeps_nothing_between_claims():
-    """Its whole interest: honest traffic cannot deplete it."""
+    """Its main property: honest traffic cannot deplete it."""
     lattice = GranularityLattice(widths={"valuation_floor": 20_000_000})
     a, b = _pair(lattice)
     for _ in range(50):
@@ -101,10 +101,10 @@ def test_the_budget_stops_a_bisection():
 
 
 def test_the_budget_is_spent_by_anyone_not_only_an_adversary():
-    """A commons, and the specification says so rather than hiding it.
+    """The budget is shared, and the specification says so openly.
 
-    The claim here is the honest one — does my ceiling clear your floor —
-    over a wide band. It is cheap, and cheap is not free.
+    The claim here is the ordinary one (does my ceiling clear your floor?)
+    over a wide band. It is cheap, but it still costs something.
     """
     budget = BitBudget(priors={"valuation_floor": GRID}, budget_bits=2.0)
     a, b = _pair(budget)
@@ -114,7 +114,7 @@ def test_the_budget_is_spent_by_anyone_not_only_an_adversary():
 
 def test_the_decision_never_consults_the_protected_value():
     """Simulatability: the same claim must be admitted or refused alike
-    whatever the responder happens to hold."""
+    whatever the responder holds."""
     claim = Claim(
         key="valuation_floor",
         operator="overlaps",
@@ -129,7 +129,7 @@ def test_the_decision_never_consults_the_protected_value():
 
 def test_an_attribute_with_no_prior_is_not_audited():
     """The budget needs to know what was possible; without that it abstains
-    rather than guessing."""
+    instead of guessing."""
     budget = BitBudget(priors={}, budget_bits=0.0)
     a, b = _pair(budget)
     assert _ask(a, b, {"min": 0, "max": 60_000_000}) is not ClaimResult.DECLINED
@@ -144,12 +144,12 @@ def test_no_audit_means_no_bound():
 
 def test_the_worst_case_rule_is_conservative_and_that_is_the_price():
     """A question whose *unlikely* answer would be very informative is
-    refused, even though the answer it would actually get is cheap.
+    refused, even though the answer it would get is cheap.
 
     Asking whether the floor is below 180M of a 200M band is almost certainly
-    answered yes, which narrows little — but if it were answered no, four
+    answered yes, which narrows little; but if it were answered no, four
     candidates would remain. Simulatability forbids conditioning on which
-    answer would be given, so the worst case decides. This is not a defect;
+    answer would be given, so the worst case decides. This is intended:
     it is what makes a refusal uninformative, and it is why a budget refuses
     some honest counterparties.
     """

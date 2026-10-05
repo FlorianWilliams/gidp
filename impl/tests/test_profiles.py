@@ -1,6 +1,6 @@
 """The profile manifest format, its validator, and the contrasted pair.
 
-The pair is the point (FORMAT.md): one narrow and numeric
+The pair is the purpose (FORMAT.md): one narrow and numeric
 (co-investment), one relational and asymmetric (executive-succession),
 both instances of the same manifest format, both driving the same core
 through the same machinery. If both hold, verticals multiply without new
@@ -44,8 +44,8 @@ def test_published_manifest_is_valid(path):
 
 
 def test_the_pair_is_contrasted_on_purpose():
-    """One narrow and numeric, one relational and asymmetric -- the same
-    format carries both, which is the claim."""
+    """One narrow and numeric, one relational and asymmetric: the claim is
+    that the same format carries both."""
     assert len(MANIFESTS) >= 2
     co = _load("co-investment-0.1.profile.json")
     succ = _load("executive-succession-0.1.profile.json")
@@ -235,7 +235,7 @@ def test_a_manifest_drives_a_session_through_the_same_core(path):
     """The same machinery, configured only by the manifest: required
     dimensions block qualification until each has been examined, the joint
     predicate blocks it until both directions have accepted one candidate,
-    then the session qualifies -- for both instances, with no
+    then the session qualifies, for both instances, with no
     profile-specific code anywhere in this test or in the core."""
     manifest = json.loads(path.read_text())
     profile_id = manifest["profile"]["id"]
@@ -284,7 +284,7 @@ def test_a_manifest_drives_a_session_through_the_same_core(path):
 def test_a_candidate_one_side_refuses_does_not_satisfy_the_predicate(path):
     """The trap the predicate exists for: each private range overlaps an
     asked band, yet no single amount suits both. A candidate outside one
-    side's range is answered incompatible -- and does not qualify."""
+    side's range is answered incompatible and does not qualify."""
     manifest = json.loads(path.read_text())
     profile_id = manifest["profile"]["id"]
     a, b = _manifest_session(manifest)

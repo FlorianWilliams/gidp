@@ -3,13 +3,13 @@
 The Agent composes the other modules and adds nothing of its own to the
 protocol semantics: evaluation lives in ``evaluation``, what may leave lives
 in ``policy``, and what may happen next lives in ``session``. That separation
-is what makes conformance criterion 3 testable -- replay the same Standing
+is what makes conformance criterion 3 testable: replay the same Standing
 Interest, policy and session state, and the same objects come out.
 
 Abuse controls (Section 24.3) are represented by a query budget. It is a
-deliberately crude mitigation, and ``examples/probing.py`` measures how crude:
+crude mitigation by design, and ``examples/probing.py`` measures how crude:
 a budget is what an implementer must set, and this implementation exists partly
-to give them a number rather than an intuition.
+to give them a measured number to set it by.
 """
 
 from __future__ import annotations
@@ -133,8 +133,8 @@ class Agent:
     )
     audit: list[AuditEntry] = field(default_factory=list)
     queries_answered: int = 0
-    #: Retention modes this Agent can actually enforce on what it receives.
-    #: The default is the honest one for an implementation that keeps a
+    #: Retention modes this Agent can enforce on what it receives.
+    #: The default is the accurate one for an implementation that keeps a
     #: session in memory and nothing after it.
     dischargeable_retention: set[Retention] = field(
         default_factory=lambda: {Retention.SESSION_ONLY}
@@ -202,8 +202,9 @@ class Agent:
             )
 
         depth = effective_depth(message.max_depth, Surface.SESSION)
-        # Section 14.1: SessionAccept carries the features actually supported,
-        # which is the intersection -- not an echo of what was asked for.
+        # Section 14.1: SessionAccept carries the features supported on both
+        # sides, which is the intersection of the two sets; it does not echo
+        # the request.
         agreed = sorted(
             set(message.features) & self.supported_features, key=lambda f: f.value
         )
@@ -279,7 +280,7 @@ class Agent:
             leaked = self._own_private_value_in(claim)
             if leaked is not None:
                 # Section 14.3: a request MUST NOT contain the requester's own
-                # private values -- the four reserved dependency lists of
+                # private values, the four reserved dependency lists of
                 # Section 19.1 included. Refused before anything is emitted
                 # or recorded. The guard compares known values; it cannot
                 # prove the provenance of a value the caller transformed.
@@ -310,9 +311,9 @@ class Agent:
         surface `local` (evaluation_only, never) or any gate. Compared by
         the exact values each side pins down, so `intersects [x]` over a
         private set containing x, or the degenerate range {x, x} over a
-        private x, is caught as well as `equals x`. Conservative -- a
-        hypothesis that merely coincides with the secret is refused too --
-        and not provenance tracking: a value the caller transformed, such
+        private x, is caught as well as `equals x`. The check is conservative (a
+        hypothesis that coincides with the secret is refused too)
+        and does no provenance tracking: a value the caller transformed, such
         as a band built around the secret, passes unseen.
         """
         interest = self.standing_interest.interest
@@ -360,7 +361,7 @@ class Agent:
                 claim, self.standing_interest
             ):
                 # Section 18: a refusal implies nothing, and this one implies
-                # less than most -- an observer can reproduce the decision.
+                # less than most, since an observer can reproduce the decision.
                 result = ClaimResult.DECLINED
             elif claim.key in IDENTITY_ATTRIBUTES and (
                 claim.key not in self.consents.identity_revealed
@@ -368,8 +369,8 @@ class Agent:
             ):
                 # Section 10.6: `compatible` to `principal_identity equals
                 # "Acme GmbH"` confirms the identity without any
-                # DisclosureResponse carrying it -- the third door, after
-                # the two S-33 closed. Declined, which implies nothing. A
+                # DisclosureResponse carrying it. This is the third such path,
+                # after the two S-33 closed. Declined, which implies nothing. A
                 # consent opens a possibility and waives no other row of
                 # Section 16.3: INTRODUCE is re-read at every use (E-02).
                 result = ClaimResult.DECLINED
@@ -380,8 +381,8 @@ class Agent:
                 if predicate is not None and predicate.value_form == "point":
                     # A profile's joint predicate (FORMAT.md): does this one
                     # candidate value satisfy our private value? Answered
-                    # truthfully -- coarsening is a permitted deviation
-                    # (15.5), and here it would erase the very fact asked.
+                    # truthfully. Coarsening is a permitted deviation
+                    # (15.5), and here it would erase the fact asked.
                     candidate = claim.model_copy(update={
                         "operator": ClaimOperator.OVERLAPS,
                         "value": {"min": claim.value, "max": claim.value},
@@ -441,7 +442,7 @@ class Agent:
 
         The default policy: coarsen whenever the value consulted is
         evaluation-only and the truthful answer is affirmative, which is the
-        canonical case of Section 15.4 -- a private threshold answered without
+        canonical case of Section 15.4: a private threshold answered without
         being transmitted. Once the query budget is exhausted, decline.
         """
         if over_budget:
@@ -486,8 +487,8 @@ class Agent:
     ) -> DisclosureRequest:
         """Section 14.4.
 
-        A stated retention is an obligation on this Agent, not a courtesy to
-        the discloser (Section 10.7). An Agent may therefore only state one it
+        A stated retention is an obligation on this Agent towards the
+        discloser (Section 10.7). An Agent may therefore only state one it
         can discharge; stating and disregarding it would make the field
         advice, and a limit nothing turns on is not a limit.
         """
@@ -531,8 +532,8 @@ class Agent:
             request.attribute not in self.consents.identity_revealed
             or self._authority(Authority.INTRODUCE) is AuthorityValue.FALSE
         ):
-            # Section 10.6: the identity rules attach to the data, not to
-            # the message. An identity attribute travels only under a
+            # Section 10.6: the identity rules attach to the data, whatever
+            # message carries it. An identity attribute travels only under a
             # `reveal_identity` consent, which requires INTRODUCE and
             # cannot precede qualification.
             return self._declined(
@@ -541,9 +542,9 @@ class Agent:
 
         # Section 16.2: where a level is `approval_required`, the response
         # MUST be `pending_principal_approval`. Authority and the Disclosure
-        # Policy are different axes -- authority says whether this Agent may
+        # Policy are different axes (authority says whether this Agent may
         # perform a category of action at all, the gate says which attributes
-        # need a decision -- and an Agent that consulted only the gate would
+        # need a decision), and an Agent that consulted only the gate would
         # silently ignore a Principal who said "ask me every time", for every
         # attribute that happens to carry no gate of its own.
         if (
@@ -683,7 +684,7 @@ class Agent:
             attribute in IDENTITY_ATTRIBUTES for attribute in request.scope
         ):
             # Section 10.6: a scope that names an identity attribute under
-            # any action but `reveal_identity` is declined -- otherwise
+            # any action but `reveal_identity` is declined; otherwise
             # `disclose_attributes` before qualification would do, under
             # DISCLOSE, what `reveal_identity` holds until after it.
             self._log("consent_declined", f"{request.action.value} (identity in scope)")
@@ -704,8 +705,8 @@ class Agent:
         ]
 
         if self._authority(level) is AuthorityValue.FALSE:
-            # Section 14.5: a refused authority is a refusal, not an approval
-            # pending -- `pending_principal_approval` would tell the peer to
+            # Section 14.5: a refused authority is a refusal. Answering
+            # `pending_principal_approval` would tell the peer to
             # wait for a decision nobody will be asked to make (Section 18
             # gives the same rule for disclosure). Section 16.3, second row.
             self._log("consent_declined", f"{request.action.value} (authority)")

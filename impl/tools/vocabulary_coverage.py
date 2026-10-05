@@ -1,12 +1,12 @@
-"""Which closed-vocabulary values does anything actually reach?
+"""Which closed-vocabulary values does anything reach?
 
     python tools/vocabulary_coverage.py
 
 A closed vocabulary is an interoperability obligation: every value in it is
 something every implementer must handle. A value that no worked domain
-reaches is therefore one of two things, and the specification should say
-which — a gap in the demonstration, or a value that should not be normative
-in 0.1. This tool makes the question answerable instead of rhetorical, and
+reaches is therefore either a gap in the demonstration or a value that should
+not be normative in 0.1, and the specification should say which. This tool
+makes the question answerable with data, and
 `tests/test_vocabulary_coverage.py` makes it answerable again tomorrow.
 
 It found S-15 and S-16.
@@ -121,7 +121,7 @@ def main() -> int:
     if undocumented:
         print()
         print(
-            "Reached by nothing and unregistered — remove, or write down why they stay:"
+            "Reached by nothing and unregistered (remove, or write down why they stay):"
         )
         for key in undocumented:
             print(f"  {key}")

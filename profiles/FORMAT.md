@@ -23,11 +23,11 @@ belong to the Principal's Disclosure Policy (Section 10), chosen per
 Standing Interest, and a profile that tried to demand disclosure would be
 asking for what the protocol exists to withhold. The manifest
 says what an attribute means and how claims over it are interpreted; each
-Principal decides, alone, how far its own values travel.
+Principal alone decides how far its own values travel.
 
 A manifest also cannot touch the closed vocabularies (Section 26): it has
 no field for new results, surfaces, gates, statuses or close reasons, and
-the validator rejects unknown fields rather than tolerating them. Its only
+the validator rejects unknown fields. Its only
 extension points are the two the specification grants profiles
 (`intended_use` values and claim operators), and both must be namespaced
 under the profile's own id.
@@ -165,5 +165,4 @@ and found the bar was not met: `ticket_meets` had no wire form, the
 budget had no hypothesis space, and `opportunity_meaning` promised a
 stage check the required dimensions did not require and an attestation no
 claim can carry. The format and both instances were corrected
-(`impl/SPEC-ISSUES.md`, E-10 to E-12); the bar is what they are now held
-to.
+(`impl/SPEC-ISSUES.md`, E-10 to E-12) and are now held to that bar.

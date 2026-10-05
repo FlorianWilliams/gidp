@@ -1,6 +1,6 @@
 """Local evaluation of claims, and the truthfulness rule (Sections 15.1-15.5).
 
-The whole point of the protocol lives in this module: a claim is evaluated
+The core of the protocol lives in this module: a claim is evaluated
 against values that never leave the Agent, and only a result from the closed
 vocabulary of Section 15.1 crosses the wire.
 
@@ -13,7 +13,7 @@ companion note argues, is also the reason the oracle leaks:
     `conditionally_compatible`, `unknown` or `declined` in order to limit
     inference. These are the only permitted deviations.
 
-``coarsen`` below implements exactly that and nothing more: it can never turn
+``coarsen`` below implements that rule and only that rule: it can never turn
 a false claim into `compatible`.
 """
 
@@ -48,7 +48,7 @@ class LocalEvaluation:
 
 
 #: The dependency primitives of Section 19.1. They are reserved claim keys:
-#: they live on the Conditional Interest as lists rather than among its
+#: they live on the Conditional Interest as lists, outside its
 #: conditions, so a claim naming one is resolved from there. Only ``excludes``
 #: must be supported by every implementation; the other three require the
 #: ``dependency_primitives`` feature (Section 14.1).
@@ -60,7 +60,7 @@ def evaluate_claim(
 ) -> LocalEvaluation:
     """Evaluate one claim against private values.
 
-    Returns the *truth*, not the answer. Choosing what to say is
+    Returns the *truth*; the answer is chosen separately. Choosing what to say is
     ``choose_result`` below, and keeping the two apart is what makes the
     truthfulness rule checkable.
     """
@@ -86,9 +86,8 @@ def _evaluate_dependency(
 ) -> LocalEvaluation:
     """Resolve a claim naming a dependency primitive (Section 19.1).
 
-    The asymmetry is the interesting part and it is deliberate. What an Agent
-    *provides* is ordinarily disclosable — it is what makes a partnership
-    findable. What it *requires* is the mirror image of what it lacks, and a
+    The asymmetry is intended. What an Agent *provides* is ordinarily
+    disclosable, since it is what makes a partnership findable. What it *requires* is the mirror image of what it lacks, and a
     capability gap admitted to a prospective partner is admitted to a
     prospective competitor, so a Principal will usually classify `requires`
     as evaluation-only and let the answer be coarsened.
@@ -101,7 +100,7 @@ def _evaluate_dependency(
 
     if not held:
         # Nothing held: the Agent cannot determine the answer, and Section
-        # 14.4's reasoning applies -- silence must not reveal absence.
+        # 14.4's reasoning applies: silence must not reveal absence.
         return LocalEvaluation(None, claim.key, evaluation_only)
 
     truth = _apply(claim.operator, held, claim.value)
@@ -141,11 +140,11 @@ def _apply(
 ) -> bool | None:
     """Resolve one operator against one private value.
 
-    Returns ``None`` — "cannot determine" — whenever the operator does not
+    Returns ``None`` ("cannot determine") whenever the operator does not
     fit the shape of the value it is applied to: `within` against a label or
     a list, `intersects` against a range. Section 14.2 does not say what a
     responder does with a shape mismatch, and the first instinct is to treat
-    it as a malformed request. That instinct is wrong twice over. A responder
+    it as a malformed request. That instinct is wrong for two reasons. A responder
     that raises has been made to behave differently by the *shape* of its own
     private value, which tells the querent something it should not learn; and
     a responder that can be crashed by a well-formed message with an
@@ -178,9 +177,9 @@ def _apply(
             return False
 
         if not all(isinstance(v, Hashable) for v in (*left, *right)):
-            # A range has no membership to intersect. The honest answer is
-            # that this Agent cannot determine one (Section 15.1), not a
-            # crash -- see the note on shape mismatches below.
+            # A range has no membership to intersect. The correct answer is
+            # that this Agent cannot determine one (Section 15.1); raising
+            # would be wrong (see the note on shape mismatches above).
             return None
         return bool(set(left) & set(right))
 
@@ -190,7 +189,7 @@ def _apply(
         return _overlaps(private, asked)
 
     if operator is ClaimOperator.COMPATIBLE_WITH:
-        # Profile-defined predicate. The core profile has none, so the honest
+        # Profile-defined predicate. The core profile has none, so the correct
         # answer is that the Agent cannot determine it.
         return None
 
@@ -202,7 +201,7 @@ def _overlaps(private: Any, asked: Any) -> bool | None:
 
     ``asked`` is ``{"min": x, "max": y}`` or a named bucket the profile
     resolves. A private *bound* (``{"max": 80_000_000}``) is compatible with
-    an asked range when the ranges overlap at all -- which is why a single
+    an asked range when the ranges overlap at all, which is why a single
     probe cannot locate the bound, and a sequence of them can.
     """
     if not isinstance(asked, dict):
@@ -276,7 +275,7 @@ def assert_truthful(evaluation: LocalEvaluation, answered: ClaimResult) -> None:
     """Check an answer against Section 15.5. Used by the conformance suite.
 
     This is the check a reviewer would write first, so the implementation
-    ships it rather than waiting to be asked.
+    ships it unprompted.
     """
     if answered is ClaimResult.COMPATIBLE and evaluation.truth is False:
         raise Truthfulness(

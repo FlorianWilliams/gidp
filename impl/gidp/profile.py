@@ -1,8 +1,8 @@
 """Read a profile manifest's qualification rules into the core.
 
 A manifest (profiles/FORMAT.md) is data. What the core needs from it to
-decide qualification is two things: the dimensions a session must have
-examined, and the joint predicates that must hold. Nothing here is
+decide qualification is the dimensions a session must have examined and
+the joint predicates that must hold. Nothing here is
 specific to any vertical; a profile that needed code here would be a
 profile that had weakened the core.
 """

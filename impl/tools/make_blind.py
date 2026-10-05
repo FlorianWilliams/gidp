@@ -4,8 +4,8 @@
 
 `conformance/scenarios-blind/` is generated, never edited by hand. Each
 scenario named in `conformance/blind-map.json` is copied under a neutral
-name with every expectation removed -- `expect*`, `forbid_*`, comments,
-notes, section references -- so that an implementer sees stimuli only and
+name with every expectation removed (`expect*`, `forbid_*`, comments,
+notes, section references) so that an implementer sees stimuli only and
 reports what its implementation did. The mapping file stays outside the
 blind directory: scenario names describe outcomes, and leak them.
 """

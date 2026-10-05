@@ -1,8 +1,8 @@
 """An in-memory Discovery Provider (Section 12).
 
-Deliberately the simplest architecture of Section 12.3 -- a single index that
-receives projections and returns candidate references -- because the point is
-to exercise the protocol, not to demonstrate a privacy-preserving retrieval
+The simplest architecture of Section 12.3, a single index that receives
+projections and returns candidate references, chosen because the aim is to
+exercise the protocol; it does not demonstrate a privacy-preserving retrieval
 mechanism. Section 24.11 applies in full: a provider sees every projection and
 query it serves, and this one is no exception.
 
@@ -72,8 +72,8 @@ class InMemoryProvider:
     def query_candidates(self, query: DiscoveryProjection) -> list[str]:
         """Return candidate references matching a query projection.
 
-        Retrieval is deliberately coarse (Section 12.4): overlap on any
-        retrieval attribute. Section 11.6 applies -- retrieval based on a
+        Retrieval is coarse by design (Section 12.4): overlap on any
+        retrieval attribute. Section 11.6 applies: retrieval based on a
         projection is not evidence of compatibility, consent or agreement, and
         the caller must open a session to learn anything.
         """

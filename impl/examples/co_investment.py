@@ -1,16 +1,16 @@
-"""Appendix C.5: co-investment — an interdependent conditional interest.
+"""Appendix C.5: co-investment, an interdependent conditional interest.
 
 The fourth domain, and the one that presses on the boundary of GIDP 0.1.
 
 The interest here is class 4 (Section 8.4): *I will consider X if another
 party performs or commits to Y*. A family office will follow a round, but only
-if a credible lead commits first. That dependency is real, it is the whole
-substance of the interest, and the third party does not exist yet.
+if a credible lead commits first. That dependency is the substance of the
+interest, and the third party does not exist yet.
 
 GIDP 0.1 is bilateral. It can *record* the dependency and carry it forward
-honestly; it cannot discover the third party, which is what the experimental
-multi-party section is for. Running the case anyway is the point: it shows
-exactly where the bilateral core stops, and it found a gap in the
+accurately; it cannot discover the third party, which is what the experimental
+multi-party section is for. The case is run anyway because it shows where
+the bilateral core stops, and it found a gap in the
 specification while doing so (SPEC-ISSUES.md S-11).
 
     python examples/co_investment.py
@@ -69,7 +69,7 @@ def show(direction: str, message) -> None:
 
 # --------------------------------------------------------------------------
 # The family office: will follow, never lead. The ticket and the appetite
-# stay home -- naming either invites being anchored in a negotiation.
+# stay home: naming either invites being anchored in a negotiation.
 # --------------------------------------------------------------------------
 
 follower = StandingInterest(
@@ -192,13 +192,13 @@ CLAIMS = [
     Claim(
         key="valuation_ceiling",
         operator=ClaimOperator.OVERLAPS,
-        # A bucket hypothesis, not the company's own private range: Section
+        # A bucket hypothesis, distinct from the company's own private range: Section
         # 14.3 forbids a request to carry the requester's private values,
         # and the reference refuses one that does (E-01).
         value={"min": 80_000_000, "max": 100_000_000},
     ),
-    # The dependency, asked plainly. The follower answers that it has one,
-    # which tells the company the round is contingent, not assembled.
+    # The dependency, asked directly. The follower answers that it has one,
+    # which tells the company the round is contingent and not yet assembled.
     Claim(
         key="conditional_on",
         operator=ClaimOperator.INTERSECTS,
@@ -283,10 +283,10 @@ def run(verbose: bool = True) -> tuple[Agent, Agent, Wire]:
 
 def main() -> None:
     print(LINE)
-    print("Appendix C.5 — co-investment, an interdependent conditional interest")
+    print("Appendix C.5: co-investment, an interdependent conditional interest")
     print(LINE)
     print()
-    say("", "The family office will follow but never lead. Its whole interest")
+    say("", "The family office will follow but never lead. Its entire interest")
     say("", "hangs on a third party who does not exist yet.")
     print()
 
@@ -298,11 +298,11 @@ def main() -> None:
     print(LINE)
     say("Office", f"conditional_on: {follower.interest.conditional_on}")
     say("", "the session qualified, and the Opportunity is *contingent*: the")
-    say("", "dependency is recorded and carried forward, not resolved.")
+    say("", "dependency is recorded and carried forward, but not resolved.")
     say("", "finding the lead is multi-party discovery (Section 19.2),")
     say("", "which GIDP 0.1 marks experimental and this code does not implement.")
-    say("", "the honest output is a qualified but contingent Opportunity,")
-    say("", "handed to a human rather than to a negotiation protocol.")
+    say("", "the correct output is a qualified but contingent Opportunity,")
+    say("", "handed to a human and not to a negotiation protocol.")
 
     print()
     print(LINE)

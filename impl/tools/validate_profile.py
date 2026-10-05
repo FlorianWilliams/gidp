@@ -12,8 +12,8 @@ express: the rules that keep a profile from weakening the core.
   both only under its own namespace;
 - an identifying attribute is never retrievable and never required for
   qualification (identity cannot precede the qualification it would gate);
-- every name a manifest uses — required dimensions, predicate ranges,
-  granularity, budgets — is an attribute it declares;
+- every name a manifest uses (required dimensions, predicate ranges,
+  granularity, budgets) is an attribute it declares;
 - every operator is a core operator or one the manifest itself declares;
 - every joint predicate states its wire form, and every budgeted attribute
   a finite domain on its lattice, so that two implementers compute the
@@ -98,7 +98,7 @@ def validate_manifest(manifest: dict[str, Any]) -> list[str]:
     extensions = manifest.get("extensions", {})
     for key in extensions:
         if key not in EXT_KEYS:
-            e(f"extensions: unknown extension point {key!r} — intended_use "
+            e(f"extensions: unknown extension point {key!r}: intended_use "
               "and operators are the only two the specification grants "
               "(Section 26)")
     namespace = f"{profile_id}:"
@@ -138,7 +138,7 @@ def validate_manifest(manifest: dict[str, Any]) -> list[str]:
             e(f"{where}: type {typ!r} requires values")
         if typ in GENERAL_TYPES and attr.get("general_value_means") not in GENERALITY:
             e(f"{where}: general_value_means is required for type {typ!r} "
-              "(approximate_knowledge or accepted_set — the distinction "
+              "(approximate_knowledge or accepted_set; the distinction "
               "decides how a narrower claim is answered)")
         for op in attr.get("operators", []) or [None]:
             if op is None:
@@ -172,10 +172,10 @@ def validate_manifest(manifest: dict[str, Any]) -> list[str]:
             e(f"qualification.required_dimensions: {dim!r} is not a declared "
               "attribute")
         if dim in identifying:
-            e(f"qualification.required_dimensions: {dim!r} is identifying — "
+            e(f"qualification.required_dimensions: {dim!r} is identifying: "
               "qualification cannot require identity, which cannot precede it")
     if not qualification.get("opportunity_meaning"):
-        e("qualification.opportunity_meaning: required — one sentence saying "
+        e("qualification.opportunity_meaning: required, one sentence saying "
           "what a qualified Opportunity asserts under this profile")
     for i, predicate in enumerate(qualification.get("joint_predicates", [])):
         where = f"qualification.joint_predicates[{i}]"
@@ -184,8 +184,8 @@ def validate_manifest(manifest: dict[str, Any]) -> list[str]:
                 e(f"{where}: unknown field {field!r}")
         for field in PREDICATE_KEYS:
             if not predicate.get(field):
-                e(f"{where}: missing {field!r} — naming compatible_with is "
-                  "not enough, the predicate's test must be stated")
+                e(f"{where}: missing {field!r}: naming compatible_with is "
+                  "not enough; the predicate's test must be stated")
         for attr in predicate.get("over", []):
             if attr not in attributes:
                 e(f"{where}.over: {attr!r} is not a declared attribute")

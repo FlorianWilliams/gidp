@@ -3,13 +3,13 @@
 The scenario is Appendix C.1 reduced to what the comparison needs: a French
 company privately authorised to explore a German acquisition, and a German
 company that is *not for sale* but would consider a transaction if three
-conditions hold — one of which is a valuation floor it will not state, and
+conditions hold, one of which is a valuation floor it will not state, and
 one a management condition it will not state either.
 
-The reduction matters and is stated here rather than buried. Each private
+The reduction matters, so it is stated here at the top. Each private
 fact is a point drawn from a finite prior, because a mechanism-independent
 leakage measure needs a countable hypothesis space (see `measure.py`). The
-valuation floor is modelled as a bound `{"min": v}` — "not below v" — which
+valuation floor is modelled as a bound `{"min": v}` ("not below v"), which
 is how Section 15.4's illustration behaves and how the L-2 limit case probes
 it. Nothing else about the scenario is simplified.
 

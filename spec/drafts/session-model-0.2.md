@@ -121,7 +121,7 @@ of the session and recovery is a new session against the same budget.
 
 ## Qualification: roles, trigger, and emission order
 
-Four things, defined separately because conflating them is circular:
+The following are defined separately, because conflating them is circular:
 
 - **Local conditions.** Each side evaluates the entry conditions of
   Section 15.2 over the propositions *it* knows, in both directions,
@@ -188,8 +188,8 @@ active request, and does not block. A Handoff ends GIDP's
 responsibility for the interaction (Section 14.7), and an unresolved
 wait should not cross that boundary; requiring local quiescence is the
 alternative to defining the fate of an orphaned wait on the far
-side. This couples the directions by design; admission of
-requests remains per direction.
+side. This coupling of the directions is intended; admission
+of requests remains per direction.
 
 A local guard cannot see a request in transit, so emission does not
 amount to bilateral acceptance of the transfer, and the collision is

@@ -2,8 +2,8 @@
 
 Each value is something an implementation must be able to receive and handle,
 so a value nothing reaches is either a gap in the demonstration or a value
-that should not be normative. This test does not forbid either — it forbids
-the third case, where nobody decided.
+that should not be normative. This test allows both and forbids only the
+case where nobody decided.
 """
 
 from __future__ import annotations
@@ -41,7 +41,7 @@ def test_the_register_does_not_outlive_what_it_registers():
 
 
 def test_the_undemonstrated_surface_does_not_grow_silently():
-    """A ratchet, not a target. If this number rises, something was added to a
+    """A ratchet: the number may only fall. If this number rises, something was added to a
     closed vocabulary without a domain that needs it."""
     # 38 -> 41 on 25 September 2026: three values reached by nothing
     # (unreferenced 11 -> 8) became reached by the review-finding tests.

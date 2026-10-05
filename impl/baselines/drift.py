@@ -1,7 +1,7 @@
 """Does a secret that moves defeat an attacker that is throttled?
 
 A budget that refills does not separate an adversary from a customer: the
-adversary empties the bucket exactly as fast, and the window between the two
+adversary empties the bucket just as fast, and the window between the two
 is the one `separability.py` already computes. What a rate *does* change is
 that extraction now takes time, and a private value that changes over that
 time is a moving target.
@@ -13,9 +13,8 @@ written to be able to say no.
 
 Two adversaries. One knows the value drifts and widens its hypothesis space
 each period before narrowing it again. One does not, and keeps narrowing on
-answers that have gone stale. The second question turns out to be the more
-interesting one: a defence that leaves an attacker *wrong* is worth more than
-one that leaves it merely uncertain.
+answers that have gone stale. The second case matters more: a defence that
+leaves an attacker *wrong* is worth more than one that leaves it uncertain.
 """
 
 from __future__ import annotations
@@ -65,7 +64,7 @@ def run(
     periods: int, per_period: int, drift_steps: int, aware: bool, seed: int = 11
 ) -> tuple[float, bool]:
     """Returns the bits the adversary holds at the end, and whether its best
-    guess is actually right."""
+    guess is right."""
     rng = random.Random(seed)
     floor = 45_000_000
     alive = set(GRID)
@@ -85,7 +84,7 @@ def run(
             observed = _answer(floor, threshold)
             narrowed = {v for v in alive if _consistent(v, threshold, observed)}
             # A naive adversary can narrow to nothing once its beliefs are
-            # stale. It does not notice; it simply has no hypotheses left.
+            # stale. It does not notice; it has no hypotheses left.
             alive = narrowed or alive
 
     bits = log2(len(GRID)) - log2(max(len(alive), 1))
@@ -102,7 +101,7 @@ def main() -> None:
     print()
     print(f"The floor is one of {len(GRID)} values, {total:.2f} bits. The adversary is")
     print("allowed a few questions per period and the value drifts between")
-    print("periods. Twelve periods — a year, if a period is a month.")
+    print("periods. Twelve periods: a year, if a period is a month.")
     print()
     print(
         f"{'questions/period':>17} {'drift/period':>14} "
@@ -128,7 +127,7 @@ def main() -> None:
     print("and nothing else, which is what the arithmetic said before the")
     print("simulation ran.")
     print()
-    print("Drift changes the shape rather than the amount. An adversary that")
+    print("Drift changes the shape; the amount stays. An adversary that")
     print("knows the value moves must widen its hypotheses every period, and")
     print("what it narrows it loses again; the residue is the fixed point of")
     print("those two operations and it does not go to zero. The formula is")
@@ -136,9 +135,9 @@ def main() -> None:
     print("questions allowed and only linear in the drift: halving the rate is")
     print("worth far more than doubling how fast the secret moves.")
     print()
-    print("The naive column is the one worth taking away. An adversary that")
+    print("The naive column is the main result. An adversary that")
     print("keeps narrowing on answers that have gone stale does not end up")
-    print("uncertain, it ends up confident and wrong — and an adversary acting")
+    print("uncertain; it ends up confident and wrong, and an adversary acting")
     print("on a wrong valuation floor is in a worse position than one that")
     print("knows it does not know. Nothing in this protocol produces that")
     print("effect; a Principal who revises its thresholds does.")

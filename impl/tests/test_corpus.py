@@ -3,7 +3,7 @@
 Each scenario in `conformance/scenarios/` is implementation-independent
 JSON; `corpus_runner` is this implementation's interpreter for it. An
 independent implementation writes its own interpreter and runs the same
-files -- that, not this suite, is the test the corpus exists for. This
+files; that run, and not this suite, is the test the corpus exists for. This
 test guarantees the weaker, necessary property: the corpus and the
 reference implementation agree.
 """

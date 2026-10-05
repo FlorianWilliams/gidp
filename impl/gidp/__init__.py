@@ -1,7 +1,7 @@
 """Reference implementation of Graduated Interest Disclosure (GIDP) 0.1.
 
-This package exists to test the specification, not to ship a product. It
-implements the bilateral core under the `core` profile and deliberately omits
+This package exists to test the specification; it is not a product. It
+implements the bilateral core under the `core` profile and omits
 multi-party discovery, transport bindings and all cryptography: GIDP 0.1
 requires none of these, and a toy version of any of them would misrepresent
 what the protocol guarantees.

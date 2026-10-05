@@ -1,9 +1,9 @@
 """Protocol objects of GIDP 0.1, Section 14, plus the local objects of 9-11.
 
-Field names follow the specification exactly. Required fields are required
+Field names follow the specification's spelling. Required fields are required
 here; where the specification leaves a field optional it is optional here.
 
-Two conventions worth stating because they are enforced below:
+Two conventions are enforced below:
 
 * Every transmitted object carries ``type``, ``version`` and ``expires_at``,
   and every object except ``DiscoveryProjection`` carries ``session_id``.
@@ -47,7 +47,7 @@ from .vocab import (
 
 
 class Strict(BaseModel):
-    """Base model: unknown fields are an error rather than silently dropped.
+    """Base model: unknown fields are an error and are never silently dropped.
 
     An implementation that accepts unknown fields cannot detect a peer using a
     vocabulary GIDP 0.1 froze (Section 26), so extra fields are forbidden.
@@ -264,7 +264,7 @@ class SessionOpen(Request):
     features: list[Feature] = Field(default_factory=list)
     trust_context: dict[str, Any] | None = None
     #: Section 14.1: the provider-assigned reference under which the
-    #: responder's projection was retrieved -- the routing key for an
+    #: responder's projection was retrieved: the routing key for an
     #: endpoint that represents several Standing Interests. Opaque to the
     #: initiator; it reveals nothing the projection had not exposed.
     projection_ref: str | None = None
@@ -352,7 +352,7 @@ class CompatibilityResponse(Response):
     # Section 14.3: the responder's own communicable contingencies, under the
     # rule of Section 14.6 (names if the policy transmits them, the token
     # ``undisclosed`` if it withholds them, nothing for ``never``). The
-    # initiator merges these into the Opportunity -- it cannot know them
+    # initiator merges these into the Opportunity, since it cannot know them
     # otherwise (Section 14.6).
     contingent_on: list[str] = Field(default_factory=list)
 
@@ -399,7 +399,7 @@ class ConsentRequest(Request):
     action: ConsentAction
     scope: list[str] = Field(default_factory=list)
     reciprocal: bool = False
-    #: MUST be false in GIDP 0.1. The field is required rather than omitted so
+    #: MUST be false in GIDP 0.1. The field is required, not omitted, so
     #: that the absence of commitment is explicit on the wire (Section 14.5).
     binding_commitment: Literal[False] = False
 
@@ -429,7 +429,7 @@ class Opportunity(SessionScoped):
     open_conditions: list[str] = Field(default_factory=list)
     #: Dependencies named in either side's `conditional_on` that the session
     #: did not resolve (Section 14.6). A non-empty list means the Opportunity
-    #: is contingent on something outside it -- typically a third party that
+    #: is contingent on something outside it, typically a third party that
     #: bilateral discovery cannot find.
     contingent_on: list[str] = Field(default_factory=list)
     identity_status: dict[str, IdentityStatus] = Field(default_factory=dict)

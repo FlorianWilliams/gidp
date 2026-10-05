@@ -1,9 +1,9 @@
-"""The four limit cases, kept honest.
+"""The four limit cases, kept current.
 
 Each of these asserts that a *known boundary still behaves as documented* in
-LIMITS.md. If one of them starts to pass differently -- if a future change
-makes an identity-first flow possible, say -- the test fails and LIMITS.md is
-out of date, which is exactly when it is most dangerous.
+LIMITS.md. If one of them starts to pass differently (if a future change
+makes an identity-first flow possible, say), the test fails and LIMITS.md is
+out of date, which is when it is most dangerous.
 """
 
 from __future__ import annotations
@@ -67,7 +67,7 @@ def test_l3_reciprocity_is_asymmetric_under_asymmetric_exposure():
 
 
 def test_l4_identity_cannot_precede_probing():
-    """L-4: the ordering of the ladder is enforced, not conventional."""
+    """L-4: the ordering of the ladder is enforced, and is more than a convention."""
     interest = StandingInterest(
         id="local:si",
         principal_ref="local:principal",

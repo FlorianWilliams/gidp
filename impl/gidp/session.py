@@ -2,18 +2,18 @@
 
 0.1 encoded three different things in one state: the session's *phase*, the
 *request in flight*, and the *consents and evaluation*. Every reviewer found
-the seams — the ``_RETURN`` bookkeeping that remembered where a request was
-asked from, the special case for a qualification reached mid-wait, the
+the seams: the ``_RETURN`` bookkeeping that remembered where a request was
+asked from, the special case for a qualification reached mid-wait, and the
 grant-before-qualification exception. This module is the 0.2 refactoring the
 reviews converged on. ``Session`` now holds:
 
-- **phase** — the monotonic life of the session:
+- phase: the monotonic life of the session,
   ``REQUESTED → EXPLORING → QUALIFIED → HANDED_OFF``, with ``CLOSED``
   reachable from anywhere. A disclosure or a consent never changes it.
-- **pending** — the request in flight (at most one at a time per view,
+- pending: the request in flight (at most one at a time per view,
   which is 0.1's concurrency rule made explicit). Answering a request
   clears it; the phase was never moved, so nothing needs restoring.
-- **evaluation and consents** — standing propositions, the peer's reported
+- evaluation and consents: standing propositions, the peer's reported
   status, granted consents (held by the Agent), dependencies.
 
 The 0.1 wire states remain as a **derived view** (the ``state`` property):
@@ -24,7 +24,7 @@ in 0.1 fall out of the shape: a disclosure returns the session to the stage
 it was asked from *because the phase never left it*; a qualification reached
 mid-wait defers to the return *because qualification requires the pending
 axis empty and recomputes then*; an ``incompatible`` closes mid-wait
-*because closing reads the evaluation axis, not the pending one*.
+*because closing reads the evaluation axis and ignores the pending one*.
 
 The state is held per session and per direction of request: each Agent
 tracks the requests it has sent, so both Agents may hold an outstanding
@@ -68,7 +68,7 @@ class ProtocolError(Exception):
 
 
 class Phase(str, enum.Enum):
-    """The session's monotonic life — one of the three axes."""
+    """The session's monotonic life, one of the three axes."""
 
     REQUESTED = "requested"
     EXPLORING = "exploring"
@@ -77,7 +77,7 @@ class Phase(str, enum.Enum):
     CLOSED = "closed"
 
 
-#: The pending axis is keyed per direction — Section 17.2 holds state per
+#: The pending axis is keyed per direction. Section 17.2 holds state per
 #: side *and per direction of request*, so an Agent whose own consent is
 #: awaiting the peer Principal's decision can still receive and answer a
 #: disclosure the peer asks meanwhile. Within one direction, at most one
@@ -104,7 +104,7 @@ class JointPredicate:
     or, for `both_directions`, in each direction on the same value: one
     side's acceptance of a candidate proves nothing about the other's
     (the buyer-at-80 / seller-at-90 trap). `conditionally_compatible` does
-    not satisfy it: a coarsened answer is exactly the information the
+    not satisfy it: a coarsened answer withholds the information the
     predicate exists to establish (E-11).
     """
 
@@ -127,15 +127,15 @@ class Session:
     features: set = field(default_factory=set)
     close_reason: CloseReason | None = None
 
-    #: Axis 1 — the phase. None until a SessionOpen is seen.
+    #: Axis 1: the phase. None until a SessionOpen is seen.
     phase: Phase | None = None
-    #: Axis 2 — the requests in flight, keyed by direction (SENT for
+    #: Axis 2: the requests in flight, keyed by direction (SENT for
     #: requests this side asked, RECEIVED for requests it was asked), each
     #: holding PENDING_DISCLOSURE or PENDING_CONSENT.
     pending_requests: dict[str, str] = field(default_factory=dict)
     #: Axis 3 (consents): the directions (SENT/RECEIVED) in which a
-    #: consent was granted after qualification — what the 0.1 wire view
-    #: calls CONSENTED, per directional view. The phase is read before the
+    #: consent was granted after qualification (what the 0.1 wire view
+    #: calls CONSENTED, per directional view). The phase is read before the
     #: grant is processed, so a pre-qualification grant that unblocks a
     #: deferred qualification never becomes retrospectively
     #: post-qualification.
@@ -143,8 +143,8 @@ class Session:
     #: Unanswered propositions, in either direction: a claim of ours whose
     #: request expired with no terminal, or a claim we received and hold
     #: for a PROBE approval (Section 16.3). They are unresolved, block
-    #: qualification on the side that records them — a question that went
-    #: unanswered must not make a session qualifiable — and clear when
+    #: qualification on the side that records them (a question that went
+    #: unanswered must not make a session qualifiable), and clear when
     #: superseded (the one extension 0.2 makes to supersedes).
     unanswered: set[str] = field(default_factory=set)
 
@@ -196,10 +196,10 @@ class Session:
     def state_of(self, direction: str) -> SessionState | None:
         """The faithful 0.1 projection of ONE directional view (17.2).
 
-        This, not the aggregate below, is what reproduces the 0.1 table:
-        each direction's view moves on its own requests and its own
-        grants. Admission never reads a projection — the guards read the
-        axes — so neither projection can mask an admissible event.
+        This projection, and not the aggregate below, reproduces the 0.1
+        table: each direction's view moves on its own requests and its own
+        grants. Admission never reads a projection (the guards read the
+        axes), so neither projection can mask an admissible event.
         """
         if self.phase is None:
             return None
@@ -225,8 +225,8 @@ class Session:
     @property
     def state(self) -> SessionState | None:
         """An aggregate display view: this side's own sent request first,
-        a received one otherwise. A convenience, not the 0.1 projection —
-        ``state_of(direction)`` is — and never a basis for admission.
+        a received one otherwise. It is a convenience and never a basis for
+        admission; the 0.1 projection is ``state_of(direction)``.
         """
         own = self.state_of(SENT)
         if own in (SessionState.DISCLOSURE_PENDING, SessionState.CONSENT_PENDING):
@@ -300,9 +300,9 @@ class Session:
     def _begin_pending(self, kind: str, direction: str) -> None:
         """Open the pending axis: one request in flight per direction.
 
-        The phase does not move — a disclosure or a consent is a request
-        made *within* a stage, not a stage of its own (Section 17.2) — so
-        there is nothing to remember and nothing to restore on the answer.
+        The phase does not move. A disclosure or a consent is a request
+        made *within* a stage and is not a stage of its own (Section 17.2),
+        so there is nothing to remember and nothing to restore on the answer.
         The directions are independent (Section 17.2): a request received
         while one's own is awaiting the peer is admitted.
         """
@@ -393,10 +393,10 @@ class Session:
         """A claim may withdraw only an answered claim of its own sender, and
         never one answered `incompatible` (S-24).
 
-        The second rule is the one that matters. A known contradiction closes
+        The second rule matters more. A known contradiction closes
         the session (Section 17.2); letting its asker withdraw it and ask a
-        neighbouring value instead would make bisection -- the attack of
-        Section 24.3 -- a supported feature of the protocol.
+        neighbouring value instead would make bisection (the attack of
+        Section 24.3) a supported feature of the protocol.
         """
         for claim_id in claim_ids:
             proposition = f"{direction}:{claim_id}"
@@ -484,7 +484,7 @@ class Session:
         later names a discharged request and is refused by correlation.
         For a CompatibilityRequest, each of its claims becomes an
         unresolved proposition that blocks qualification until superseded
-        (Section 14.2, the 0.2 extension) — expiring an awkward question
+        (Section 14.2, the 0.2 extension), because expiring an awkward question
         must not make the session qualifiable.
         """
         kind = self.open_requests.get(request_id)
@@ -510,9 +510,9 @@ class Session:
         """The emitter's side of the quiescence barrier (0.2 semantics).
 
         A local guard, scoped as such: both pending slots empty and no
-        locally known active CompatibilityRequest in either direction --
-        an own question still undischarged, or a received question held
-        unanswered. An expired-but-unsuperseded proposition is an
+        locally known active CompatibilityRequest in either direction
+        (an own question still undischarged, or a received question held
+        unanswered). An expired-but-unsuperseded proposition is an
         evaluation fact, not an active request, and does not block. The
         guard cannot see a request in transit; emission is therefore NOT
         a bilateral acceptance of the transfer, and the collision is
@@ -571,7 +571,7 @@ class Session:
             return SessionStatus.POTENTIALLY_COMPATIBLE
 
         # Section 17.2: while a disclosure or consent is pending, the status
-        # is not yet reported qualifying -- it is recomputed when the
+        # is not yet reported qualifying; it is recomputed when the
         # pending axis empties, over the propositions then standing, so
         # that status, phase and Opportunity advance together.
         if self.phase is not Phase.EXPLORING or self.pending_requests:
@@ -586,8 +586,8 @@ class Session:
         qualifies = (
             bool(values)
             and not self.outstanding_requires
-            # A question of ours that has no answer yet -- held for a PROBE
-            # approval, say (Section 16.3) -- is an unresolved proposition,
+            # A question of ours that has no answer yet (held for a PROBE
+            # approval, say; Section 16.3) is an unresolved proposition,
             # and an Opportunity must not be emitted over it. Expiry
             # discharges the request without making it a result (S-59).
             and "CompatibilityRequest" not in self.open_requests.values()
@@ -595,7 +595,7 @@ class Session:
             and ClaimResult.COMPATIBLE in values
             and all(v in qualifying for v in values)
             # Section 15.2: the profile's qualification requirements enter
-            # the entry conditions directly -- a required dimension nobody
+            # the entry conditions directly: a required dimension nobody
             # has examined blocks the transition however positively the
             # examined ones answered.
             and self.required_dimensions <= covered
@@ -610,7 +610,7 @@ class Session:
         produces the Opportunity (Sections 14.6, 17.2). ``status()`` already
         requires the pending axis empty and the phase EXPLORING, so a
         qualification reached mid-wait defers and is recomputed at the
-        return by construction.
+        return.
         """
         if self.status() is not SessionStatus.POTENTIALLY_COMPATIBLE:
             return False
@@ -625,8 +625,8 @@ class Session:
             # peer_status None; on the wire every result arrives with a
             # report, so None never occurs in a real exchange.
             # Section 14.6: qualification is the conjunction of both sides'
-            # entry conditions. The responder confirms its own -- profile
-            # requirements included -- through the status it reports, and
+            # entry conditions. The responder confirms its own (profile
+            # requirements included) through the status it reports, and
             # the initiator does not emit until that report qualifies.
             return False
         self.phase = Phase.QUALIFIED
@@ -693,7 +693,7 @@ class Session:
         dependencies were stated by the peer and travel as they are. This
         side's own travel by name only if its policy permits it; otherwise a
         single ``undisclosed`` marks the Opportunity as contingent without
-        saying on what -- the fact of contingency is a result derived from an
+        saying on what. The fact of contingency is a result derived from an
         evaluation-only attribute, which `evaluation_only` permits. A `never`
         dependency leaves no trace, because a flag that exists only because
         of it would be a transmitted result produced from it.

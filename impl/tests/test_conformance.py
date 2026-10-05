@@ -4,8 +4,8 @@ One test per criterion, named after it, so that a third party can run this
 suite against their own implementation: "third-party implementation" means
 something verifiable only if there is a suite to point at.
 
-The deployment requirement of 23.2 -- publishing a threat model -- is not
-testable by code and is deliberately absent.
+The deployment requirement of 23.2, publishing a threat model, is not
+testable by code and is left out on purpose.
 """
 
 from __future__ import annotations
@@ -118,12 +118,12 @@ def test_criterion_1_the_four_situations_of_section_8_all_run():
 
     The criterion says a conforming implementation must be able to represent
     all four classes of Conditional Interest, and the specification adds that
-    they differ in *what is hidden*, not in protocol mechanics. The earlier
-    reading of this — verified "by local inspection", then by a field on the
-    object — was the wrong one twice over: the protocol defines no such field,
+    they differ in *what is hidden* and share the protocol mechanics. The
+    earlier reading of this (verified "by local inspection", then by a field
+    on the object) was wrong on both counts: the protocol defines no such field,
     and inspection is not verification.
 
-    What the criterion actually promises is that the same machinery serves all
+    What the criterion promises is that the same machinery serves all
     four situations and that the difference between them is policy. So build
     the four, run each, and check both halves.
     """
@@ -655,7 +655,7 @@ def test_a_stated_retention_is_an_obligation_not_advice():
     an obligation must not proceed as though it had.
 
     Before this rule the `retention` field was two SHOULDs facing each other
-    — state it, honour it — which is advice whatever it is called.
+    (state it, honour it), which is advice whatever it is called.
     """
     from gidp.vocab import Retention
 
@@ -668,7 +668,7 @@ def test_a_stated_retention_is_an_obligation_not_advice():
 
     # A fresh session: a second DisclosureRequest on the same one is refused
     # by the state machine, which would let this test pass for a reason that
-    # has nothing to do with retention. The mutation check found exactly that.
+    # has nothing to do with retention. The mutation check found that case.
     b, _ = _pair()
     with pytest.raises(ProtocolError, match="discharge retention"):
         b.request_disclosure(
@@ -698,7 +698,7 @@ def test_approval_required_authority_is_not_silently_ignored():
     """Section 16.2: where a level is `approval_required`, the response MUST
     be `pending_principal_approval`.
 
-    Authority and the Disclosure Policy are different axes — the first says
+    Authority and the Disclosure Policy are different axes: the first says
     whether the Agent may perform a category of action, the second which
     attributes need a decision. The implementation consulted only the second,
     so a Principal who said "ask me before disclosing anything" was obeyed for
@@ -757,7 +757,7 @@ def test_a_held_value_answers_for_everything_it_is_part_of():
 
 def test_a_narrower_question_than_the_value_held_is_undeterminable():
     """The asymmetry. A German company may or may not be in Munich, and it
-    has not said which — so `unknown`, never `incompatible`."""
+    has not said which, so `unknown`, never `incompatible`."""
     assert _ask(["germany"], ["munich"]) is None
 
 

@@ -54,8 +54,8 @@ state every level their outcome depends on.
 | `{"handoff": {"from", "target", "expect_error"?, "expect_recipient_error"?}}` | `target` is the Section 14.7 object (`{"kind": "protocol", "protocol_ref": …}`); a handoff consent's scope names its `protocol_ref`. `expect_error: true`: the implementation must refuse to emit. `expect_recipient_error: true`: the recipient must refuse it. |
 
 Matching is **partial**: fields a step does not name are unconstrained.
-`forbid_substrings` is the negative space: the corpus's way of saying a
-private value must leave no trace, whatever the object's other content.
+`forbid_substrings` is how the corpus states that a private value must
+leave no trace, whatever the object's other content.
 
 **`notes`** ties the scenario to the sections of `spec/GIDP-0.1.md` (or of the 0.2
 session-model draft) it exercises.

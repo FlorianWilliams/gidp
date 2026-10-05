@@ -18,7 +18,7 @@ together.
 
 Two Agents in the same process can run a complete discovery, from publishing a
 projection to handing a qualified Opportunity to a human. That is the unit the
-specification defines, and this code implements that unit by design.
+specification defines, and the unit this code implements.
 
 ## Module map
 
@@ -81,7 +81,7 @@ makes a disclosure decision reproducible.
 
 ## What a deployment must supply
 
-Five bricks are absent by design. A demonstration needs the first three; a
+Five components are absent by design. A demonstration needs the first three; a
 product needs all five.
 
 **A transport.** `transport.Wire` enforces Section 14's correlation rules
@@ -114,7 +114,8 @@ before they act on it.
 ## Deliberately absent
 
 Multi-party discovery (Section 19.2) is experimental in the specification and
-is not implemented: demonstrating an experimental section would be dishonest.
+is not implemented: implementing an experimental section here would misrepresent
+its status.
 There is no cryptography, for the reasons in
 `../spec/open-problems.md`. There is no negotiation: Section 16.1 puts even
 non-binding proposals after the Handoff, and this code stops at the Handoff.

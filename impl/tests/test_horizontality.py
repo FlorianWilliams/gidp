@@ -1,15 +1,14 @@
 """Appendix F.2, the horizontality hypothesis, checked mechanically.
 
-The specification says GIDP should not become a protocol layer merely because
+The specification says GIDP should not become a protocol layer only because
 the abstraction is appealing, and states the validation: the same core
 implementation across materially different domains, changing primarily
 vocabularies and validation rules.
 
-Two domains is not four, so this proves nothing on its own. What it does is
-make the claim falsifiable and cheap to re-check: add a third scenario, and if
-it needs an object, an operator, a disclosure class, an authority level or a
-state that the others did not, this test fails and the hypothesis is in
-trouble.
+Four domains written by one author prove little on their own. The test makes
+the claim falsifiable and cheap to re-check: add a domain, and if it needs an
+object, an operator, a disclosure class, an authority level or a state that
+the others did not, this test fails and the hypothesis is in trouble.
 """
 
 from __future__ import annotations
@@ -32,11 +31,11 @@ def _all_domains():
     """The four domains Appendix F.2 asks for.
 
     A corporate transaction, an executive appointment, a commercial
-    partnership and a financing — materially different markets, different
-    parties, different secrets. If the same objects, operators and results
+    partnership and a financing: materially different markets, with different
+    parties and different secrets. If the same objects, operators and results
     carry all four, the horizontality hypothesis has survived its first real
     test. It is not proof: four is the threshold the specification set for
-    itself, not a law of nature.
+    itself, and nothing more general.
     """
     return {
         "cross-border transaction": run_cross_border()[2],
@@ -98,7 +97,7 @@ def test_no_domain_needed_a_value_outside_the_closed_vocabularies():
 
 
 def test_every_domain_uses_the_core_profile_only():
-    """Three domains, one profile: the differences are policy, not protocol."""
+    """Four domains, one profile: the differences are in policy, and the protocol is shared."""
     for wire in _all_domains().values():
         for _, message in wire.transcript:
             profile = getattr(message, "profile", None)
@@ -107,7 +106,7 @@ def test_every_domain_uses_the_core_profile_only():
 
 
 def test_the_difference_between_domains_is_policy_not_protocol():
-    """The two Principals differ in what they keep local, not in mechanics."""
+    """The two Principals differ in what they keep local; the mechanics are the same."""
     from cross_border import a_interest, b_interest
 
     domains = {
@@ -121,7 +120,7 @@ def test_the_difference_between_domains_is_policy_not_protocol():
             for cls in interest.disclosure_policy.attributes.values():
                 assert cls.surface in set(Surface), name
                 assert cls.gate in set(Gate), name
-        # Every domain keeps something evaluation-only: that is the point.
+        # Every domain keeps something evaluation-only, which is what this checks.
         assert any(
             interest.class_of(key).surface is Surface.LOCAL
             for interest in interests

@@ -1,11 +1,11 @@
 """The Disclosure Policy engine (Sections 10, 11, 14.1).
 
-This module is deliberately separable from everything else: given a Standing
+This module is separable from everything else by design: given a Standing
 Interest, a session depth and a request, it decides what may leave the Agent,
 and it decides it the same way every time. Conformance criterion 3 of Section
-23.2 -- that the decision to transmit an object be reproducible from the
-Standing Interest, the Disclosure Policy and the session state alone -- is
-testable precisely because nothing here consults anything else.
+23.2 (that the decision to transmit an object be reproducible from the
+Standing Interest, the Disclosure Policy and the session state alone) is
+testable because nothing here consults anything else.
 
 Nothing in this module asks a model, a network or a clock.
 """
@@ -149,9 +149,9 @@ def derive_projection(
     trust domain it MAY additionally contain ``network`` attributes. A
     projection MUST NOT contain Principal identity.
 
-    Rather than filter silently, a source attribute whose class forbids
-    publication raises: silent filtering hides a policy error from the author
-    of the policy, which is exactly how an interest leaks in production.
+    A source attribute whose class forbids publication raises instead of
+    being filtered out: silent filtering hides a policy error from the author
+    of the policy, which is how an interest leaks in production.
     """
     permitted = {Surface.PUBLIC, Surface.DISCOVERY}
     if inside_trust_domain:

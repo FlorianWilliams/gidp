@@ -2,11 +2,11 @@
 
 The corpus is implementation-independent; this module is the *reference
 implementation's* interpreter for it. An independent implementation writes
-its own — the grammar is documented in `conformance/README.md` — and the
+its own (the grammar is documented in `conformance/README.md`), and the
 corpus is the contract between the two.
 
 The interpreter maps each step onto the public Agent API and asserts the
-scenario's expectations. It deliberately touches nothing private: if a
+scenario's expectations. It touches nothing private, by intent: if a
 scenario cannot be expressed through the public API, that is a finding
 about the API.
 """

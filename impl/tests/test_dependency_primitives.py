@@ -61,7 +61,7 @@ def test_an_empty_list_answers_unknown_not_absent():
 
 
 def test_features_in_force_are_the_intersection_not_an_echo():
-    """Section 14.1: SessionAccept carries the features actually supported."""
+    """Section 14.1: SessionAccept carries the features supported by both sides."""
     a = Agent(ref="a", standing_interest=partnership.logistics)
     b = Agent(
         ref="b", standing_interest=partnership.brokerage, supported_features=set()

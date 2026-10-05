@@ -2,11 +2,11 @@
 
 Section 26 of the specification freezes these vocabularies for version 0.1:
 an implementation MUST NOT add values to them. Defining them once, here, as
-enumerations means the freeze is enforced by the type system rather than by
-prose. The two deliberate extension points -- domain profiles and future
-versions of the specification -- live outside this module.
+enumerations means the freeze is enforced by the type system and does not
+depend on prose. The two intended extension points, domain profiles and future
+versions of the specification, live outside this module.
 
-Every name below is spelled exactly as the specification spells it.
+Every name below is spelled as the specification spells it.
 """
 
 from __future__ import annotations
@@ -14,10 +14,8 @@ from __future__ import annotations
 from enum import Enum
 from typing import Final
 
-#: Object version token. The short form is ``gidp`` rather than ``gidp``
-#: because ``gidp`` is the established abbreviation of the IPFS Content
-#: Identifier and would be misread in the ecosystems this protocol sits in
-#: (GIDP 0.1 Section 14).
+#: Object version token: the protocol's acronym in lower case (GIDP 0.1
+#: Section 14).
 VERSION: Final = "gidp/0.1"
 
 PROFILE_CORE = "core"

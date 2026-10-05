@@ -2,7 +2,7 @@
 
 Four of them exist already and are what a reviewer will propose instead of
 this protocol. The fifth is this protocol. Each is given the same scenario,
-the same facts, and the same yardstick, and each reports three things: what
+the same facts, and the same yardstick, and each reports what
 it concluded, what it leaked and to whom, and what it structurally cannot
 express.
 
@@ -220,11 +220,11 @@ def sealed_one_shot() -> Outcome:
         cannot=[
             "finding the counterparty in the first place",
             "agreeing the predicate without stating the dimensions",
-            "reporting which dimensions are open rather than a single bit",
+            "reporting which dimensions are open instead of a single bit",
             "answering conditionally, so that a near miss can be repaired",
         ],
         remark=(
-            "The honest winner on leakage, and it answers a question the "
+            "The winner on leakage, and it answers a question the "
             "parties must already have found each other to ask. It settles a "
             "comparison; it does not perform discovery."
         ),
@@ -237,7 +237,7 @@ def sealed_one_shot() -> Outcome:
 
 
 def private_set_intersection() -> Outcome:
-    """Real intersection of the categorical attributes, honestly scored.
+    """Real intersection of the categorical attributes, scored fairly.
 
     The information profile of an ideal PSI: both sides learn the exact
     intersection of the sets they submitted, and nothing about the rest.
@@ -293,8 +293,8 @@ HONEST_CLAIMS = [
         operator=ClaimOperator.OVERLAPS,
         value={"min": 0, "max": A_BUDGET_CEILING},
     ),
-    # A can live with either of two conditions, so it asks for both rather
-    # than guessing one -- an honest querent states its whole acceptance set.
+    # A can live with either of two conditions, so it asks for both instead
+    # of guessing one: an honest querent states its whole acceptance set.
     Claim(
         key="management_condition",
         operator=ClaimOperator.INTERSECTS,
@@ -328,13 +328,13 @@ def _replay(ledger: Ledger, claims: list[Claim], note: str) -> None:
             )
 
 
-def cid_honest() -> Outcome:
+def gidp_honest() -> Outcome:
     """A counterparty that asks what it needs and stops."""
     ledger = _ledger()
     # Identity is consented only after qualification, so the counterparty
     # learns who it is talking to. The provider that held the projection
     # learned that *an* interest exists behind an opaque endpoint, which is
-    # not the same fact and is therefore not scored here -- see the remark.
+    # not the same fact and is therefore not scored here (see the remark).
     ledger.reveal(COUNTERPARTY, B_EXISTS, "identity consented after qualification")
     ledger.reveal(COUNTERPARTY, A_EXISTS, "likewise")
     _replay(ledger, HONEST_CLAIMS, "answered in session")
@@ -359,10 +359,10 @@ def cid_honest() -> Outcome:
     )
 
 
-def cid_adversarial(budget: int = 40) -> Outcome:
+def gidp_adversarial(budget: int = 40) -> Outcome:
     """The same protocol against a counterparty that probes.
 
-    This is the number that matters. A comparison that reported only the
+    This is the deciding number. A comparison that reported only the
     honest run would be measuring our own good intentions.
     """
     ledger = _ledger()
@@ -416,6 +416,6 @@ MECHANISMS = (
     public_posting,
     sealed_one_shot,
     private_set_intersection,
-    cid_honest,
-    cid_adversarial,
+    gidp_honest,
+    gidp_adversarial,
 )

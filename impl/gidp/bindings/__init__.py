@@ -1,1 +1,1 @@
-"""Transport bindings. GIDP defines objects, not a wire (Section 22)."""
+"""Transport bindings. GIDP defines objects and leaves the wire to bindings (Section 22)."""

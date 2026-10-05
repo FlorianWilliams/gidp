@@ -1,15 +1,15 @@
 """The Appendix C.1 scenario, replayed as a test.
 
 The example prints a transcript for a human; this replays the same exchange
-and asserts the property the whole protocol exists for: **an Agent never
-transmits a value classified `local`**, across a complete session, in any
+and asserts the property the protocol exists for: an Agent never
+transmits a value classified `local`, across a complete session, in any
 object, in any field.
 
-Note the shape of that claim, which the first version of this test got wrong
-and which is worth stating precisely. The guarantee is *per sender*: it is not
-that the string never appears on the wire, because a querent may name a
-candidate value in a claim — asking "is `founder_operational` compatible?"
-necessarily puts that string in the request. What the protocol guarantees is
+The first version of this test got the shape of that claim wrong. The
+guarantee is *per sender*. It does not say that the string never appears on
+the wire, because a querent may name a candidate value in a claim (asking
+"is `founder_operational` compatible?" necessarily puts that string in the
+request). What the protocol guarantees is
 that the *holder* of the value never sends it. See SPEC-ISSUES.md S-09.
 
 A reviewer who reads nothing else should read this test.
@@ -149,7 +149,7 @@ def test_a_querent_may_name_a_value_the_holder_never_confirms():
     A asks whether `founder_operational` is compatible. That string is on the
     wire because A put it there. B answers `conditionally_compatible`, which
     asserts nothing, and never transmits its own value. A learns that its guess
-    is not ruled out -- which is exactly the inference channel of Section 24.3.
+    is not ruled out, which is the inference channel of Section 24.3.
     """
     _, _, wire = _run()
     asked = json.dumps(

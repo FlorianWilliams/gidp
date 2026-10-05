@@ -43,9 +43,9 @@ external review of the specification, read without the code; six by the
 second, which re-read the corrected text; fourteen by the third round, which
 comprised the same reviewer's third pass and a second reviewer's first, fresh
 reading; two by the first reviewer's fourth pass; seven by the second
-reviewer's second reading; and nine by a third fresh reading.
+reviewer's second reading; and nine by a third fresh reading. Every review before publication, adversarial or external, was carried out by a large language model given the text without its history; human review begins with publication.
 
-The external review matters for what it found. Three of its findings were normative contradictions that
+Three of the first external review's findings were normative contradictions that
 no implementation could satisfy without inventing behaviour: a consent the
 session needed could not be asked for (S-22), a required field forced the
 transmission of a dependency the Disclosure Policy protected (S-23), and a
@@ -86,8 +86,8 @@ The first reviewer's fourth pass closed the round with two consistency fixes (S-
 qualification is recomputed at the return to PROBING rather than
 remembered from mid-wait (fixing this surfaced that the status-kept
 rule of S-35 had existed only in prose), and a claim on an identity
-attribute is declined without reveal_identity consent, closing the third
-door after S-33's two. The reviewer then judged the version fit to
+attribute is declined without reveal_identity consent, closing a third
+route to identity before qualification after the two S-33 closed. The reviewer then judged the version fit to
 stabilise and submit to implementers.
 
 The fresh reviewer's second reading (S-49 to S-55) withdrew its earlier
@@ -95,7 +95,7 @@ criticisms and asked for consistency between the new rules: a profile's
 minimum claims now enter Section 15.2's entry conditions directly; the
 pending-open rule is narrowed to a not-yet-qualified,
 incompatibility-free session; PROBE under approval_required waits
-locally and answers terminally, by design without a provisional;
+locally and answers terminally, with no provisional answer;
 "reciprocal" is defined as sequential exchange, initiator first, expiry
 as explicit failure; a profile may type a general value as an accepted
 set; projection routing is closed end to end; and the
@@ -138,8 +138,8 @@ partition of the responder's possible values is unchanged. Sections 15.4, 15.5
 and 24.3 were corrected before publication, and Section 24.3 now names the two
 controls that do bound adaptive inference: a granularity lattice, which caps
 the resolution of any answer, and an information budget, which refuses a claim
-whose worst-case answer would cost more bits than the budget allows. Counting
-claims was itself the error: an honest question over a wide band costs a
+whose worst-case answer would cost more bits than the budget allows. The error
+was to count claims: an honest question over a wide band costs a
 fraction of a bit, while a bisecting question costs a full bit by
 construction, so a budget denominated in questions cannot separate the two.
 The measurements are in `spec/alternatives.md`.

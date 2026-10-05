@@ -10,7 +10,7 @@ Each case follows the same template so that the invariant structure is visible:
 - **Hidden interest**: what neither side wants to publish.
 - **Private conditions**: attributes of surface `local` (`evaluation_only` or `never`, GIDP 0.1 Section 10).
 - **Why public discovery fails**: the circularity that GIDP addresses.
-- **GIDP interaction**: projection → retrieval → compatibility → disclosure → consent → handoff.
+- **GIDP interaction**: projection, then retrieval, compatibility, disclosure, consent and handoff, in that order.
 - **Resulting Opportunity**: what is handed off, and what was never revealed.
 
 The four classes of Conditional Interest (GIDP 0.1 Section 8) are abbreviated: **PCD** passive conditional demand, **CAD** confidential active demand, **PCS** private conditional supply, **ICI** interdependent conditional interest.
