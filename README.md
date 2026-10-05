@@ -75,17 +75,27 @@ attack cheaper than the one in `examples/probing.py`, a reading of the
 truthfulness rule that permits a lie, or a second implementation that disagrees
 with this one.
 
-How much rests on that question is now measured rather than asserted. A
-counterparty that spends questions instead of asking once extracts 65% of
-everything private in the worked case, in seventeen claims; the coarsening the
-specification illustrates stops none of it; and the query budget that does
-bound it is bypassed by an adversary holding several identities, which the
-specification's own threat model acknowledges. `spec/alternatives.md` has the
-numbers.
+How much rests on that question is measured rather than asserted.
+Unprotected, a counterparty that spends questions instead of asking once
+extracts 65% of everything private in the worked case, in seventeen claims,
+and the coarsening the specification illustrates stops none of it. Two
+controls the specification recommends do bound it (§24.3). An information
+budget kept per Standing Interest, and decided on the worst case over the
+answers it might give, holds a probing counterparty to under one bit of a
+five-bit secret while serving most honest counterparties; because it is kept
+per interest rather than per counterparty, an adversary holding several
+identities does not dilute it. A claim lattice caps the resolution of any
+answer outright, whatever the number of claims. A budget kept per
+counterparty, by contrast, is bypassed by multiple identities (§24.4).
+`spec/alternatives.md` has the numbers.
 
-The bounded-disclosure question in §24.3 of the specification is open: no
-result is known that bounds what an *adaptive* querent learns from a truthful
-compatibility oracle across a session. Candidate directions are in
+What remains open is narrower, and stated as such. A budget can be spent by
+an adversary, so that honest counterparties are refused: a cost in
+availability rather than in secrecy. Correlations between attributes are not
+bounded by budgets kept attribute by attribute. And no result yet says how
+good the best truthful policy can be — the open problem of §24.3: bounding
+what an *adaptive* querent learns from a truthful compatibility oracle while
+keeping it useful. Candidate directions are in
 `spec/open-problems.md`, including one that the limit cases have since
 qualified.
 
