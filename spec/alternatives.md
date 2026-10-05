@@ -38,8 +38,8 @@ might sell".
 Five facts are private: whether each side has any such interest at all, the
 German company's valuation floor, its management condition, and the French
 company's budget ceiling. Each is modelled as a point drawn from a finite
-prior — a grid of valuations in five-million steps, six plausible management
-conditions, a yes or no on existence — which totals **15.30 bits**.
+prior (a grid of valuations in five-million steps, six plausible management
+conditions, a yes or no on existence), which totals 15.30 bits.
 
 Leakage is the reduction of an observer's hypothesis space, in bits: zero
 means the observer learned nothing, 15.30 means it learned everything. The
@@ -63,25 +63,25 @@ is permanent and its audience is unbounded.
 | GIDP, honest counterparty | introduce | 6 | 4.30 b | 0 | 0 |
 | GIDP, probing counterparty | introduce | 17 | **9.94 b** | 0 | 0 |
 
-Read the first three rows together. Against a counterparty that asks what it
-needs and stops, the three mechanisms that decide the case leak roughly the
-same amount to that counterparty: 4.30, 4.66, 4.66 bits. What separates them
-is not the bit count, and a comparison that stopped at the first column would
-be measuring nothing.
+Read the intermediary, the sealed comparison and the honest GIDP rows together.
+Against a counterparty that asks what it needs and stops, these three leak
+roughly the same amount to that counterparty: 4.30, 4.66, 4.66 bits. The bit count does
+not separate them, and a comparison that stopped at the first column would
+measure nothing.
 
 **The intermediary** learns everything, exactly, permanently, and again for
-every pair it serves. This is the status quo — the banker, the headhunter, the
-corporate development team — and it works, which is why any protocol that
-cannot beat it on something is pointless. It is beaten on exactly one thing,
-and that is the second column.
+every pair it serves. This is the status quo (the banker, the headhunter, the
+corporate development team), and it works, which is why any protocol that
+cannot beat it on something is pointless. It is beaten on one thing only,
+the second column.
 
 **The listing** leaks less in total than the intermediary, and for a company
 that is not for sale it is the worst of the five, because the audience is
 unbounded and the disclosure cannot be withdrawn. The existence of the
 interest is one bit, and it is the only bit that mattered.
 
-**The ideal sealed comparison** — a secure two-party computation of an agreed
-predicate, modelled at its theoretical best — is the honest winner on leakage
+**The ideal sealed comparison** (a secure two-party computation of an agreed
+predicate, modelled at its theoretical best) is the clear winner on leakage
 among the mechanisms that decide the case. Anyone who needs a single yes or no
 and has already found their counterparty should use it rather than this
 protocol. It cannot find the counterparty, it cannot agree the predicate
@@ -95,14 +95,14 @@ not set membership. Leaking nothing about a question you cannot ask is not a
 privacy property.
 
 **GIDP** is the only one of the five that performs discovery, decides the case,
-and leaves no third party holding both secrets. That is the whole of what it
+and leaves no third party holding both secrets. That is all it
 buys, and it is narrower than the specification's prose implied.
 
 ## What it costs
 
-The last row is the one that matters. Against a counterparty that spends
+The row that matters most is the last. Against a counterparty that spends
 questions instead of asking once, the same protocol with the same answering
-policy gives up 9.94 bits in seventeen questions — sixty-five per cent of
+policy gives up 9.94 bits in seventeen questions, which is sixty-five per cent of
 everything at stake, and more than the intermediary discloses to the
 counterparty. The intermediary at least knows who it is trusting.
 
@@ -134,26 +134,26 @@ be high for a policy to be worth anything; either alone is trivial.
 Four findings, in descending order of how uncomfortable they are.
 
 **The coarsening of Section 15.4 stops no inference at all.** Its row is
-identical to the plainly truthful row in every cell. The reason is structural
+identical to the purely truthful row in every cell. The reason is structural
 rather than empirical: coarsening an affirmative answer replaces one
 deterministic result with another, so the adversary's partition of the
 hypothesis space is unchanged and the relabelling costs it nothing. The lever
 protects the *value* from being transmitted, which is real and is what
 Section 15.4 was written for, and it provides no protection against inference,
-which is what Sections 15.5 and 24.3 imply it provides. That is a defect in the
+which is what Sections 15.5 and 24.3 implied it provided. That was a defect in the
 specification, recorded as S-12 in `impl/SPEC-ISSUES.md` and corrected in the
 text before publication.
 
 **The two extreme policies leak nothing and are worthless.** Coarsening every
 local answer qualifies every counterparty, including all those that should have
 been refused; declining every local answer qualifies none. Section 24.3's
-remark that an oracle which never leaks never discriminates is no longer a
-remark.
+remark that an oracle which never leaks never discriminates is now backed by a
+measurement.
 
 **Randomisation delays and does not bound.** Answering a local claim truthfully
 half the time and coarsening it the other half holds the adversary to 3.04 bits
 at a budget of eight, where a deterministic policy has already given up
-everything — and at a budget of sixteen it has given up everything too, because
+everything. At a budget of sixteen it has given up everything too, because
 a coin flipped often enough stops hiding anything and the adversary here
 re-asks. It also costs thirty-nine points of true negative rate: a coarsened
 refusal reads as a maybe, so the session qualifies counterparties it should
@@ -165,21 +165,25 @@ open.
 **The query budget is the only lever in the sweep that bounds anything.** It is
 also the lever the L-3 limit case showed cannot be keyed to a counterparty when
 one side faces many, and a budget keyed to the asker would need the persistent
-identity this design deliberately does not carry.
+identity this design chooses not to carry.
 
 ## What this changes
 
 Nothing in the object model, the state machine or the authority ladder. One
 thing in the text: the specification no longer describes coarsening as an
-inference-limiting measure, and Section 24.3 now says plainly that the only
-mechanism in GIDP 0.1 which bounds adaptive inference is a bound on the number
-of claims, with its known weakness named.
+inference-limiting measure, and Section 24.3 now names the two controls that
+bound adaptive inference: a granularity lattice, which caps the resolution of
+any answer, and an information budget kept per Standing Interest, which
+refuses a claim whose worst-case answer would cost more bits than the budget
+allows. Counting claims, as the sweep above does, was itself the error: a
+budget denominated in questions cannot separate an honest counterparty from a
+probing one (see the last section of this document).
 
-And one thing in the argument. The claim is no longer that existing mechanisms
-cannot do this. It is that each of them gives up exactly one thing GIDP keeps —
-the intermediary gives up having no one to trust, the listing gives up privacy
-altogether, the sealed comparison and the set intersection give up discovery —
-and that GIDP keeps all of them only for as long as the counterparty's questions
+It also changes one thing in the argument. The claim used to be that existing
+mechanisms cannot do this. It is now that each of them gives up exactly one
+thing GIDP keeps (the intermediary gives up having no one to trust, the listing
+gives up privacy altogether, the sealed comparison and the set intersection give
+up discovery), and that GIDP keeps all of them only for as long as the counterparty's questions
 are bounded. Whether that bound can be made principled rather than arbitrary is
 the open problem of `open-problems.md`, and this document is the first
 measurement of how much rests on it.
@@ -196,7 +200,7 @@ cannot tell its customers from its attackers.** Section 24.3 offers query
 budgets as the defence against probing and Section 24.4 acknowledges that an
 attacker may mint counterparties to get around them. Measured, the two cancel
 exactly: an allowance of two claims per counterparty with four identities
-extracts precisely what an allowance of eight with one identity extracts. A
+extracts the same as an allowance of eight with one identity. A
 cap on the responder's *total* answered claims cannot be diluted that way and
 does bound. Whether it can also tell the two populations apart is a ratio, and
 the ratio is computable: an honest session costs one claim per attribute it
@@ -210,9 +214,9 @@ inheriting a number.
 **Minimising a projection reverses past a point.** Section 11.4 calls the
 trade-off fundamental and frames it as retrieval quality against inference
 risk. On a synthetic index of two thousand publishers and three hundred
-querents, an over-precise projection is retrieved *less* — it answers only
-querents who described the target in the same words, so naming a city hides
-you from someone who named the country — while a projection coarse enough to
+querents, an over-precise projection is retrieved *less*, since it answers only
+querents who described the target in the same words (naming a city hides
+you from someone who named the country). A projection coarse enough to
 be retrieved by everyone is retrieved by everyone, and at a session's worth of
 inference per retrieval the publisher is drained completely. The usable band
 is narrow, and the quantity that locates it is visible to the Discovery
@@ -221,7 +225,7 @@ Provider rather than to the publisher.
 **The implementation crashed on the first input nobody designed.** Property
 tests over generated Standing Interests found, at their first example, that a
 claim whose operator does not fit the shape of the private value raised an
-uncaught exception rather than answering `unknown` — which is both a denial of
+uncaught exception instead of answering `unknown`. That is both a denial of
 service available to any counterparty and an inference channel, since the
 responder's failure is a function of the shape of its own secret. Section 14.2
 now requires `unknown`. Every hand-written test had passed, because an author
@@ -230,11 +234,11 @@ writes the claims the protocol was designed for.
 None of the three changes what GIDP does. All three change what the
 specification may claim, and the first two narrow the claim in the same
 direction the table above does: this protocol's guarantees hold against a
-counterparty whose questions are bounded — and, since these measurements were
-taken, GIDP does contain a principled way to bound them. Budgeting *information*
+counterparty whose questions are bounded. Since these measurements were
+taken, GIDP has gained a principled way to bound them. Budgeting *information*
 rather than questions, with the refusal decided from what an observer already
 knows rather than from the value, holds a probing counterparty to under a bit
 of a five-bit threshold while serving most honest ones. It needs no identity
-and no operator, so the Sybil result above does not defeat it. What it does not
-do is protect: a budget of two bits gives two bits away, to everyone, for good.
+and no operator, so the Sybil result above does not defeat it. It does not, however,
+protect: a budget of two bits gives two bits away, to everyone, for good.
 The measurement is `impl/baselines/auditing.py`.

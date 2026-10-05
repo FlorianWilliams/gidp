@@ -10,7 +10,7 @@ someone reviewing whether the structure matches what the specification says.
 ## What this code is
 
 A library, not a service. It has no network, no storage, no scheduler, no user
-interface and no identity system, and none of those are oversights — each is a
+interface and no identity system. None of those is an oversight; each is a
 decision recorded below. What it does have is the whole of the bilateral core
 of GIDP 0.1: the objects, the vocabularies, the disclosure engine, the
 compatibility semantics, the state machine, and an Agent that puts them
@@ -18,7 +18,7 @@ together.
 
 Two Agents in the same process can run a complete discovery, from publishing a
 projection to handing a qualified Opportunity to a human. That is the unit the
-specification defines, and it is deliberately the unit this code implements.
+specification defines, and this code implements that unit by design.
 
 ## Module map
 
@@ -27,25 +27,27 @@ it, which is what makes the lower layers testable without the upper ones and
 replaceable without touching them.
 
 ```text
-  examples/              six worked domains, an attack, four limit cases
+  examples/              four worked domains, a probing attack, four limit cases
   baselines/             measurement harnesses (not part of the protocol)
          │
-  gidp/agent.py       596  the protocol as a usable object: sessions, claims,
-         │                disclosures, consents, handoff, the audit trail
+  gidp/agent.py          the protocol as a usable object: sessions, claims,
+         │               disclosures, consents, handoff, the audit trail
          │
-  gidp/session.py     321  the state machine of Section 17.2, the qualification
-         │                rule of 15.2, the Opportunity of 14.6
+  gidp/session.py        the state machine of Section 17.2, the qualification
+         │               rule of 15.2, the Opportunity of 14.6
          │
-  gidp/policy.py      189  the disclosure engine (surface x gate x depth) and
-  gidp/evaluation.py  222  the claim evaluator and the truthfulness rule 15.5
+  gidp/policy.py         the disclosure engine (surface x gate x depth) and
+  gidp/evaluation.py     the claim evaluator and the truthfulness rule 15.5
+  gidp/auditing.py       what a responder declines to be asked (Section 24.3):
+         │               the granularity lattice and the bit budget
          │
-  gidp/objects.py     430  every transmitted object, as validated models
+  gidp/objects.py        every transmitted object, as validated models
          │
-  gidp/vocab.py       246  the closed vocabularies and the wire version token
+  gidp/vocab.py          the closed vocabularies and the wire version token
 
-  gidp/transport.py   126  a checking wire: correlation rules of Section 14
-  gidp/provider.py    113  an in-memory Discovery Provider (Section 12)
-  gidp/bindings/a2a.py 176 declaration, activation and carriage over A2A
+  gidp/transport.py      a checking wire: correlation rules of Section 14
+  gidp/provider.py       an in-memory Discovery Provider (Section 12)
+  gidp/bindings/a2a.py   declaration, activation and carriage over A2A
 ```
 
 `transport.py` and `provider.py` sit beside the stack rather than in it: an
@@ -58,7 +60,7 @@ The eight stages of Section 13, in the order a session runs them.
 
 | Stage | Code |
 |---|---|
-| Express a Standing Interest | `objects.StandingInterest` — held, never sent |
+| Express a Standing Interest | `objects.StandingInterest` (held, never sent) |
 | Derive and publish a projection | `policy.derive_projection` → `provider.publish_projection` |
 | Retrieve candidates | `provider.query_candidates` |
 | Open a session | `agent.open_session` / `handle_session_open` / `confirm_accept` |
@@ -69,7 +71,7 @@ The eight stages of Section 13, in the order a session runs them.
 
 Two separations carry most of the design. `evaluation` computes the *truth*
 and `choose_result` decides what to *say*, which is what makes the
-truthfulness rule checkable rather than aspirational — `assert_truthful`
+truthfulness rule checkable: `assert_truthful`
 compares the two. And `policy` decides disclosure from the Standing Interest,
 the session depth and the consents, and consults nothing else, which is what
 makes a disclosure decision reproducible.
@@ -109,8 +111,8 @@ before they act on it.
 ## Deliberately absent
 
 Multi-party discovery (Section 19.2) is experimental in the specification and
-is not implemented, on the implementation plan's own rule that demonstrating an
-experimental section is dishonest. There is no cryptography, for the reasons in
+is not implemented: demonstrating an experimental section would be dishonest.
+There is no cryptography, for the reasons in
 `../spec/open-problems.md`. There is no negotiation: Section 16.1 puts even
 non-binding proposals after the Handoff, and this code stops at the Handoff.
 
@@ -121,14 +123,14 @@ have it. It measures: `compare.py` runs the same case through four existing
 mechanisms and GIDP on one yardstick, `mitigations.py` sweeps answering
 policies against query budgets, `sybil.py` measures what a budget is worth
 against many identities, `projection.py` measures the Section 11.4 trade-off.
-`measure.py` holds the yardstick — leakage as the reduction of an observer's
+`measure.py` holds the yardstick: leakage as the reduction of an observer's
 hypothesis space, computed by enumeration, with an invariant that refuses to
 run if an observation rules out the truth.
 
 `tools/` holds three: `emit_schema.py` generates the JSON Schemas from the
 models, `vocabulary_coverage.py` reports which closed-vocabulary values nothing
-reaches, `mutation_check.py` breaks eleven guarantees one at a time and reports
-any the tests fail to notice.
+reaches, and `mutation_check.py` breaks the guarantees it lists one at a time
+and reports any the tests fail to notice.
 
 ## How to extend it
 
