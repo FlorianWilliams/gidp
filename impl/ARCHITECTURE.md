@@ -36,6 +36,9 @@ replaceable without touching them.
   gidp/session.py     321  the state machine of Section 17.2, the qualification
          │                rule of 15.2, the Opportunity of 14.6
          │
+  gidp/profile.py      34  a manifest's qualification rules: required
+         │                dimensions and joint predicates (profiles/FORMAT.md)
+         │
   gidp/policy.py      189  the disclosure engine (surface x gate x depth) and
   gidp/evaluation.py  222  the claim evaluator and the truthfulness rule 15.5
          │

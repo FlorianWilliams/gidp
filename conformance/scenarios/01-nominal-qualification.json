@@ -20,11 +20,11 @@
         "open_attribute": "session"
       },
       "authority": {
-        "PROBE": "true",
-        "DISCLOSE": "true",
-        "INTRODUCE": "true",
-        "PUBLISH_PROJECTION": "true",
-        "NEGOTIATE_NONBINDING": "true"
+        "PROBE": true,
+        "DISCLOSE": true,
+        "INTRODUCE": true,
+        "PUBLISH_PROJECTION": true,
+        "NEGOTIATE_NONBINDING": true
       }
     },
     "B": {
@@ -39,11 +39,11 @@
         "open_attribute": "session"
       },
       "authority": {
-        "PROBE": "true",
-        "DISCLOSE": "true",
-        "INTRODUCE": "true",
-        "PUBLISH_PROJECTION": "true",
-        "NEGOTIATE_NONBINDING": "true"
+        "PROBE": true,
+        "DISCLOSE": true,
+        "INTRODUCE": true,
+        "PUBLISH_PROJECTION": true,
+        "NEGOTIATE_NONBINDING": true
       }
     }
   },
@@ -88,9 +88,9 @@
       }
     },
     {
-      "qualify": {
+      "opportunities": {
         "role": "A",
-        "expect": false
+        "expect": 1
       }
     },
     {

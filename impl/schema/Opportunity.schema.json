@@ -71,11 +71,16 @@
     }
   },
   "required": [
+    "compatible_dimensions",
+    "contingent_on",
+    "evaluated_dimensions",
     "expires_at",
+    "identity_status",
+    "open_conditions",
     "session_id",
     "structure",
-    "evaluated_dimensions",
-    "compatible_dimensions"
+    "type",
+    "version"
   ],
   "title": "Opportunity",
   "type": "object",

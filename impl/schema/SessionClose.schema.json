@@ -56,8 +56,10 @@
   },
   "required": [
     "expires_at",
+    "reason",
     "session_id",
-    "reason"
+    "type",
+    "version"
   ],
   "title": "SessionClose",
   "type": "object",

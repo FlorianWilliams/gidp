@@ -1,6 +1,6 @@
 {
   "scenario": "cross-direction-requests",
-  "notes": "Section 17.2 holds state per side AND per direction of request. A's consent awaits B's Principal (provisional pending_principal_approval); B may meanwhile ask A for a disclosure in the reverse direction, and the Principal's later decision still lands where it was awaited. A single shared wait slot would wrongly refuse the middle step.",
+  "notes": "Section 17.2 holds state per side AND per direction of request. A's consent awaits B's Principal (provisional pending_principal_approval); B may meanwhile ask A for a disclosure in the reverse direction, and the Principal's later decision still lands where it was awaited. A single shared wait slot would wrongly refuse the middle step. The consent is sought over principal_identity: reveal_identity over a non-identity attribute was a corpus defect (E-05).",
   "spec": [
     "14",
     "14.5",
@@ -20,9 +20,9 @@
         "open_attribute": "session"
       },
       "authority": {
-        "PROBE": "true",
-        "DISCLOSE": "true",
-        "INTRODUCE": "true"
+        "PROBE": true,
+        "DISCLOSE": true,
+        "INTRODUCE": true
       }
     },
     "B": {
@@ -30,15 +30,17 @@
         "domain": [
           "enterprise_software"
         ],
-        "open_attribute": "value"
+        "open_attribute": "value",
+        "principal_identity": "Acme GmbH"
       },
       "policy": {
         "domain": "discovery",
-        "open_attribute": "session"
+        "open_attribute": "session",
+        "principal_identity": "session"
       },
       "authority": {
-        "PROBE": "true",
-        "DISCLOSE": "true",
+        "PROBE": true,
+        "DISCLOSE": true,
         "INTRODUCE": "approval_required"
       }
     }
@@ -87,7 +89,7 @@
         "from": "A",
         "action": "reveal_identity",
         "scope": [
-          "open_attribute"
+          "principal_identity"
         ]
       },
       "expect_consent": "pending_principal_approval"

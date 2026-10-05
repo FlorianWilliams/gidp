@@ -35,8 +35,10 @@ request at the same time without the session having two conflicting states.
 from __future__ import annotations
 
 import enum
+import json
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
+from typing import Any
 
 from .objects import (
     ClaimOutcome,
@@ -90,6 +92,28 @@ PENDING_CONSENT = "ConsentRequest"
 UNDISCLOSED_DEPENDENCY = "undisclosed"
 
 
+
+@dataclass(frozen=True)
+class JointPredicate:
+    """A profile's joint predicate in its wire form (profiles/FORMAT.md).
+
+    The predicate travels as ordinary claims on `key` with `operator`; a
+    `point` value form asks whether one candidate value satisfies the
+    responder's private value. It holds, in a side's local view, when a
+    standing proposition on it resolved `compatible` -- in one direction,
+    or, for `both_directions`, in each direction on the same value: one
+    side's acceptance of a candidate proves nothing about the other's
+    (the buyer-at-80 / seller-at-90 trap). `conditionally_compatible` does
+    not satisfy it: a coarsened answer is exactly the information the
+    predicate exists to establish (E-11).
+    """
+
+    name: str
+    key: str
+    operator: str
+    value_form: str = "point"
+    satisfied_when: str = "both_directions"
+
 @dataclass
 class Session:
     """One side's view of a Compatibility Session."""
@@ -136,6 +160,12 @@ class Session:
     #: Section 15.2: dimensions the session's profile requires to have been
     #: examined before qualification. The core profile requires none.
     required_dimensions: set[str] = field(default_factory=set)
+    #: The profile's joint predicates (FORMAT.md); each enters the entry
+    #: conditions like a required dimension, but asks more of it.
+    joint_predicates: list[JointPredicate] = field(default_factory=list)
+    #: Proposition -> (key, operator, canonical value), for the claims this
+    #: side sent or received; what a joint predicate is checked against.
+    claim_of: dict[str, tuple[str, str, str]] = field(default_factory=dict)
     #: request_id -> claim_ids that request withdraws, applied on its answer.
     pending_supersedes: dict[str, list[str]] = field(default_factory=dict)
     #: Attribute keys whose disclosure would resolve a requires_disclosure.
@@ -328,6 +358,36 @@ class Session:
             proposition = f"{direction}:{outcome.claim_id}"
             self.results[proposition] = outcome.result
             self.dimension_of[proposition] = outcome.key
+
+    def note_claims(self, direction: str, claims: Iterable[Any]) -> None:
+        """Remember what each proposition asked, for the joint predicates."""
+        for claim in claims:
+            self.claim_of[f"{direction}:{claim.claim_id}"] = (
+                claim.key,
+                getattr(claim.operator, "value", str(claim.operator)),
+                json.dumps(claim.value, sort_keys=True),
+            )
+
+    def joint_predicate_for(self, key: str, operator: str) -> JointPredicate | None:
+        for predicate in self.joint_predicates:
+            if predicate.key == key and predicate.operator == operator:
+                return predicate
+        return None
+
+    def _joint_holds(self, predicate: JointPredicate) -> bool:
+        def accepted(direction: str) -> set[str]:
+            return {
+                value
+                for proposition, (key, operator, value) in self.claim_of.items()
+                if proposition.startswith(f"{direction}:")
+                and key == predicate.key
+                and operator == predicate.operator
+                and self.results.get(proposition) is ClaimResult.COMPATIBLE
+            }
+
+        if predicate.satisfied_when == "one_direction":
+            return bool(accepted("sent") | accepted("received"))
+        return bool(accepted("sent") & accepted("received"))
 
     def check_supersedes(self, direction: str, claim_ids: Iterable[str]) -> None:
         """A claim may withdraw only an answered claim of its own sender, and
@@ -539,6 +599,7 @@ class Session:
             # has examined blocks the transition however positively the
             # examined ones answered.
             and self.required_dimensions <= covered
+            and all(self._joint_holds(p) for p in self.joint_predicates)
         )
         return SessionStatus.POTENTIALLY_COMPATIBLE if qualifies else SessionStatus.OPEN
 

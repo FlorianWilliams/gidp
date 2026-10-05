@@ -18,9 +18,9 @@
         "open_attribute": "session"
       },
       "authority": {
-        "PROBE": "true",
-        "DISCLOSE": "true",
-        "INTRODUCE": "true"
+        "PROBE": true,
+        "DISCLOSE": true,
+        "INTRODUCE": true
       }
     },
     "B": {
@@ -35,9 +35,9 @@
         "open_attribute": "session"
       },
       "authority": {
-        "PROBE": "true",
-        "DISCLOSE": "true",
-        "INTRODUCE": "true"
+        "PROBE": true,
+        "DISCLOSE": true,
+        "INTRODUCE": true
       }
     }
   },
@@ -101,7 +101,10 @@
     {
       "handoff": {
         "from": "A",
-        "target": "urn:example:negotiation",
+        "target": {
+          "kind": "protocol",
+          "protocol_ref": "urn:example:negotiation"
+        },
         "expect_recipient_error": true
       }
     },

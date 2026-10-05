@@ -86,14 +86,58 @@ of specification Section 15.2 directly):
   it from what the session carried) or `private_evaluation` (each side
   verifies against its own values and answers as one claim). Naming
   `compatible_with` is not enough; the predicate's test must be stated.
+  Each predicate also states its **`wire`** form, because two implementers
+  who agree on what a predicate means but not on how it travels cannot
+  agree on whether it held (E-11):
+  - `key` and `operator`: the claims that carry it — an attribute the
+    predicate ranges over, with one of that attribute's operators;
+  - `value`: `point` — the claim names one candidate value, and the
+    responder answers whether that value satisfies its own private value
+    (for a range, whether the point lies inside it, bounds inclusive) — or
+    `range`, the claim naming a band under the operator's ordinary meaning;
+  - `satisfied_when`: `both_directions` — the predicate holds when each
+    side has answered `compatible` to the **same** value, asked in each
+    direction, both propositions still standing; or `one_direction` — one
+    standing `compatible` suffices.
+
+  `conditionally_compatible` does not satisfy a predicate: a coarsened
+  answer withholds exactly the fact the predicate exists to establish. A
+  responder that wants it to hold answers truthfully, which Section 15.5
+  always permits. A candidate value is a hypothesis chosen on the lattice,
+  never either side's private bound (Section 14.3). Every declared joint
+  predicate enters the entry conditions: a session qualifies only when all
+  of them hold. The reference implementation reads both
+  `required_dimensions` and the predicates' wire forms from the manifest
+  (`impl/gidp/profile.py`) with no vertical-specific code.
 - `opportunity_meaning`: one sentence: what a qualified Opportunity
   asserts under this profile, and no more.
 
 **`budget`** — what the profile declares to the information budget of
-Section 24.3: per-attribute `granularity` (the minimum bucket width a
-claim may name; the lattice of the reference implementation) and
-`bits_per_attribute` (the worst-case budget). The scope is always
-`per_standing_interest`; the manifest cannot change that.
+Section 24.3. A bit budget bounds a posterior, and a posterior needs a
+hypothesis space and a prior; a manifest that gives only a number of bits
+gives nothing two implementations can compute alike (E-12). So, per
+budgeted attribute:
+
+- `granularity.<attr>.min_bucket_width`: the lattice. Claim bounds fall
+  on integer multiples of the width (origin 0) and a band is at least one
+  cell wide; constraining where edges may fall, not only how wide a band
+  is, is what caps resolution (Section 24.3).
+- `domain.<attr>`: `{min, max}`, on the lattice — the finite public
+  hypothesis space is the cells between them. A Principal whose value lies
+  outside the domain is outside what the budget protects, and its Agent
+  should decline claims on that attribute rather than answer them.
+- `prior`: `uniform` over the cells, the only prior this format version
+  defines.
+- `bits_per_attribute.<attr>`: the worst-case budget, cumulative over the
+  Standing Interest: before answering, the responder computes the
+  posterior under every answer it might give and declines if the worst
+  case would leave fewer than `cells / 2^bits` candidates. It must not
+  exceed the information the domain holds, `log2(cells)`, or it would
+  never bind.
+
+The scope is always `per_standing_interest`; the manifest cannot change
+that. What the budget does not bound — correlations between attributes,
+timing, outside knowledge — it does not claim to (Section 24.3).
 
 **`extensions`** — the two permitted extension points, every value
 prefixed `"<profile id>:"`.
@@ -104,10 +148,21 @@ prefixed `"<profile id>:"`.
 required dimensions and predicate ranges name declared attributes;
 operators are core or declared; identifying attributes are neither
 retrievable nor required for qualification; extensions are namespaced;
-granularity and budget entries name declared attributes; no unknown
-fields anywhere. A manifest that passes can be implemented from this
+every joint predicate has a wire form over its own attributes and
+operators; every bit budget has a lattice and a domain on it, and asks no
+more bits than the domain holds; granularity and budget entries name
+declared attributes; no unknown fields anywhere. A manifest that passes can be implemented from this
 document and the specification alone — that is the format's conformance
 bar, and the two instances in this directory (`co-investment`, narrow and
 numeric; `executive-succession`, relational and asymmetric) exist to hold
 it: the same core, the same corpus, two verticals, no protocol work
 between them.
+
+The first independent implementation (October 2026) implemented the
+co-investment instance from this document and the specification alone,
+and found the bar was not met: `ticket_meets` had no wire form, the
+budget had no hypothesis space, and `opportunity_meaning` promised a
+stage check the required dimensions did not require and an attestation no
+claim can carry. The format and both instances were corrected
+(`impl/SPEC-ISSUES.md`, E-10 to E-12); the bar is what they are now held
+to.

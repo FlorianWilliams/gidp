@@ -1,0 +1,109 @@
+{
+  "scenario": "t14",
+  "setup": {
+    "A": {
+      "conditions": {
+        "domain": [
+          "enterprise_software"
+        ],
+        "ceiling": 80
+      },
+      "policy": {
+        "domain": "discovery",
+        "ceiling": "evaluation_only"
+      },
+      "conditional_on": [
+        "anchor_commitment"
+      ],
+      "conditional_on_policy": "evaluation_only",
+      "authority": {
+        "PROBE": true,
+        "DISCLOSE": true,
+        "INTRODUCE": true
+      }
+    },
+    "B": {
+      "conditions": {
+        "domain": [
+          "enterprise_software"
+        ],
+        "ceiling": 90
+      },
+      "policy": {
+        "domain": "discovery"
+      },
+      "authority": {
+        "PROBE": true,
+        "DISCLOSE": true,
+        "INTRODUCE": true
+      }
+    }
+  },
+  "steps": [
+    {
+      "open": {
+        "purpose": "test"
+      }
+    },
+    {
+      "ask": {
+        "from": "A",
+        "claims": [
+          {
+            "claim_id": "c1",
+            "key": "ceiling",
+            "operator": "equals",
+            "value": 80
+          }
+        ]
+      }
+    },
+    {
+      "ask": {
+        "from": "A",
+        "claims": [
+          {
+            "claim_id": "c2",
+            "key": "ceiling",
+            "operator": "overlaps",
+            "value": {
+              "min": 80,
+              "max": 80
+            }
+          }
+        ]
+      }
+    },
+    {
+      "ask": {
+        "from": "A",
+        "claims": [
+          {
+            "claim_id": "c3",
+            "key": "conditional_on",
+            "operator": "intersects",
+            "value": [
+              "anchor_commitment"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "ask": {
+        "from": "A",
+        "claims": [
+          {
+            "claim_id": "c4",
+            "key": "ceiling",
+            "operator": "overlaps",
+            "value": {
+              "min": 60,
+              "max": 100
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

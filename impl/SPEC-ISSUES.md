@@ -1194,3 +1194,66 @@ were already recorded; consent content per action and the trust
 boundary table are added to the 0.2 list.
 
 **Resolution — applied to GIDP 0.1 on 2026-09-29.**
+
+## E-01 to E-12 — the first independent implementation (5 October 2026)
+
+A clean-room implementation in TypeScript, written from the specification,
+the schemas, the profile format and the blind corpus alone, without the
+reference code or any companion document, kept a decision journal (21
+entries) written before each choice, ran the thirteen blind scenarios in
+one pass, then audited its own code. Compared afterwards with the full
+corpus, its truly blind pass met 77 of 80 expectations, its corrected
+pass 79; none of the misses was a misreading of the specification.
+Classified here: *reference* (a defect of this implementation), *corpus*,
+*artefact* (schemas, profile), *specification* (a gap, recorded in
+open-problems for 0.2 — 0.1 is frozen).
+
+**E-01 — reference. A request could carry the requester's own private
+value.** Section 14.3 forbids it; `Agent.ask` checked nothing, and the
+co-investment example itself sent the company's private valuation range
+as its hypothesis. `ask` now refuses, before anything is emitted or
+recorded, a claim that pins one of this side's private values (surface
+`local` or gated), the four reserved dependency lists included. The
+guard compares pinned values — the value, an element of it, a range
+collapsed onto it — and is not provenance tracking: a band built around
+the secret passes. Example corrected; tests, a property and a mutation
+added.
+
+**E-02 — reference. Identity confirmed after INTRODUCE was withdrawn.**
+A granted `reveal_identity` consent kept both identity doors open after
+the Principal set INTRODUCE to `false`: a claim `principal_identity
+equals …` answered positively, and a DisclosureResponse carried the
+value. Section 16.3: consent waives no other row. Both paths now re-read
+INTRODUCE at every use. Tests and two mutations added.
+
+**E-03 to E-08 — corpus.** Handoff targets written as bare strings where
+Section 14.7 requires an object; authority levels written as strings
+`"true"` where the grammar says booleans; scenario 13 seeking
+`reveal_identity` over a non-identity attribute; scenario 09 requiring
+`HANDED_OFF` to persist where Section 17.2 lets the session close
+`completed` at once; a README announcing a "specification default" for
+unset authority levels that the specification does not define (the
+reference silently used `false`); and an undefined `qualify` step, whose
+meaning depended on whether the transition is triggered or automatic.
+All repaired in the corpus; see its README.
+
+**E-09, E-10 — artefacts.** The exported schemas omitted `type` and
+`version` from `required` although Section 14 makes them mandatory; the
+co-investment manifest promised in `opportunity_meaning` a stage check
+its `required_dimensions` did not require, and an attestation of the lead
+commitment no claim can provide. Both repaired.
+
+**E-11, E-12 — profile format.** A joint predicate (`ticket_meets`) had
+no wire encoding: two implementers cannot agree on what claim carries it
+or when it holds. `bits_per_attribute` had no hypothesis space or prior,
+so no worst-case posterior could be computed. The format now requires
+each joint predicate to state its `wire` form and each budgeted attribute
+to declare its finite `domain`.
+
+**Specification gaps** — recorded in `spec/open-problems.md` under the
+same date: the scope of `reveal_identity` (D/R03), whether a SessionOpen
+is held under PROBE `approval_required` (D18), who sets a session's
+duration (D09), the concordance rule when an initiator's Opportunity adds
+contingencies (D19), partial consent (D12). The evaluator independently
+re-derived the 0.2 draft's qualification rule (initiator gated on the
+responder's last reported status, D11) without having seen the draft.

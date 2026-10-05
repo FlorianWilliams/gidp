@@ -95,6 +95,7 @@
     "required_dimensions": [
       "sector",
       "geography",
+      "stage",
       "ticket_eur",
       "lead_commitment_eur"
     ],
@@ -104,11 +105,17 @@
         "over": [
           "ticket_eur"
         ],
-        "semantics": "There exists a single ticket amount acceptable to both sides: inside the follower's investable range AND inside the allocation the round offers. Overlap of each private range with an asked range proves nothing (a follower capped at 80k and a round requiring 90k minimum both overlap 50k-100k); this predicate is answered by each side evaluating the other's stated candidate allocation against its own private range.",
-        "computable_from": "private_evaluation"
+        "semantics": "There exists a single ticket amount acceptable to both sides: inside the follower's investable range AND inside the allocation the round offers. Overlap of each private range with an asked range proves nothing (a follower capped at 80k and a round requiring 90k minimum both overlap 50k-100k). On the wire: each side asks the other `ticket_eur compatible_with <amount>`, the amount being a candidate allocation on the lattice, never either side's private bound; each responder answers whether that one amount lies inside its own private range. The predicate holds when both directions answered `compatible` to the same amount.",
+        "computable_from": "private_evaluation",
+        "wire": {
+          "key": "ticket_eur",
+          "operator": "compatible_with",
+          "value": "point",
+          "satisfied_when": "both_directions"
+        }
       }
     ],
-    "opportunity_meaning": "A qualified Opportunity asserts that sector, geography and stage are compatible, that a committed lead meeting the follower's floor exists as claimed, and that the ticket_meets predicate held for at least one candidate allocation. It asserts nothing about terms, valuation or the parties' identities."
+    "opportunity_meaning": "A qualified Opportunity asserts that sector, geography, stage, ticket range and lead commitment were each examined and found compatible -- or, for a value its holder keeps evaluation-only, conditionally compatible, and then listed in open_conditions; that the lead commitment met the follower's floor as the round's Agent answered it (an answer, not an attestation: no claim proves a commitment exists); and that ticket_meets held for at least one candidate amount answered in both directions. It asserts nothing about terms, valuation or the parties' identities."
   },
   "budget": {
     "granularity": {
@@ -119,6 +126,17 @@
         "min_bucket_width": 250000
       }
     },
+    "domain": {
+      "ticket_eur": {
+        "min": 0,
+        "max": 10000000
+      },
+      "lead_commitment_eur": {
+        "min": 0,
+        "max": 50000000
+      }
+    },
+    "prior": "uniform",
     "bits_per_attribute": {
       "ticket_eur": 3,
       "lead_commitment_eur": 2

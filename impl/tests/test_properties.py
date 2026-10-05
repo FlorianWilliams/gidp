@@ -187,7 +187,9 @@ def test_a_responder_never_transmits_its_own_local_values(interest, claim_list):
     """
     assume(interest.authority.permits(Authority.PROBE))
     responder = Agent(ref="agent:opaque:r", standing_interest=interest)
-    initiator = Agent(ref="agent:opaque:i", standing_interest=interest)
+    # The querent holds nothing: whatever it names is its own hypothesis,
+    # which is what lets the property speak about the responder alone.
+    initiator = Agent(ref="agent:opaque:i", standing_interest=_holding_nothing(interest))
     opened = initiator.open_session("s", purpose="test")
     accept = responder.handle_session_open(opened)
     initiator.confirm_accept(accept)
@@ -200,6 +202,59 @@ def test_a_responder_never_transmits_its_own_local_values(interest, claim_list):
         assert not _appears_in(value, payload), (
             f"a local value reached the wire in {payload}"
         )
+
+
+def _pinned(value) -> list:
+    if isinstance(value, dict):
+        return [value["min"]] if value.get("min") is not None and value.get("min") == value.get("max") else []
+    if isinstance(value, list):
+        return [x for item in value for x in _pinned(item)]
+    return [value]
+
+
+def _pins_the_same_value(own, sent) -> bool:
+    """The guarantee E-01 makes, stated independently of the code: the
+    request names the private value itself, an element of it, or a range
+    collapsed onto it. A band around the value is outside the guarantee."""
+    return sent == own or any(x in _pinned(own) for x in _pinned(sent))
+
+
+def _holding_nothing(interest):
+    empty = interest.interest.model_copy(
+        update={
+            "conditions": {},
+            "conditional_on": [],
+            "provides": [],
+            "requires": [],
+            "excludes": [],
+        }
+    )
+    return interest.model_copy(update={"interest": empty})
+
+
+@SETTINGS
+@given(standing_interests(), st.lists(claims(), min_size=1, max_size=6))
+def test_a_requester_never_transmits_its_own_local_values(interest, claim_list):
+    """Section 14.3, the other side of the same coin (E-01).
+
+    A request MUST NOT contain the requester's own private values. Either
+    `ask` refuses before anything leaves, or nothing private is in it.
+    """
+    assume(interest.authority.permits(Authority.PROBE))
+    asker = Agent(ref="agent:opaque:i", standing_interest=interest)
+    asker.open_session("s", purpose="test")
+    try:
+        request = asker.ask(claim_list)
+    except ProtocolError:
+        return
+    held = interest.interest.conditions
+    for claim in request.claims:
+        if claim.key in held and interest.class_of(claim.key).surface is Surface.LOCAL:
+            sent = claim.model_dump(mode="json")["value"]
+            own = held[claim.key]
+            assert not _pins_the_same_value(own, sent), (
+                f"the requester's own local value of {claim.key!r} reached the wire"
+            )
 
 
 @SETTINGS

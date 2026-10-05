@@ -99,12 +99,15 @@
   },
   "required": [
     "expires_at",
-    "session_id",
-    "request_id",
+    "features",
     "initiator",
-    "purpose",
     "max_depth",
-    "profile"
+    "profile",
+    "purpose",
+    "request_id",
+    "session_id",
+    "type",
+    "version"
   ],
   "title": "SessionOpen",
   "type": "object",

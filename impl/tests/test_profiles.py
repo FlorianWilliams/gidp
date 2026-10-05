@@ -23,6 +23,7 @@ from test_conformance import _interest  # noqa: E402
 
 from gidp.agent import Agent  # noqa: E402
 from gidp.objects import Claim, ConditionalInterest, DisclosurePolicy  # noqa: E402
+from gidp.profile import apply_qualification  # noqa: E402
 from gidp.vocab import ClaimOperator, SessionStatus  # noqa: E402
 from tools.validate_profile import validate_manifest  # noqa: E402
 
@@ -144,6 +145,7 @@ SAMPLE_VALUES = {
         "company_arr_eur": {"min": 10000000, "max": 80000000},
         "location": ["paris", "london"],
         "timing": ["within_6_months", "exploratory"],
+        "equity_pct": {"min": 2, "max": 8},
     },
 }
 
@@ -153,6 +155,7 @@ PROBE_CLAIMS = {
         ("geography", "intersects", ["france", "europe"]),
         ("ticket_eur", "overlaps", {"min": 200000, "max": 400000}),
         ("lead_commitment_eur", "overlaps", {"min": 1000000, "max": 5000000}),
+        ("stage", "intersects", ["seed"]),
     ],
     "gidp.profile.executive-succession": [
         ("role", "intersects", ["ceo"]),
@@ -195,44 +198,137 @@ def _agent_from_manifest(name: str, manifest: dict) -> Agent:
     return agent
 
 
+PREDICATE_CANDIDATES = {
+    "gidp.profile.co-investment": 300000,
+    "gidp.profile.executive-succession": 5,
+}
+
+
+def _exchange(asker: Agent, answerer: Agent, claim: Claim):
+    request = asker.ask([claim])
+    response = answerer.handle_compatibility_request(request)
+    asker.receive_compatibility_response(response, request)
+    return response
+
+
+def _manifest_session(manifest: dict) -> tuple[Agent, Agent]:
+    a = _agent_from_manifest("A", manifest)
+    b = _agent_from_manifest("B", manifest)
+    profile_id = manifest["profile"]["id"]
+    a.confirm_accept(b.handle_session_open(a.open_session(f"s-{profile_id}", purpose=profile_id)))
+    for agent in (a, b):
+        apply_qualification(agent.session, manifest)
+    return a, b
+
+
+def _predicate_claim(manifest: dict) -> Claim:
+    wire = manifest["qualification"]["joint_predicates"][0]["wire"]
+    return Claim(
+        key=wire["key"],
+        operator=ClaimOperator(wire["operator"]),
+        value=PREDICATE_CANDIDATES[manifest["profile"]["id"]],
+    )
+
+
 @pytest.mark.parametrize("path", MANIFESTS, ids=lambda p: p.stem)
 def test_a_manifest_drives_a_session_through_the_same_core(path):
     """The same machinery, configured only by the manifest: required
-    dimensions block qualification until each has been examined, then the
-    session qualifies -- for both instances, with no profile-specific
-    code anywhere in this test."""
+    dimensions block qualification until each has been examined, the joint
+    predicate blocks it until both directions have accepted one candidate,
+    then the session qualifies -- for both instances, with no
+    profile-specific code anywhere in this test or in the core."""
     manifest = json.loads(path.read_text())
     profile_id = manifest["profile"]["id"]
     required = manifest["qualification"]["required_dimensions"]
-
-    a = _agent_from_manifest("A", manifest)
-    b = _agent_from_manifest("B", manifest)
-    opened = a.open_session(f"s-{profile_id}", purpose=profile_id)
-    a.confirm_accept(b.handle_session_open(opened))
-    for agent in (a, b):
-        agent.session.required_dimensions = set(required)
+    a, b = _manifest_session(manifest)
 
     claims = PROBE_CLAIMS[profile_id]
     assert {key for key, _, _ in claims} == set(required)
 
-    for i, (key, operator, value) in enumerate(claims):
-        spec = manifest["attributes"][key]
-        assert operator in spec["operators"], (
+    for key, operator, value in claims:
+        assert operator in manifest["attributes"][key]["operators"], (
             f"the probe uses only operators the manifest permits for {key}"
         )
-        request = a.ask([Claim(key=key, operator=OPERATORS[operator], value=value)])
-        response = b.handle_compatibility_request(request)
-        a.receive_compatibility_response(response, request)
-        last = i == len(claims) - 1
-        assert (response.session_status is SessionStatus.POTENTIALLY_COMPATIBLE) is last, (
-            f"{profile_id}: after {key}, qualification is "
-            f"{'reached' if last else 'blocked -- a required dimension is unexamined'}"
+        response = _exchange(a, b, Claim(key=key, operator=OPERATORS[operator], value=value))
+        assert response.session_status is SessionStatus.OPEN, (
+            f"{profile_id}: after {key}, qualification is blocked -- a required "
+            "dimension is unexamined, or the joint predicate does not hold yet"
         )
-        assert a.session.qualify() is last
+        assert a.session.qualify() is False
+
+    # The joint predicate, in its wire form: B tests the candidate against
+    # A's private value, then A against B's; only the second answer can
+    # carry B's positive status, since 0.1 has no status-refresh message.
+    predicate = _predicate_claim(manifest)
+    response = _exchange(b, a, predicate)
+    assert [o.result.value for o in response.results] == ["compatible"]
+    # One direction proves nothing, in either view: A's (which also lacks
+    # B's positive report) and B's own, which has everything else.
+    assert a.session.qualify() is False
+    assert b.session.status() is SessionStatus.OPEN, "one direction proves nothing"
+    response = _exchange(a, b, predicate)
+    assert [o.result.value for o in response.results] == ["compatible"]
+    assert response.session_status is SessionStatus.POTENTIALLY_COMPATIBLE
+    assert b.session.qualify() is True
+    assert a.session.qualify() is True
 
     opportunity = a.session.build_opportunity(
         structure=manifest["qualification"]["opportunity_meaning"][:40],
         expires_at=__import__("test_review_findings").__dict__["_soon"](),
         identity_status={},
     )
-    assert opportunity.evaluated_dimensions == len(required)
+    assert opportunity.evaluated_dimensions == len(set(required) | {predicate.key})
+
+
+@pytest.mark.parametrize("path", MANIFESTS, ids=lambda p: p.stem)
+def test_a_candidate_one_side_refuses_does_not_satisfy_the_predicate(path):
+    """The trap the predicate exists for: each private range overlaps an
+    asked band, yet no single amount suits both. A candidate outside one
+    side's range is answered incompatible -- and does not qualify."""
+    manifest = json.loads(path.read_text())
+    profile_id = manifest["profile"]["id"]
+    a, b = _manifest_session(manifest)
+    for key, operator, value in PROBE_CLAIMS[profile_id]:
+        _exchange(a, b, Claim(key=key, operator=OPERATORS[operator], value=value))
+    wire = manifest["qualification"]["joint_predicates"][0]["wire"]
+    outside = SAMPLE_VALUES[profile_id][wire["key"]]["max"] + manifest["budget"][
+        "granularity"
+    ][wire["key"]]["min_bucket_width"]
+    response = _exchange(b, a, Claim(key=wire["key"],
+                                     operator=ClaimOperator(wire["operator"]),
+                                     value=outside))
+    assert [o.result.value for o in response.results] == ["incompatible"]
+    assert a.session.qualify() is False
+
+
+def test_a_predicate_without_its_wire_form_is_refused():
+    broken = _co()
+    broken["qualification"]["joint_predicates"][0].pop("wire")
+    _expect_finding(broken, "predicate's test must be stated")
+
+
+def test_a_wire_form_must_use_the_predicate_attribute_and_its_operator():
+    broken = _co()
+    broken["qualification"]["joint_predicates"][0]["wire"]["key"] = "sector"
+    _expect_finding(broken, "not among the attributes")
+    broken = _co()
+    broken["qualification"]["joint_predicates"][0]["wire"]["operator"] = "equals"
+    _expect_finding(broken, "is not an operator of")
+
+
+def test_a_bit_budget_needs_a_finite_domain():
+    broken = _co()
+    broken["budget"].pop("domain")
+    _expect_finding(broken, "no posterior can be computed")
+
+
+def test_a_domain_must_fall_on_the_lattice():
+    broken = _co()
+    broken["budget"]["domain"]["ticket_eur"]["min"] = 10000
+    _expect_finding(broken, "must fall on the lattice")
+
+
+def test_a_budget_larger_than_its_domain_never_binds():
+    broken = _co()
+    broken["budget"]["bits_per_attribute"]["ticket_eur"] = 12
+    _expect_finding(broken, "would never bind")

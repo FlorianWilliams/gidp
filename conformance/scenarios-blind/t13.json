@@ -13,9 +13,9 @@
         "open_attribute": "session"
       },
       "authority": {
-        "PROBE": "true",
-        "DISCLOSE": "true",
-        "INTRODUCE": "true"
+        "PROBE": true,
+        "DISCLOSE": true,
+        "INTRODUCE": true
       }
     },
     "B": {
@@ -23,15 +23,17 @@
         "domain": [
           "enterprise_software"
         ],
-        "open_attribute": "value"
+        "open_attribute": "value",
+        "principal_identity": "Acme GmbH"
       },
       "policy": {
         "domain": "discovery",
-        "open_attribute": "session"
+        "open_attribute": "session",
+        "principal_identity": "session"
       },
       "authority": {
-        "PROBE": "true",
-        "DISCLOSE": "true",
+        "PROBE": true,
+        "DISCLOSE": true,
         "INTRODUCE": "approval_required"
       }
     }
@@ -72,7 +74,7 @@
         "from": "A",
         "action": "reveal_identity",
         "scope": [
-          "open_attribute"
+          "principal_identity"
         ]
       }
     },

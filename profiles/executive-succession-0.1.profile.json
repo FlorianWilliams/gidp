@@ -137,11 +137,17 @@
         "over": [
           "equity_pct"
         ],
-        "semantics": "There exists an equity level inside both the candidate's floor and the organisation's envelope. Each side evaluates the other's candidate package privately; overlap with an asked band proves nothing on its own.",
-        "computable_from": "private_evaluation"
+        "semantics": "There exists an equity level inside both the candidate's floor and the organisation's envelope. Each side evaluates the other's candidate package privately; overlap with an asked band proves nothing on its own. On the wire: each side asks `equity_pct compatible_with <level>`, a whole-percent candidate; the predicate holds when both directions answered `compatible` to the same level.",
+        "computable_from": "private_evaluation",
+        "wire": {
+          "key": "equity_pct",
+          "operator": "compatible_with",
+          "value": "point",
+          "satisfied_when": "both_directions"
+        }
       }
     ],
-    "opportunity_meaning": "A qualified Opportunity asserts that role, sector, scale and location are compatible and that package_feasible held for at least one candidate package. It asserts neither identity, nor availability, nor that either Principal has decided anything."
+    "opportunity_meaning": "A qualified Opportunity asserts that role, sector, location and scale were each examined and found compatible -- or, for a value its holder keeps evaluation-only, conditionally compatible, and then listed in open_conditions -- and that package_feasible held for at least one candidate equity level answered in both directions. It asserts neither identity, nor availability, nor that either Principal has decided anything."
   },
   "budget": {
     "granularity": {
@@ -152,6 +158,17 @@
         "min_bucket_width": 1
       }
     },
+    "domain": {
+      "company_arr_eur": {
+        "min": 0,
+        "max": 200000000
+      },
+      "equity_pct": {
+        "min": 0,
+        "max": 25
+      }
+    },
+    "prior": "uniform",
     "bits_per_attribute": {
       "company_arr_eur": 3,
       "equity_pct": 3

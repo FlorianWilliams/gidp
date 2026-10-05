@@ -21,9 +21,9 @@
         "open_attribute": "session"
       },
       "authority": {
-        "PROBE": "true",
-        "DISCLOSE": "true",
-        "INTRODUCE": "true"
+        "PROBE": true,
+        "DISCLOSE": true,
+        "INTRODUCE": true
       }
     },
     "B": {
@@ -39,8 +39,8 @@
       },
       "authority": {
         "PROBE": "approval_required",
-        "DISCLOSE": "true",
-        "INTRODUCE": "true"
+        "DISCLOSE": true,
+        "INTRODUCE": true
       }
     }
   },

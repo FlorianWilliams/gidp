@@ -131,10 +131,13 @@
   },
   "required": [
     "expires_at",
-    "session_id",
+    "next",
     "request_ref",
     "results",
-    "session_status"
+    "session_id",
+    "session_status",
+    "type",
+    "version"
   ],
   "title": "CompatibilityResponse",
   "type": "object",

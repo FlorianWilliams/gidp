@@ -13,11 +13,11 @@
         "open_attribute": "session"
       },
       "authority": {
-        "PROBE": "true",
-        "DISCLOSE": "true",
-        "INTRODUCE": "true",
-        "PUBLISH_PROJECTION": "true",
-        "NEGOTIATE_NONBINDING": "true"
+        "PROBE": true,
+        "DISCLOSE": true,
+        "INTRODUCE": true,
+        "PUBLISH_PROJECTION": true,
+        "NEGOTIATE_NONBINDING": true
       }
     },
     "B": {
@@ -32,11 +32,11 @@
         "open_attribute": "session"
       },
       "authority": {
-        "PROBE": "true",
-        "DISCLOSE": "true",
-        "INTRODUCE": "true",
-        "PUBLISH_PROJECTION": "true",
-        "NEGOTIATE_NONBINDING": "true"
+        "PROBE": true,
+        "DISCLOSE": true,
+        "INTRODUCE": true,
+        "PUBLISH_PROJECTION": true,
+        "NEGOTIATE_NONBINDING": true
       }
     }
   },
@@ -83,7 +83,10 @@
     {
       "handoff": {
         "from": "A",
-        "target": "urn:example:negotiation"
+        "target": {
+          "kind": "protocol",
+          "protocol_ref": "urn:example:negotiation"
+        }
       }
     },
     {
@@ -98,13 +101,19 @@
     {
       "handoff": {
         "from": "A",
-        "target": "urn:example:other"
+        "target": {
+          "kind": "protocol",
+          "protocol_ref": "urn:example:other"
+        }
       }
     },
     {
       "handoff": {
         "from": "A",
-        "target": "urn:example:negotiation"
+        "target": {
+          "kind": "protocol",
+          "protocol_ref": "urn:example:negotiation"
+        }
       }
     },
     {

@@ -34,6 +34,46 @@ class Mutation:
 
 MUTATIONS = (
     Mutation(
+        "a profile's joint predicate enters the entry conditions (15.2, E-11)",
+        "gidp/session.py",
+        "            and all(self._joint_holds(p) for p in self.joint_predicates)",
+        "            and True",
+    ),
+    Mutation(
+        "a both-directions predicate needs each direction on one value (E-11)",
+        "gidp/session.py",
+        """        return bool(accepted("sent") & accepted("received"))""",
+        """        return bool(accepted("sent") | accepted("received"))""",
+    ),
+    Mutation(
+        "a joint predicate is answered exactly, not coarsened (15.5, E-11)",
+        "gidp/agent.py",
+        "        coarsen = evaluation.evaluation_only and evaluation.truth is True and not exact",
+        "        coarsen = evaluation.evaluation_only and evaluation.truth is True",
+    ),
+    Mutation(
+        "a request never carries the requester's own private value (14.3, E-01)",
+        "gidp/agent.py",
+        "            leaked = self._own_private_value_in(claim)",
+        "            leaked = None",
+    ),
+    Mutation(
+        "an identity claim re-reads INTRODUCE at every use (10.6, 16.3, E-02)",
+        "gidp/agent.py",
+        """            elif claim.key in IDENTITY_ATTRIBUTES and (
+                claim.key not in self.consents.identity_revealed
+                or self._authority(Authority.INTRODUCE) is AuthorityValue.FALSE""",
+        """            elif claim.key in IDENTITY_ATTRIBUTES and (
+                claim.key not in self.consents.identity_revealed""",
+    ),
+    Mutation(
+        "an identity disclosure re-reads INTRODUCE at every use (10.6, 16.3, E-02)",
+        "gidp/agent.py",
+        """            request.attribute not in self.consents.identity_revealed
+            or self._authority(Authority.INTRODUCE) is AuthorityValue.FALSE""",
+        """            request.attribute not in self.consents.identity_revealed""",
+    ),
+    Mutation(
         "the Handoff barrier counts active compatibility requests (14.7, 0.2)",
         "gidp/session.py",
         "        if \"CompatibilityRequest\" in self.open_requests.values() or any(",
@@ -78,8 +118,8 @@ MUTATIONS = (
     Mutation(
         "an identity claim is declined without reveal_identity (10.6)",
         "gidp/agent.py",
-        "                claim.key in IDENTITY_ATTRIBUTES",
-        "                False",
+        "            elif claim.key in IDENTITY_ATTRIBUTES and (",
+        "            elif False and (",
     ),
     Mutation(
         "no qualifying status is reported while a request is pending (17.2)",
@@ -96,8 +136,8 @@ MUTATIONS = (
     Mutation(
         "an identity attribute travels only under reveal_identity (10.6)",
         "gidp/agent.py",
-        "            request.attribute in IDENTITY_ATTRIBUTES",
-        "            False",
+        "        if request.attribute in IDENTITY_ATTRIBUTES and (",
+        "        if False and (",
     ),
     Mutation(
         "identity cannot ride disclose_attributes (10.6, 14.5)",

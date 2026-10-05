@@ -14,7 +14,10 @@ express — the rules that keep a profile from weakening the core:
   qualification (identity cannot precede the qualification it would gate);
 - every name a manifest uses — required dimensions, predicate ranges,
   granularity, budgets — is an attribute it declares;
-- every operator is a core operator or one the manifest itself declares.
+- every operator is a core operator or one the manifest itself declares;
+- every joint predicate states its wire form, and every budgeted attribute
+  a finite domain on its lattice, so that two implementers compute the
+  same thing.
 
 Exit code 0 and no output means valid; otherwise one finding per line.
 """
@@ -22,6 +25,7 @@ Exit code 0 and no output means valid; otherwise one finding per line.
 from __future__ import annotations
 
 import json
+import math
 import re
 import sys
 from pathlib import Path
@@ -45,8 +49,12 @@ ATTR_KEYS = {
     "identifying", "retrieval", "description",
 }
 QUAL_KEYS = {"required_dimensions", "joint_predicates", "opportunity_meaning"}
-PREDICATE_KEYS = {"name", "over", "semantics", "computable_from"}
-BUDGET_KEYS = {"granularity", "bits_per_attribute", "scope"}
+PREDICATE_KEYS = {"name", "over", "semantics", "computable_from", "wire"}
+WIRE_KEYS = {"key", "operator", "value", "satisfied_when"}
+VALUE_FORMS = {"point", "range"}
+SATISFACTION = {"both_directions", "one_direction"}
+ORDERED_TYPES = {"number", "integer", "money", "range"}
+BUDGET_KEYS = {"granularity", "domain", "prior", "bits_per_attribute", "scope"}
 EXT_KEYS = {"intended_use", "operators"}
 
 
@@ -183,6 +191,34 @@ def validate_manifest(manifest: dict[str, Any]) -> list[str]:
                 e(f"{where}.over: {attr!r} is not a declared attribute")
         if predicate.get("computable_from") not in COMPUTABLE:
             e(f"{where}.computable_from: expected one of {sorted(COMPUTABLE)}")
+        # E-11: a predicate two implementers cannot put on the wire the same
+        # way is a predicate they cannot agree on.
+        wire = predicate.get("wire")
+        if isinstance(wire, dict):
+            for field in wire:
+                if field not in WIRE_KEYS:
+                    e(f"{where}.wire: unknown field {field!r}")
+            key = wire.get("key")
+            if key not in predicate.get("over", []):
+                e(f"{where}.wire.key: {key!r} is not among the attributes the "
+                  "predicate ranges over")
+            elif key in attributes and wire.get("operator") not in attributes[key].get(
+                "operators", []
+            ):
+                e(f"{where}.wire.operator: {wire.get('operator')!r} is not an "
+                  f"operator of {key!r}")
+            if wire.get("value") not in VALUE_FORMS:
+                e(f"{where}.wire.value: expected one of {sorted(VALUE_FORMS)}")
+            elif (
+                wire["value"] == "point"
+                and key in attributes
+                and attributes[key].get("type") not in ORDERED_TYPES
+            ):
+                e(f"{where}.wire.value: a point candidate needs an ordered "
+                  f"attribute, and {key!r} is not one")
+            if wire.get("satisfied_when") not in SATISFACTION:
+                e(f"{where}.wire.satisfied_when: expected one of "
+                  f"{sorted(SATISFACTION)}")
 
     budget = manifest.get("budget", {})
     for field in budget:
@@ -191,10 +227,40 @@ def validate_manifest(manifest: dict[str, Any]) -> list[str]:
     if budget and budget.get("scope", "per_standing_interest") != "per_standing_interest":
         e("budget.scope: the budget's scope is per_standing_interest and a "
           "manifest cannot change it (specification Section 24.3)")
-    for section in ("granularity", "bits_per_attribute"):
+    for section in ("granularity", "domain", "bits_per_attribute"):
         for key in budget.get(section, {}):
             if key not in attributes:
                 e(f"budget.{section}: {key!r} is not a declared attribute")
+    if budget.get("prior", "uniform") != "uniform":
+        e("budget.prior: only 'uniform' is defined by this format version")
+    # E-12: a bit budget is a bound on a posterior, and a posterior needs a
+    # finite public hypothesis space. The lattice gives it: cells of
+    # min_bucket_width, edges on its multiples (origin 0), between the
+    # domain's bounds.
+    for key, bits in budget.get("bits_per_attribute", {}).items():
+        width = budget.get("granularity", {}).get(key, {}).get("min_bucket_width")
+        domain = budget.get("domain", {}).get(key)
+        if not width:
+            e(f"budget.bits_per_attribute.{key}: needs a granularity, the "
+              "lattice the hypothesis space is cut on")
+            continue
+        if not isinstance(domain, dict) or "min" not in domain or "max" not in domain:
+            e(f"budget.bits_per_attribute.{key}: needs a domain {{min, max}} -- "
+              "without a finite hypothesis space no posterior can be computed")
+            continue
+        low, high = domain["min"], domain["max"]
+        if not low < high:
+            e(f"budget.domain.{key}: min must be below max")
+            continue
+        if low % width or high % width:
+            e(f"budget.domain.{key}: bounds must fall on the lattice "
+              f"(multiples of {width})")
+            continue
+        cells = (high - low) // width
+        if bits > math.log2(cells):
+            e(f"budget.bits_per_attribute.{key}: {bits} bits exceeds the "
+              f"{math.log2(cells):.2f} bits the domain holds; the budget "
+              "would never bind")
 
     return errors
 

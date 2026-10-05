@@ -19,11 +19,11 @@
         "open_attribute": "session"
       },
       "authority": {
-        "PROBE": "true",
-        "DISCLOSE": "true",
-        "INTRODUCE": "true",
-        "PUBLISH_PROJECTION": "true",
-        "NEGOTIATE_NONBINDING": "true"
+        "PROBE": true,
+        "DISCLOSE": true,
+        "INTRODUCE": true,
+        "PUBLISH_PROJECTION": true,
+        "NEGOTIATE_NONBINDING": true
       }
     },
     "B": {
@@ -38,11 +38,11 @@
         "open_attribute": "session"
       },
       "authority": {
-        "PROBE": "true",
-        "DISCLOSE": "true",
-        "INTRODUCE": "true",
-        "PUBLISH_PROJECTION": "true",
-        "NEGOTIATE_NONBINDING": "true"
+        "PROBE": true,
+        "DISCLOSE": true,
+        "INTRODUCE": true,
+        "PUBLISH_PROJECTION": true,
+        "NEGOTIATE_NONBINDING": true
       },
       "conditional_on": [
         "anchor_investor_commitment"

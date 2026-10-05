@@ -1,23 +1,27 @@
 {
-  "scenario": "t03",
+  "scenario": "consent-waives-no-authority",
+  "notes": "A granted reveal_identity consent opens a possibility and waives no other row of 16.3. Once B's Principal withdraws INTRODUCE, neither door confirms the identity: a claim on principal_identity is declined, and so is its disclosure (10.6, 16.3). Found by the first independent implementation (E-02).",
+  "spec": [
+    "10.6",
+    "16.1",
+    "16.3"
+  ],
   "setup": {
     "A": {
       "conditions": {
         "domain": [
           "enterprise_software"
         ],
-        "open_attribute": "value"
+        "principal_identity": "Borealis SA"
       },
       "policy": {
         "domain": "discovery",
-        "open_attribute": "session"
+        "principal_identity": "session"
       },
       "authority": {
         "PROBE": true,
         "DISCLOSE": true,
-        "INTRODUCE": true,
-        "PUBLISH_PROJECTION": true,
-        "NEGOTIATE_NONBINDING": true
+        "INTRODUCE": true
       }
     },
     "B": {
@@ -25,20 +29,16 @@
         "domain": [
           "enterprise_software"
         ],
-        "open_attribute": "value",
         "principal_identity": "Acme GmbH"
       },
       "policy": {
         "domain": "discovery",
-        "open_attribute": "session",
         "principal_identity": "session"
       },
       "authority": {
         "PROBE": true,
         "DISCLOSE": true,
-        "INTRODUCE": true,
-        "PUBLISH_PROJECTION": true,
-        "NEGOTIATE_NONBINDING": true
+        "INTRODUCE": true
       }
     }
   },
@@ -54,55 +54,31 @@
         "claims": [
           {
             "claim_id": "c1",
-            "key": "principal_identity",
-            "operator": "equals",
-            "value": "Acme GmbH"
-          }
-        ]
-      }
-    },
-    {
-      "request_consent": {
-        "from": "A",
-        "action": "disclose_attributes",
-        "scope": [
-          "principal_identity"
-        ]
-      }
-    },
-    {
-      "ask": {
-        "from": "A",
-        "claims": [
-          {
-            "claim_id": "c2",
             "key": "domain",
             "operator": "intersects",
             "value": [
               "enterprise_software"
-            ],
-            "supersedes": [
-              "c1"
             ]
           }
         ]
+      },
+      "expect_results": [
+        {
+          "claim_id": "c1",
+          "result": "compatible"
+        }
+      ]
+    },
+    {
+      "qualify": {
+        "role": "B",
+        "expect": true
       }
     },
     {
       "qualify": {
-        "role": "B"
-      }
-    },
-    {
-      "qualify": {
-        "role": "A"
-      }
-    },
-    {
-      "request_disclosure": {
-        "from": "A",
-        "attribute": "principal_identity",
-        "purpose": "handoff"
+        "role": "A",
+        "expect": true
       }
     },
     {
@@ -112,13 +88,14 @@
         "scope": [
           "principal_identity"
         ]
-      }
+      },
+      "expect_consent": "granted"
     },
     {
-      "request_disclosure": {
-        "from": "A",
-        "attribute": "principal_identity",
-        "purpose": "handoff"
+      "set_authority": {
+        "role": "B",
+        "level": "INTRODUCE",
+        "value": false
       }
     },
     {
@@ -126,13 +103,30 @@
         "from": "A",
         "claims": [
           {
-            "claim_id": "c9",
+            "claim_id": "c2",
             "key": "principal_identity",
             "operator": "equals",
             "value": "Acme GmbH"
           }
         ]
-      }
+      },
+      "expect_results": [
+        {
+          "claim_id": "c2",
+          "result": "declined"
+        }
+      ]
+    },
+    {
+      "request_disclosure": {
+        "from": "A",
+        "attribute": "principal_identity",
+        "purpose": "introduce"
+      },
+      "expect_disclosure": "declined",
+      "forbid_substrings": [
+        "Acme"
+      ]
     }
   ]
 }

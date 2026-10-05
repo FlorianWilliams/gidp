@@ -163,7 +163,8 @@
               "name",
               "over",
               "semantics",
-              "computable_from"
+              "computable_from",
+              "wire"
             ],
             "properties": {
               "name": {
@@ -186,6 +187,39 @@
                   "exchanged_claims",
                   "private_evaluation"
                 ]
+              },
+              "wire": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "key",
+                  "operator",
+                  "value",
+                  "satisfied_when"
+                ],
+                "description": "How the predicate travels: as claims on `key` with `operator`. `point`: the claim names one candidate value, and the responder answers whether it satisfies its private value. `satisfied_when`: `both_directions` -- each side answered compatible to the same value; `one_direction` -- one compatible answer suffices.",
+                "properties": {
+                  "key": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "operator": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "value": {
+                    "enum": [
+                      "point",
+                      "range"
+                    ]
+                  },
+                  "satisfied_when": {
+                    "enum": [
+                      "both_directions",
+                      "one_direction"
+                    ]
+                  }
+                }
               }
             }
           }
@@ -222,6 +256,30 @@
         },
         "scope": {
           "const": "per_standing_interest"
+        },
+        "domain": {
+          "type": "object",
+          "description": "Per budgeted attribute, the finite public hypothesis space: the lattice cells between min and max. Without it no posterior can be computed.",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "min",
+              "max"
+            ],
+            "properties": {
+              "min": {
+                "type": "number"
+              },
+              "max": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        "prior": {
+          "const": "uniform",
+          "description": "The prior over the domain's cells. Only uniform is defined by this format version."
         }
       }
     },

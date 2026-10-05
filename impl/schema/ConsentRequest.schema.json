@@ -62,10 +62,15 @@
     }
   },
   "required": [
+    "action",
+    "binding_commitment",
     "expires_at",
-    "session_id",
+    "reciprocal",
     "request_id",
-    "action"
+    "scope",
+    "session_id",
+    "type",
+    "version"
   ],
   "title": "ConsentRequest",
   "type": "object",

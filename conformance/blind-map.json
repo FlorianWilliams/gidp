@@ -1,0 +1,20 @@
+{
+  "_comment": "Blind name -> scenario. NOT handed to an implementer: the names leak outcomes. Scenarios 14 and 15 (0.2 draft semantics) are excluded from the blind 0.1 corpus. t01-t13 are the set the first independent evaluation ran (October 2026, as they were then).",
+  "map": {
+    "t01": "01-nominal-qualification",
+    "t02": "02-consent-before-qualification",
+    "t03": "03-identity-three-doors",
+    "t04": "04-responder-only-dependency",
+    "t05": "05-incompatible-closes-even-mid-wait",
+    "t06": "06-deferred-qualification-recomputed",
+    "t07": "07-post-qualification-freeze",
+    "t08": "08-profile-minimum-coverage",
+    "t09": "09-handoff-needs-its-consent",
+    "t10": "10-never-leaves-no-trace",
+    "t11": "11-depth-refuses-never-pends",
+    "t12": "12-authority-false-is-a-refusal",
+    "t13": "13-cross-direction-requests",
+    "t14": "16-requester-sends-no-private-value",
+    "t15": "17-consent-waives-no-authority"
+  }
+}

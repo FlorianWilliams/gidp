@@ -69,9 +69,11 @@
     }
   },
   "required": [
+    "endpoint",
     "expires_at",
     "projection_id",
-    "endpoint"
+    "type",
+    "version"
   ],
   "title": "DiscoveryProjection",
   "type": "object",

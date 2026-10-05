@@ -1,6 +1,6 @@
 {
   "scenario": "handoff-needs-its-consent",
-  "notes": "A Handoff MUST be preceded by a granted consent whose action is handoff and whose scope names this target (14.7). CONSENTED via another action establishes nothing; a consent for one target does not cover another.",
+  "notes": "A Handoff MUST be preceded by a granted consent whose action is handoff and whose scope names this target (14.7). CONSENTED via another action establishes nothing; a consent for one target does not cover another. After the Handoff the session is HANDED_OFF, or already CLOSED with reason completed (17.2); the corpus accepts either (E-06).",
   "spec": [
     "14.5",
     "14.7"
@@ -18,11 +18,11 @@
         "open_attribute": "session"
       },
       "authority": {
-        "PROBE": "true",
-        "DISCLOSE": "true",
-        "INTRODUCE": "true",
-        "PUBLISH_PROJECTION": "true",
-        "NEGOTIATE_NONBINDING": "true"
+        "PROBE": true,
+        "DISCLOSE": true,
+        "INTRODUCE": true,
+        "PUBLISH_PROJECTION": true,
+        "NEGOTIATE_NONBINDING": true
       }
     },
     "B": {
@@ -37,11 +37,11 @@
         "open_attribute": "session"
       },
       "authority": {
-        "PROBE": "true",
-        "DISCLOSE": "true",
-        "INTRODUCE": "true",
-        "PUBLISH_PROJECTION": "true",
-        "NEGOTIATE_NONBINDING": "true"
+        "PROBE": true,
+        "DISCLOSE": true,
+        "INTRODUCE": true,
+        "PUBLISH_PROJECTION": true,
+        "NEGOTIATE_NONBINDING": true
       }
     }
   },
@@ -97,7 +97,10 @@
     {
       "handoff": {
         "from": "A",
-        "target": "urn:example:negotiation",
+        "target": {
+          "kind": "protocol",
+          "protocol_ref": "urn:example:negotiation"
+        },
         "expect_error": true
       }
     },
@@ -114,21 +117,31 @@
     {
       "handoff": {
         "from": "A",
-        "target": "urn:example:other",
+        "target": {
+          "kind": "protocol",
+          "protocol_ref": "urn:example:other"
+        },
         "expect_error": true
       }
     },
     {
       "handoff": {
         "from": "A",
-        "target": "urn:example:negotiation"
+        "target": {
+          "kind": "protocol",
+          "protocol_ref": "urn:example:negotiation"
+        }
       }
     },
     {
       "state": {
         "role": "A",
-        "expect": "HANDED_OFF"
-      }
+        "expect": [
+          "HANDED_OFF",
+          "CLOSED"
+        ]
+      },
+      "_comment": "Section 17.2 lets the emitter close with reason completed at once after a Handoff (HANDED_OFF -> CLOSED); either state conforms."
     }
   ]
 }

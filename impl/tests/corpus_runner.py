@@ -29,7 +29,7 @@ from gidp.objects import (
     DisclosurePolicy,
     StandingInterest,
 )
-from gidp.session import ProtocolError
+from gidp.session import Phase, ProtocolError
 from gidp.vocab import (
     Authority,
     AuthorityValue,
@@ -55,6 +55,21 @@ def _class_of(spec: str) -> DisclosureClass:
     )
 
 
+def _authority_value(value: Any) -> AuthorityValue:
+    # The grammar writes `true` / `false` as JSON booleans (E-04);
+    # `approval_required` is the only string.
+    if isinstance(value, bool):
+        return AuthorityValue.TRUE if value else AuthorityValue.FALSE
+    return AuthorityValue(value)
+
+
+def _target_ref(target: Any) -> str:
+    # Section 14.7: a target is an object; the corpus uses protocol targets,
+    # whose protocol_ref is what a handoff consent's scope names (E-03).
+    assert isinstance(target, dict) and target["kind"] == "protocol", target
+    return str(target["protocol_ref"])
+
+
 def _build_agent(name: str, setup: dict[str, Any]) -> Agent:
     policy = {k: _class_of(v) for k, v in setup.get("policy", {}).items()}
     if "conditional_on_policy" in setup:
@@ -66,7 +81,7 @@ def _build_agent(name: str, setup: dict[str, Any]) -> Agent:
     )
     authority = AuthoritySpec(
         levels={
-            Authority[level]: AuthorityValue(value)
+            Authority[level]: _authority_value(value)
             for level, value in setup.get("authority", {}).items()
         }
     )
@@ -103,6 +118,7 @@ class Corpus:
         self.pending_disclosure: tuple | None = None
         self.pending_consent: tuple | None = None
         self.held_ask: tuple | None = None
+        self.transitions = {name: 0 for name in self.agents}
 
     def run(self, steps: list[dict]) -> None:
         for i, step in enumerate(steps):
@@ -130,6 +146,11 @@ class Corpus:
             asker = self.agents[spec["from"]]
             answerer = b if asker is a else a
             claims = [Claim(**c) for c in spec["claims"]]
+            if step.get("expect_error") or spec.get("expect_error"):
+                # The sender's own implementation refuses to emit (14.3).
+                with pytest.raises(ProtocolError):
+                    asker.ask(claims)
+                return
             request = asker.ask(claims)
             if spec.get("hold"):
                 # The responder receives the question and holds it for a
@@ -226,17 +247,43 @@ class Corpus:
             return
 
         if "qualify" in step:
+            # E-08: `expect` is whether the side is QUALIFIED after this
+            # step. This implementation triggers the transition here; one
+            # that re-evaluates on its own may treat the step as a no-op.
             spec = step["qualify"]
-            got = self.agents[spec["role"]].session.qualify()
+            session = self.agents[spec["role"]].session
+            if session.qualify():
+                self.transitions[spec["role"]] += 1
+            got = session.phase is Phase.QUALIFIED
             assert got is spec["expect"], (
-                f"{label}: qualify() -> {got}, expected {spec['expect']}"
+                f"{label}: QUALIFIED after qualify -> {got}, expected {spec['expect']}"
             )
+            return
+
+        if "opportunities" in step:
+            # Qualification is reached at most once (17.2), and the
+            # initiator's transition and its Opportunity are one event:
+            # the count of transitions is the count of emissions.
+            spec = step["opportunities"]
+            got = self.transitions[spec["role"]]
+            assert got == spec["expect"], (
+                f"{label}: {got} Opportunities emitted, expected {spec['expect']}"
+            )
+            return
+
+        if "set_authority" in step:
+            # The Principal changes a delegation mid-session. Local: nothing
+            # crosses the wire.
+            spec = step["set_authority"]
+            levels = self.agents[spec["role"]].standing_interest.authority.levels
+            levels[Authority[spec["level"]]] = _authority_value(spec["value"])
             return
 
         if "state" in step:
             spec = step["state"]
             got = self.agents[spec["role"]].session.state
-            assert got is SessionState[spec["expect"]], (
+            accepted = spec["expect"] if isinstance(spec["expect"], list) else [spec["expect"]]
+            assert got in {SessionState[name] for name in accepted}, (
                 f"{label}: state {got}, expected {spec['expect']}"
             )
             return
@@ -271,9 +318,9 @@ class Corpus:
             agent = self.agents[spec["from"]]
             if step.get("expect_error") or spec.get("expect_error"):
                 with pytest.raises(ProtocolError):
-                    agent.handoff(spec["target"])
+                    agent.handoff(_target_ref(spec["target"]))
                 return
-            handoff = agent.handoff(spec["target"])
+            handoff = agent.handoff(_target_ref(spec["target"]))
             other = b if agent is a else a
             if spec.get("expect_recipient_error"):
                 from gidp.vocab import CloseReason
