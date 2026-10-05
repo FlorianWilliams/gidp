@@ -1,7 +1,7 @@
 # Specification issues found while implementing
 
 Every ambiguity met while writing this implementation is logged here before
-being resolved in code, per the working rule of the implementation plan. An
+being resolved in code; that is the working rule of this implementation. An
 implementation that found nothing would mean the implementer stopped reading
 carefully.
 
