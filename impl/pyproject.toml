@@ -30,7 +30,7 @@ build-backend = "setuptools.build_meta"
 # good. It is declared once a domain exists; an unresolvable placeholder
 # here fails the build, which is the correct behaviour.
 # [project.urls]
-# Specification = "{{CANONICAL_URL}}"
+# Specification = "https://gidp.dev"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -8,8 +8,8 @@ status: Non-normative companion to GIDP 0.1
 # Open Problems and Design Rationale
 
 **Status:** non-normative companion to *Graduated Interest Disclosure Protocol (GIDP) — Draft 0.1*. Nothing here is a requirement. Where this document and the specification disagree, the specification is authoritative.
-**Author:** {{AUTHOR}}, Independent. Contact: {{CONTACT}}.
-**Canonical location:** {{CANONICAL_URL}}.
+**Author:** Florian Williams, Independent. Contact: contact@gidp.dev.
+**Canonical location:** https://gidp.dev.
 **Licence:** CC BY 4.0.
 **Date:** 23 September 2026.
 

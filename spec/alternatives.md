@@ -7,7 +7,7 @@ status: Non-normative companion to GIDP 0.1
 
 # Why not use an existing mechanism?
 
-**{{AUTHOR}}, Independent · {{CONTACT}} · {{CANONICAL_URL}} · CC BY 4.0 · non-normative**
+**Florian Williams, Independent · contact@gidp.dev · https://gidp.dev · CC BY 4.0 · non-normative**
 
 The first objection to any new protocol is that something already does the
 job. For this one the candidates are obvious: hire an intermediary, publish a

@@ -99,5 +99,5 @@ Code under `impl/`: **Apache License 2.0** — see [`LICENSE`](LICENSE).
 
 ## Contact
 
-{{AUTHOR}}, Independent. {{CONTACT}}.
-Canonical location: {{CANONICAL_URL}}.
+Florian Williams, Independent. contact@gidp.dev.
+Canonical location: https://gidp.dev.

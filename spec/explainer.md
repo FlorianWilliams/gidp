@@ -1,6 +1,6 @@
 # The transactions nobody advertises
 
-**{{AUTHOR}} · {{CANONICAL_URL}} · September 2026**
+**Florian Williams · https://gidp.dev · September 2026**
 
 Most of what happens in an economy is advertised. Jobs are posted, companies are listed, properties go on the market, suppliers publish catalogues. Discovery systems are built on that assumption: someone says what they want, someone else searches for it, software matches them.
 
@@ -56,4 +56,4 @@ Three things would change it substantially. A demonstration that each vertical n
 
 I would rather learn any of those from a reviewer in 2026 than from a failed deployment in 2028.
 
-The specification, the companion note on open problems, the use cases and the code are at {{CANONICAL_URL}}. Objections are more useful than agreement, and the most useful thing anyone can tell me is which prior art I have missed.
+The specification, the companion note on open problems, the use cases and the code are at https://gidp.dev. Objections are more useful than agreement, and the most useful thing anyone can tell me is which prior art I have missed.
