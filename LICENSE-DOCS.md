@@ -5,7 +5,7 @@ published under the **Creative Commons Attribution 4.0 International
 licence (CC BY 4.0)**.
 
     Graduated Interest Disclosure (GIDP)
-    Copyright (c) 2026 {{AUTHOR}}
+    Copyright (c) 2026 Florian Williams
 
     This work is licensed under the Creative Commons Attribution 4.0
     International License. To view a copy of this license, visit

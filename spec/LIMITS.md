@@ -1,6 +1,6 @@
 # Where this protocol should not be used
 
-**{{AUTHOR}} · {{CANONICAL_URL}} · 23 September 2026 · non-normative**
+**Florian Williams · https://gidp.dev · 23 September 2026 · non-normative**
 
 Four domains have been run against a single implementation of the core, and
 they work. They were also all chosen because they would. This document is the

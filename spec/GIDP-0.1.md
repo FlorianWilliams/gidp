@@ -12,8 +12,8 @@ category: Experimental
 **Category:** Experimental.
 **Version:** 0.1. This is the first public draft. It consolidates three earlier internal drafts and incorporates the results of two independent adversarial reviews of the consolidated text and of four external review passes by two independent reviewers, each reading the specification without the reference implementation.
 **Date:** 28 September 2026.
-**Author / editor:** {{AUTHOR}}, Independent. Contact: {{CONTACT}}.
-**Canonical location:** {{CANONICAL_URL}}. Comments, objections and implementation reports are welcome; see Appendix E.
+**Author / editor:** Florian Williams, Independent. Contact: contact@gidp.dev.
+**Canonical location:** https://gidp.dev. Comments, objections and implementation reports are welcome; see Appendix E.
 **Licence:** this document is published under the Creative Commons Attribution 4.0 International licence (CC BY 4.0). The reference implementation published alongside it is licensed under the Apache License 2.0. The author is aware of no intellectual property rights covering the mechanisms described here and has filed none.
 **Intended audience:** agent-platform developers, protocol designers, identity and privacy infrastructure providers, marketplace operators, enterprise software vendors, mechanism-design and privacy researchers.
 
@@ -1033,7 +1033,7 @@ The most likely first binding is an extension of an agent-to-agent protocol such
   "capabilities": {
     "extensions": [
       {
-        "uri": "{{CANONICAL_URL}}/extensions/conditional-interest-discovery/0.1",
+        "uri": "https://gidp.dev/extensions/conditional-interest-discovery/0.1",
         "description": "Graduated Interest Disclosure 0.1",
         "required": false,
         "params": { "profiles": ["core"] }
@@ -1393,7 +1393,7 @@ Capability discovery answers *intent → capable agent*. GIDP answers *private p
 
 **Governance.** Should GIDP become an A2A extension, a separate protocol or a reusable application profile? Which parts should be standardised versus left to Discovery Providers? What namespace and versioning model? If GIDP gains adoption, what governance structure preserves neutrality?
 
-**How to comment.** The canonical location of this document is {{CANONICAL_URL}}. Objections, corrections, implementation reports and refutations should go to the issue tracker there, or to {{CONTACT}}. Every substantive comment received will be answered in public and, where it changes the text, recorded in the revision history with attribution. A companion document at the same location, *Open Problems and Design Rationale*, carries the non-normative material that does not belong in a specification: the mapping from this document's requirements to existing cryptographic and identity mechanisms, the candidate directions for the open problem of Section 24.3, and the reasoning behind choices this text states without arguing.
+**How to comment.** The canonical location of this document is https://gidp.dev. Objections, corrections, implementation reports and refutations should go to the issue tracker there, or to contact@gidp.dev. Every substantive comment received will be answered in public and, where it changes the text, recorded in the revision history with attribution. A companion document at the same location, *Open Problems and Design Rationale*, carries the non-normative material that does not belong in a specification: the mapping from this document's requirements to existing cryptographic and identity mechanisms, the candidate directions for the open problem of Section 24.3, and the reasoning behind choices this text states without arguing.
 
 **Five questions for reviewers.**
 
