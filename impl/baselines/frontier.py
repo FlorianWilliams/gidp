@@ -1,15 +1,15 @@
-"""The bound-utility frontier, as an instrument rather than an opinion.
+"""The bound-utility frontier, measured.
 
 Section 24.3's open problem used to be "is there a bound". There is one, and
 the question became "is there a better one": a policy that holds an adversary
-as low while refusing fewer honest counterparties. That is not a question to
-answer by argument. It is two numbers per policy, on axes everyone agrees on,
+as low while refusing fewer honest counterparties. That question is answered
+by measurement: two numbers per policy, on axes everyone agrees on,
 so that any proposal can be dropped in and compared.
 
     python -m baselines.frontier
 
-Axes. **Leak**: bits a probing counterparty extracts about the threshold,
-lower better. **Service**: honest counterparties served out of forty, higher
+Axes. Leak: bits a probing counterparty extracts about the threshold,
+lower better. Service: honest counterparties served out of forty, higher
 better. A policy is dominated when another leaks no more and serves no fewer.
 
 Four families are measured, including one from `open-problems.md` that had
@@ -85,12 +85,12 @@ class GranularityFloor(Policy):
     """`open-problems.md`'s minimum granularity, finally measured.
 
     A bound is probed at the edge of whatever band is asked, so constraining
-    the *width* of a band achieves nothing — the edge is still wherever the
+    the *width* of a band achieves nothing: the edge is still wherever the
     querent puts it. Constraining where the edges may fall is different: if
     every bound must be a multiple of w, no sequence of questions locates the
     value more precisely than w, however many are asked.
 
-    It holds no state at all, which is its interesting property: honest
+    It holds no state at all, which is its main property: honest
     traffic does not deplete it, and it cannot be drained.
     """
 
@@ -131,7 +131,7 @@ def _probe(policy: Policy, attempts: int = 40) -> float:
     """An adversary that respects whatever the policy allows.
 
     It bisects on the finest lattice the policy will answer on, which is the
-    honest way to measure a granularity floor: an adversary does not keep
+    fair way to measure a granularity floor: an adversary does not keep
     asking questions it knows will be refused.
     """
     lattice = getattr(policy, "width", STEP)
@@ -256,16 +256,16 @@ def main() -> None:
     for name, leak, served in sorted(best, key=lambda c: c[1]):
         print(f"  {name:<34} {leak:>6.2f}b  {served}/{HONEST}")
     print()
-    print("The granularity floor is the result worth looking at, and it had")
+    print("The granularity floor is the main result here, and it had")
     print("never been measured. It holds no state, so honest traffic does not")
     print("deplete it and an adversary cannot drain it; and because a bound is")
     print("probed at the edge of whatever band is asked, constraining where the")
-    print("edges may fall caps the resolution outright at log2(range / width)")
+    print("edges may fall caps the resolution at log2(range / width)")
     print("however many questions are asked. Its cost is that a customer must")
     print("round its question to the lattice, which is a real loss of precision")
-    print("and not a refusal.")
+    print("but not a refusal.")
     print()
-    print("This table is the instrument, not the answer. A policy that lands")
+    print("This table is an instrument for comparing policies. A policy that lands")
     print("below and to the right of everything here is an improvement, and")
     print("adding one is a subclass and a line.")
 

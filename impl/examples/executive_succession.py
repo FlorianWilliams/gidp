@@ -9,14 +9,14 @@ is the claim the publication puts at risk:
     candidate retrieval, compatibility, progressive disclosure, authority,
     consent and Handoff substantially unchanged.
 
-So the interesting part of this file is what is *not* in it. There is no new
+What matters in this file is what is *not* in it. There is no new
 object, no new claim operator, no new disclosure class, no new authority level
-and no new state. Compared with `cross_border.py` — a cross-border corporate
-transaction — the only differences are the claim keys, the values, and which
+and no new state. Compared with `cross_border.py`, a cross-border corporate
+transaction, the only differences are the claim keys, the values, and which
 attributes the two Principals choose to keep evaluation-only.
 
 A domain where that stopped being true would be evidence against the protocol,
-and `tests/test_horizontality.py` checks it mechanically rather than trusting
+and `tests/test_horizontality.py` checks it mechanically instead of relying on
 this paragraph.
 
     python examples/executive_succession.py
@@ -195,7 +195,7 @@ CLAIMS = [
 
 def run(verbose: bool = True) -> tuple[Agent, Agent, Wire]:
     wire = Wire()
-    # The board initiates: it is the side that is actually searching, and the
+    # The board initiates: it is the side that is searching, and the
     # side that must not publish a projection to do so.
     b = Agent(
         ref="agent:opaque:board",
@@ -267,7 +267,7 @@ def run(verbose: bool = True) -> tuple[Agent, Agent, Wire]:
 
 def main() -> None:
     print(LINE)
-    print("Appendix C.2 — executive succession (person <-> organisation)")
+    print("Appendix C.2: executive succession (person <-> organisation)")
     print(LINE)
     print()
     say("", "The candidate is not looking. The board's search is itself the")

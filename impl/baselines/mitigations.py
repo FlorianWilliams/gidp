@@ -1,4 +1,4 @@
-"""Do the specification's anti-inference levers actually work?
+"""Do the specification's anti-inference levers work?
 
 Section 15.5 gives a responder three moves: answer truthfully, coarsen to
 `conditionally_compatible`, or decline. Section 24.3 says an adaptive
@@ -10,14 +10,14 @@ helps. None of that had ever been measured.
 The harness sweeps answering policies against query budgets and reports two
 numbers per cell: how much a probing counterparty extracts, and whether the
 protocol can still tell a compatible counterparty from an incompatible one.
-The second number is the one that stops the exercise being trivial — a
+The second number stops the exercise from being trivial: a
 responder that answers `conditionally_compatible` to everything leaks
 nothing and qualifies everyone.
 
-**On randomised policies.** A candidate value survives if it *could* have
+On randomised policies: a candidate value survives if it *could* have
 produced the observed answer, so a policy is written as the set of answers
-it admits rather than the one it gives. That is the possibilistic posterior,
-which is the honest one to use against an adversary that knows the policy.
+it admits instead of the one it gives. That is the possibilistic posterior,
+which is the correct one to use against an adversary that knows the policy.
 """
 
 from __future__ import annotations
@@ -49,7 +49,7 @@ QUALIFYING = {ClaimResult.COMPATIBLE, ClaimResult.CONDITIONALLY_COMPATIBLE}
 
 #: How many times the adversary will re-ask a question that stopped narrowing
 #: its hypothesis space before abandoning that fact. Repetition is pointless
-#: against a deterministic policy and is exactly how a randomised one is
+#: against a deterministic policy and is how a randomised one is
 #: defeated, so the number has to be greater than one and finite.
 PATIENCE = 12
 
@@ -130,7 +130,7 @@ def decision_of(
     The answer a policy gives and the *decision* to give it are different
     objects, and only the second is at issue here. A truthful oracle leaks
     through its answers, which is what it is for. What [KMN2005] forbids is a
-    decision -- to withhold, to blur -- that is itself computed from the data
+    decision (to withhold, to blur) that is itself computed from the data
     being protected, because then the choice carries the datum.
     """
     admissible = policy(evaluation, over_budget)
@@ -149,7 +149,7 @@ def is_simulatable(policy: Policy, claim: Claim, candidates) -> bool:
 
     An attacker that knows the policy can reproduce a simulatable decision
     without the data, so the decision tells it nothing. A decision that
-    differs between two candidate values is a channel exactly as wide as the
+    differs between two candidate values is a channel as wide as the
     answer it was supposed to replace.
     """
     decisions = {
@@ -196,11 +196,11 @@ class Cell:
 
 
 def probe(policy: Policy, budget: int, seed: int = 7) -> tuple[float, int]:
-    """A posterior-driven adversary, not a bisection.
+    """A posterior-driven adversary, distinct from a bisection.
 
     At each step it asks the question that best splits whichever fact it is
     least sure of, and filters the candidate set by what could have produced
-    the answer it saw. Three consequences, all deliberate: an uninformative
+    the answer it saw. By design, an uninformative
     answer costs it a query and nothing else; it will re-ask the same
     question when that is still the best split, which is how a randomised
     policy is defeated; and it never needs to know the policy's internals,
@@ -231,7 +231,7 @@ def probe(policy: Policy, budget: int, seed: int = 7) -> tuple[float, int]:
         if on_floor:
             ordered = sorted(floors)
             # The threshold that halves the surviving candidates. Asking the
-            # median *candidate* rather than the midpoint of the range is what
+            # median *candidate* instead of the midpoint of the range is what
             # keeps every query informative; getting this wrong makes the
             # adversary re-ask a question that no longer splits anything.
             threshold = ordered[(len(ordered) - 1) // 2]
@@ -353,11 +353,11 @@ def main() -> None:
     print("the one the specification illustrates: Section 15.4 coarsens when the")
     print("truthful answer would have been affirmative, so the choice to coarsen")
     print("is the affirmative answer, spelled differently. That is the general")
-    print("reason behind the identical rows below, and it is a 2005 result rather")
-    print("than a property of this implementation.")
+    print("reason behind the identical rows below, and it is a 2005 result and")
+    print("not a property of this implementation.")
     print()
-    print("The coarsening of Section 15.4 buys a factor, not a bound. At a budget")
-    print(f"of eight it holds the adversary to {d8:.2f} bits where a plainly truthful")
+    print("The coarsening of Section 15.4 buys a factor but no bound. At a budget")
+    print(f"of eight it holds the adversary to {d8:.2f} bits where a purely truthful")
     print(
         f"oracle gives up {t8:.2f}; at an unbounded budget it gives up {d_bits:.2f} all the"
     )
@@ -373,7 +373,7 @@ def main() -> None:
     print("it qualifies everyone, including every counterparty that should have")
     print("been refused. Declining every local answer leaks nothing either and")
     print(
-        f"scores {dec[1]:.0%}/{dec[2]:.0%} — it qualifies no one. Neither is a mitigation;"
+        f"scores {dec[1]:.0%}/{dec[2]:.0%}: it qualifies no one. Neither is a mitigation;"
     )
     print("both are the oracle switched off, which is Section 24.3's remark about")
     print("discrimination turned into a measurement.")
@@ -391,7 +391,7 @@ def main() -> None:
     print("The query budget is the only lever in this sweep that bounds anything,")
     print("and the L-3 limit case already showed it cannot be keyed to a")
     print("counterparty when one side faces many. A budget keyed to the asker")
-    print("needs an identity the design deliberately does not carry.")
+    print("needs an identity the design chooses not to carry.")
     print()
     print("None of this makes the protocol unusable. It makes the open problem")
     print("of Section 24.3 concrete: the levers the specification offers trade")

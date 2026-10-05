@@ -116,7 +116,7 @@ def test_consent_to_disclose_can_be_sought_before_qualification():
     a.session.record_consent(response)
     b.session.record_consent(response, discharge=False)
 
-    # A grant before qualification is a gate being opened, not a stage of the
+    # A grant before qualification opens a gate and is not a stage of the
     # session: both sides are back where they were.
     assert a.session.state is SessionState.PROBING
     assert b.session.state is SessionState.PROBING
@@ -420,7 +420,7 @@ def _responder_dependent_pair(conditional_on_class: DisclosureClass | None):
 
 def test_a_responders_withheld_dependency_reaches_the_opportunity():
     """S-32: B's evaluation_only dependency, unknown to A, must still mark
-    the Opportunity as contingent -- as `undisclosed`, never by name."""
+    the Opportunity as contingent, as `undisclosed`, never by name."""
     response, opportunity = _responder_dependent_pair(None)
     assert response.contingent_on == ["undisclosed"]
     assert opportunity.contingent_on == ["undisclosed"]
@@ -576,8 +576,8 @@ def test_identity_cannot_ride_disclose_attributes_before_qualification():
 
 
 def test_a_disclosure_request_on_identity_is_declined_without_reveal_consent():
-    """S-33: the rule attaches to the data, not the message. The class here
-    is `session` with no gate -- the reviewer's sharpest case, in which
+    """S-33: the rule attaches to the data, whatever the message. The class
+    here is `session` with no gate, the reviewer's sharpest case, in which
     nothing but the identity rule itself stands between the request and the
     value."""
     a, b = _identity_pair(gate=Gate.NONE)
@@ -606,7 +606,7 @@ def test_identity_travels_after_a_reveal_identity_consent():
 
 def test_qualification_reached_while_a_disclosure_is_pending_defers():
     """S-34: the qualifying result can arrive during DISCLOSURE_PENDING; the
-    transition neither fires there nor lapses -- it fires on the return to
+    transition neither fires there nor lapses; it fires on the return to
     PROBING."""
     a, b = _pair()
     # A disclosure request is outstanding...
@@ -616,7 +616,7 @@ def test_qualification_reached_while_a_disclosure_is_pending_defers():
     _exchange(a, b, [Claim(key="domain", operator=ClaimOperator.INTERSECTS,
                            value=["enterprise_software"])])
     # Section 17.2: while the request is pending, the status is not yet
-    # reported qualifying -- it is recomputed on the return to PROBING.
+    # reported qualifying; it is recomputed on the return to PROBING.
     assert a.session.status() is SessionStatus.OPEN
     assert a.session.qualify() is False, "must not fire while pending"
     assert a.session.state is SessionState.DISCLOSURE_PENDING
@@ -631,10 +631,10 @@ def test_qualification_reached_while_a_disclosure_is_pending_defers():
 
 
 def test_a_result_arriving_during_the_wait_counts_at_the_return():
-    """The reviewer's exact sequence: qualifying at step 2, `unknown` at
-    step 3 during the same wait -- the session must NOT qualify at step 4,
+    """The reviewer's sequence: qualifying at step 2, `unknown` at
+    step 3 during the same wait. The session must NOT qualify at step 4,
     because the conditions are recomputed over the propositions then
-    standing, not remembered from mid-wait."""
+    standing instead of being remembered from mid-wait."""
     a, b = _pair()
     request = a.request_disclosure("open_attribute", purpose="qualify")
     # Step 2: a qualifying exchange completes during the wait.
@@ -742,7 +742,7 @@ def test_the_kept_status_survives_a_pending_consent():
 
 
 # ---------------------------------------------------------------------------
-# Fresh reviewer, third reading points applied same day -- S-56 to S-58
+# Fresh reviewer, third reading points applied same day: S-56 to S-58
 # ---------------------------------------------------------------------------
 
 
@@ -775,7 +775,7 @@ def test_a_handoff_without_its_consent_is_refused():
     """S-58: being in CONSENTED establishes nothing about *this* action."""
     a, b = _pair()
     _qualify_both(a, b)
-    # A consent exists -- for something else entirely.
+    # A consent exists, for something else.
     consent = a.request_consent(ConsentAction.DISCLOSE_ATTRIBUTES, ["open_attribute"])
     granted = b.handle_consent_request(consent)
     a.record_consent(granted)
@@ -818,7 +818,7 @@ def test_a_requester_cannot_send_its_own_private_value():
 
 def test_a_requester_cannot_send_its_own_private_dependency():
     """E-01, Sections 14.3 and 19.1: the four reserved lists are the
-    requester's values like any other -- the evaluator's exact case."""
+    requester's values like any other (the evaluator's own case)."""
     a = Agent(ref="agent:a", standing_interest=_interest(
         interest=ConditionalInterest(
             action="consider",
@@ -892,7 +892,7 @@ def test_identity_disclosure_rereads_introduce_at_every_use():
     granted = b.handle_disclosure_request(
         a.request_disclosure("principal_identity", purpose="introduce")
     )
-    assert granted.status is DisclosureStatus.GRANTED  # the door is really open
+    assert granted.status is DisclosureStatus.GRANTED  # the gate is open
     a.session.record_disclosure(granted)
     b.standing_interest.authority.levels[Authority.INTRODUCE] = AuthorityValue.FALSE
     response = b.handle_disclosure_request(

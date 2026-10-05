@@ -124,7 +124,7 @@ def claims(draw):
 
 
 # ---------------------------------------------------------------------------
-# Section 15.5 — truthfulness
+# Section 15.5: truthfulness
 # ---------------------------------------------------------------------------
 
 
@@ -156,7 +156,7 @@ def test_a_definite_answer_requires_a_definite_truth(interest, claim):
 
 
 # ---------------------------------------------------------------------------
-# Sections 9.1 and 10 — a local value never leaves its holder
+# Sections 9.1 and 10: a local value never leaves its holder
 # ---------------------------------------------------------------------------
 
 
@@ -179,11 +179,11 @@ def _appears_in(value, payload) -> bool:
 @SETTINGS
 @given(standing_interests(), st.lists(claims(), min_size=1, max_size=6))
 def test_a_responder_never_transmits_its_own_local_values(interest, claim_list):
-    """Section 9.1, as a property rather than as one scenario.
+    """Section 9.1, as a property instead of a single scenario.
 
     Per sender, which is the nuance S-09 forced into the open: a querent may
-    name a value the responder happens to hold, and that is the querent's
-    disclosure, not the responder's.
+    name a value the responder holds, and that is the querent's
+    disclosure and not the responder's.
     """
     assume(interest.authority.permits(Authority.PROBE))
     responder = Agent(ref="agent:opaque:r", standing_interest=interest)
@@ -278,7 +278,7 @@ def test_a_projection_never_carries_a_local_value(interest):
 
 
 # ---------------------------------------------------------------------------
-# Section 17.2 — the state machine admits nothing it has not defined
+# Section 17.2: the state machine admits nothing it has not defined
 # ---------------------------------------------------------------------------
 
 EVENTS = ("ask", "disclose", "consent", "handoff", "close")
@@ -322,7 +322,7 @@ def test_every_event_sequence_either_advances_or_is_refused(interest, events):
 
                 a.session.close(CloseReason.COMPLETED)
         except ProtocolError:
-            # A refusal is a defined outcome; the point is that it is raised
-            # rather than silently accepted.
+            # A refusal is a defined outcome; what matters is that it is raised
+            # and the event is never silently accepted.
             continue
         assert a.session.state is not None

@@ -1,13 +1,13 @@
 """Appendix C.3: a commercial partnership, using dependency primitives.
 
 The third domain, and the first to use the dependency primitives of Section
-19.1 — `provides` and `requires` — bilaterally. Section 19.1 says only
+19.1, `provides` and `requires`, bilaterally. Section 19.1 says only
 `excludes` must be supported by every implementation; the other three require
 the `dependency_primitives` feature, so this example is also the one that
 exercises feature negotiation (Section 14.1).
 
 The shape is a common one: two
-companies whose partnership would obviously work, and who will never find out,
+companies whose partnership would work, and who will never find out,
 because neither will tell the other what it lacks. Admitting a capability gap
 to a potential partner is admitting it to a potential competitor.
 
@@ -124,7 +124,7 @@ logistics = StandingInterest(
 
 
 # --------------------------------------------------------------------------
-# A customs brokerage: has exactly that capability, needs the network.
+# A customs brokerage: has that capability, needs the network.
 # --------------------------------------------------------------------------
 
 brokerage = StandingInterest(
@@ -183,7 +183,7 @@ def _claims_for(mine: StandingInterest) -> list[Claim]:
 
     Section 19.1 used bilaterally: `requires: X` on one side meets
     `provides: X` on the other. Note that the *gap* itself is never named on
-    the wire as a gap — the claim asks about a capability, and only the
+    the wire as a gap: the claim asks about a capability, and only the
     asker's own Standing Interest records that it is missing.
     """
     claims = [
@@ -290,10 +290,10 @@ def run(verbose: bool = True) -> tuple[Agent, Agent, Wire]:
 
 def main() -> None:
     print(LINE)
-    print("Appendix C.3 — commercial partnership, with dependency primitives")
+    print("Appendix C.3: commercial partnership, with dependency primitives")
     print(LINE)
     print()
-    say("", "Each side lacks exactly what the other has. Neither will say so:")
+    say("", "Each side lacks what the other has. Neither will say so:")
     say("", "a capability gap admitted to a partner is admitted to a rival.")
     print()
 
@@ -305,12 +305,12 @@ def main() -> None:
     print(LINE)
     say(
         "Logis.",
-        f"requires {logistics.interest.requires} — "
+        f"requires {logistics.interest.requires}; "
         f"provides {logistics.interest.provides}",
     )
     say(
         "Broker",
-        f"requires {brokerage.interest.requires} — "
+        f"requires {brokerage.interest.requires}; "
         f"provides {brokerage.interest.provides}",
     )
     say("", "the match is exact and neither side named its own gap on the wire:")
@@ -323,7 +323,7 @@ def main() -> None:
     print(LINE)
     say("", f"{len(wire.transcript)} objects, all from the GIDP 0.1 core set")
     say("", "the only novelty is the declared feature: dependency_primitives,")
-    say("", "which adds claim keys, not objects, operators or states")
+    say("", "which adds claim keys and no objects, operators or states")
 
 
 if __name__ == "__main__":

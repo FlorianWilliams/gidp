@@ -277,10 +277,10 @@ class Session:
         """A claim may withdraw only an answered claim of its own sender, and
         never one answered `incompatible` (S-24).
 
-        The second rule is the one that matters. A known contradiction closes
+        The second rule matters more. A known contradiction closes
         the session (Section 17.2); letting its asker withdraw it and ask a
-        neighbouring value instead would make bisection -- the attack of
-        Section 24.3 -- a supported feature of the protocol.
+        neighbouring value instead would make bisection (the attack of
+        Section 24.3) a supported feature of the protocol.
         """
         for claim_id in claim_ids:
             proposition = f"{direction}:{claim_id}"
@@ -386,7 +386,7 @@ class Session:
             and ClaimResult.COMPATIBLE in values
             and all(v in qualifying for v in values)
             # Section 15.2: the profile's qualification requirements enter
-            # the entry conditions directly -- a required dimension nobody
+            # the entry conditions directly: a required dimension nobody
             # has examined blocks the transition however positively the
             # examined ones answered.
             and self.required_dimensions <= covered
@@ -417,8 +417,8 @@ class Session:
             # peer_status None; on the wire every result arrives with a
             # report, so None never occurs in a real exchange.
             # Section 14.6: qualification is the conjunction of both sides'
-            # entry conditions. The responder confirms its own -- profile
-            # requirements included -- through the status it reports, and
+            # entry conditions. The responder confirms its own (profile
+            # requirements included) through the status it reports, and
             # the initiator does not emit until that report qualifies.
             return False
         self._fire(QUALIFY)
@@ -483,7 +483,7 @@ class Session:
         dependencies were stated by the peer and travel as they are. This
         side's own travel by name only if its policy permits it; otherwise a
         single ``undisclosed`` marks the Opportunity as contingent without
-        saying on what -- the fact of contingency is a result derived from an
+        saying on what. The fact of contingency is a result derived from an
         evaluation-only attribute, which `evaluation_only` permits. A `never`
         dependency leaves no trace, because a flag that exists only because
         of it would be a transmitted result produced from it.

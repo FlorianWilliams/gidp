@@ -1,7 +1,7 @@
 """The comparative claim, guarded.
 
 `spec/alternatives.md` rests on these numbers. A change to the protocol that
-silently moves them should fail here rather than be discovered by a reader.
+silently moves them should fail here before a reader discovers it.
 """
 
 from __future__ import annotations
@@ -16,8 +16,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from baselines.measure import COUNTERPARTY, OPERATOR, PUBLIC, Fact, Ledger
 from baselines.mechanisms import (
-    cid_adversarial,
-    cid_honest,
+    gidp_adversarial,
+    gidp_honest,
     private_set_intersection,
     public_posting,
     sealed_one_shot,
@@ -66,7 +66,7 @@ def test_only_the_intermediary_hands_both_secrets_to_a_third_party():
         public_posting,
         sealed_one_shot,
         private_set_intersection,
-        cid_honest,
+        gidp_honest,
     ):
         assert mechanism().third_party is None
 
@@ -84,8 +84,8 @@ def test_only_publication_leaks_to_an_unbounded_audience():
         trusted_broker,
         sealed_one_shot,
         private_set_intersection,
-        cid_honest,
-        cid_adversarial,
+        gidp_honest,
+        gidp_adversarial,
     ):
         assert mechanism().ledger.total(PUBLIC) == 0.0
 
@@ -97,11 +97,11 @@ def test_set_intersection_cannot_decide_the_case():
 def test_the_two_cryptographic_baselines_presuppose_the_rendezvous():
     assert sealed_one_shot().presupposes_rendezvous
     assert private_set_intersection().presupposes_rendezvous
-    assert not cid_honest().presupposes_rendezvous
+    assert not gidp_honest().presupposes_rendezvous
 
 
 def test_probing_extracts_substantially_more_than_asking():
-    honest, probing = cid_honest(), cid_adversarial()
+    honest, probing = gidp_honest(), gidp_adversarial()
     assert probing.ledger.total(COUNTERPARTY) > honest.ledger.total(COUNTERPARTY)
     # The gap is the open problem. If it ever closes, say why.
     assert probing.ledger.total(COUNTERPARTY) > 9.0
@@ -115,7 +115,7 @@ def test_the_coarsening_of_section_15_4_stops_no_inference():
 
     Coarsening an affirmative local answer replaces one deterministic result
     with another. The adversary's partition of the hypothesis space is
-    unchanged, so the leakage is identical to answering plainly.
+    unchanged, so the leakage is identical to answering without coarsening.
     """
     for budget in (4, 8, 16, 64):
         plain, _ = probe(POLICIES["truthful (no coarsening)"], budget)
@@ -161,7 +161,7 @@ def test_a_budget_is_the_only_lever_that_bounds():
 
 
 def test_a_per_counterparty_budget_bounds_nothing_against_many_identities():
-    """The bits track budget times identities, not the budget."""
+    """The bits track budget times identities; the budget alone does not bound them."""
     from baselines.sybil import probe_with_identities
 
     policy = POLICIES["default (spec 15.4)"]
@@ -230,8 +230,8 @@ def test_the_coarsest_projection_drains_the_publisher():
 
 
 def test_resolving_one_hierarchy_removes_the_recall_penalty():
-    """The recall cost of a precise projection is the provider's, not the
-    protocol's: it disappears with one hierarchy and no ontology."""
+    """The recall cost of a precise projection belongs to the provider and
+    not to the protocol: it disappears with one hierarchy and no ontology."""
     from baselines.projection import (
         LEVELS,
         population,
@@ -258,7 +258,7 @@ def test_resolving_one_hierarchy_removes_the_recall_penalty():
     resolved = recall(resolving(LEVELS[0]))
     assert plain < 0.5
     assert resolved > 0.95
-    # And the publisher conceded exactly as much to the index either way.
+    # And the publisher conceded the same amount to the index either way.
     assert resolving(LEVELS[0]).projection_bits == LEVELS[0].projection_bits
 
 
@@ -293,8 +293,8 @@ def test_a_separating_budget_exists_once_the_secret_is_large_enough():
     """The correction to a statement made too broadly.
 
     The Sybil demonstration reported that no cap both stopped the attacker
-    and served the honest counterparty. That held for its own scenario — 41
-    candidate values against a five-claim session — and was stated as though
+    and served the honest counterparty. That held for its own scenario (41
+    candidate values against a five-claim session) and was stated as though
     it held generally. It does not: the window opens as the secret grows.
     """
     from baselines.separability import extraction_cost

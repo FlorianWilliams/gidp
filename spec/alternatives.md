@@ -13,8 +13,8 @@ The first objection to any new protocol is that something already does the
 job. For this one the candidates are obvious: hire an intermediary, publish a
 listing, run a secure comparison, compute a private set intersection. The
 specification answered that objection in prose, with a table of requirements
-mapped to mechanisms. Prose written by the author of the protocol is worth
-nothing as evidence.
+mapped to mechanisms, and prose written by the author of the protocol is
+worth nothing as evidence.
 
 This document replaces it with a measurement. Four existing mechanisms and
 this protocol are given the same case, the same private facts and the same
@@ -66,37 +66,37 @@ is permanent and its audience is unbounded.
 Read the intermediary, the sealed comparison and the honest GIDP rows together.
 Against a counterparty that asks what it needs and stops, these three leak
 roughly the same amount to that counterparty: 4.30, 4.66, 4.66 bits. The bit count does
-not separate them, and a comparison that stopped at the first column would
-measure nothing.
+not separate them, and a comparison that stopped at the "→ counterparty"
+column would measure nothing.
 
 **The intermediary** learns everything, exactly, permanently, and again for
 every pair it serves. This is the status quo (the banker, the headhunter, the
 corporate development team), and it works, which is why any protocol that
 cannot beat it on something is pointless. It is beaten on one thing only,
-the second column.
+the "→ operator" column.
 
 **The listing** leaks less in total than the intermediary, and for a company
 that is not for sale it is the worst of the five, because the audience is
-unbounded and the disclosure cannot be withdrawn. The existence of the
-interest is one bit, and it is the only bit that mattered.
+unbounded and the disclosure cannot be withdrawn; the existence of the
+interest is one bit, and it was the only bit that mattered.
 
 **The ideal sealed comparison** (a secure two-party computation of an agreed
 predicate, modelled at its theoretical best) is the clear winner on leakage
 among the mechanisms that decide the case. Anyone who needs a single yes or no
 and has already found their counterparty should use it rather than this
-protocol. It cannot find the counterparty, it cannot agree the predicate
-without naming the dimensions, it cannot report which dimensions are open
-rather than a single bit, and it cannot answer conditionally so that a near
+protocol. But it cannot find the counterparty, nor agree the predicate
+without naming the dimensions; it reports a single bit rather than which
+dimensions are open; and it cannot answer conditionally so that a near
 miss can be repaired.
 
 **Private set intersection** leaks the least of all, 2.00 bits, and cannot
 decide the case: the binding conditions here are a threshold and a condition,
-not set membership. Leaking nothing about a question you cannot ask is not a
+not set membership, and leaking little about a question it cannot ask is no
 privacy property.
 
 **GIDP** is the only one of the five that performs discovery, decides the case,
-and leaves no third party holding both secrets. That is all it
-buys, and it is narrower than the specification's prose implied.
+and leaves no third party holding both secrets. Those three properties are
+all it buys, which is less than the specification's prose implied.
 
 ## What it costs
 
@@ -113,7 +113,7 @@ the strongest argument against deploying this protocol as it stands.
 
 Section 15.5 gives a responder three moves: answer truthfully, coarsen to
 `conditionally_compatible`, or decline. The specification presents coarsening
-as an inference-limiting lever. It was never measured. Sweeping answering
+as an inference-limiting lever, but this had never been measured. Sweeping answering
 policies against query budgets, with an adversary that asks whichever question
 best splits its remaining hypotheses and re-asks it when the answer was
 uninformative:
@@ -131,13 +131,13 @@ condition, out of 7.94. Right: the true positive and true negative rates of an
 honest session, swept across every counterparty in the prior. Both rates must
 be high for a policy to be worth anything; either alone is trivial.
 
-Four findings, in descending order of how uncomfortable they are.
+The findings follow, the most uncomfortable first.
 
 **The coarsening of Section 15.4 stops no inference at all.** Its row is
 identical to the purely truthful row in every cell. The reason is structural
 rather than empirical: coarsening an affirmative answer replaces one
 deterministic result with another, so the adversary's partition of the
-hypothesis space is unchanged and the relabelling costs it nothing. The lever
+hypothesis space is unchanged and the relabelling costs it nothing. Coarsening
 protects the *value* from being transmitted, which is real and is what
 Section 15.4 was written for, and it provides no protection against inference,
 which is what Sections 15.5 and 24.3 implied it provided. That was a defect in the
@@ -169,18 +169,18 @@ identity this design chooses not to carry.
 
 ## What this changes
 
-Nothing in the object model, the state machine or the authority ladder. One
-thing in the text: the specification no longer describes coarsening as an
+The object model, the state machine and the authority ladder are unchanged.
+In the text, the specification no longer describes coarsening as an
 inference-limiting measure, and Section 24.3 now names the two controls that
 bound adaptive inference: a granularity lattice, which caps the resolution of
 any answer, and an information budget kept per Standing Interest, which
 refuses a claim whose worst-case answer would cost more bits than the budget
-allows. Counting claims, as the sweep above does, was itself the error: a
+allows. The sweep above counts claims, and that was the error: a
 budget denominated in questions cannot separate an honest counterparty from a
 probing one (see the last section of this document).
 
-It also changes one thing in the argument. The claim used to be that existing
-mechanisms cannot do this. It is now that each of them gives up exactly one
+The argument changes too. The claim used to be that existing
+mechanisms cannot do this; it is now that each of them gives up exactly one
 thing GIDP keeps (the intermediary gives up having no one to trust, the listing
 gives up privacy altogether, the sealed comparison and the set intersection give
 up discovery), and that GIDP keeps all of them only for as long as the counterparty's questions
@@ -217,7 +217,7 @@ risk. On a synthetic index of two thousand publishers and three hundred
 querents, an over-precise projection is retrieved *less*, since it answers only
 querents who described the target in the same words (naming a city hides
 you from someone who named the country). A projection coarse enough to
-be retrieved by everyone is retrieved by everyone, and at a session's worth of
+match every querent is retrieved by all of them, and at a session's worth of
 inference per retrieval the publisher is drained completely. The usable band
 is narrow, and the quantity that locates it is visible to the Discovery
 Provider rather than to the publisher.
@@ -228,10 +228,10 @@ claim whose operator does not fit the shape of the private value raised an
 uncaught exception instead of answering `unknown`. That is both a denial of
 service available to any counterparty and an inference channel, since the
 responder's failure is a function of the shape of its own secret. Section 14.2
-now requires `unknown`. Every hand-written test had passed, because an author
-writes the claims the protocol was designed for.
+now requires `unknown`. Every hand-written test had passed, because their author
+wrote only the claims the protocol was designed for.
 
-None of the three changes what GIDP does. All three change what the
+The three leave GIDP's behaviour as it was and change what the
 specification may claim, and the first two narrow the claim in the same
 direction the table above does: this protocol's guarantees hold against a
 counterparty whose questions are bounded. Since these measurements were

@@ -1,7 +1,7 @@
 """Emit JSON Schema for every transmitted object.
 
 GIDP 0.2 must publish a normative JSON Schema (Appendix F.1). Generating it
-from working code rather than writing it by hand means the required fields
+from working code, instead of writing it by hand, means the required fields
 have been exercised by an implementation before they are frozen.
 
     python tools/emit_schema.py schema/
@@ -39,7 +39,7 @@ ENVELOPE = ("type", "version", "session_id", "expires_at")
 
 #: The required fields the specification lists per object (Sections 11.1,
 #: 14.1-14.8), mirrored here because a field with a default in the code is
-#: not "required" to pydantic -- which is how the first export omitted
+#: not "required" to pydantic, which is how the first export omitted
 #: `type` and `version` everywhere (E-09). `test_schema` checks that every
 #: name below is a property of its object, so this table cannot drift into
 #: naming fields that do not exist.

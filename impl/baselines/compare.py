@@ -95,36 +95,36 @@ def main() -> None:
     print(
         f"trusted intermediary {cp(broker):.2f}. Those three are close, and the closeness"
     )
-    print("is the point: what separates them is not the bit count.")
+    print("matters: the bit count does not separate them.")
     print()
     print(
         f"The intermediary leaks {broker.ledger.total(OPERATOR):.2f} bits of a possible {TOTAL:.2f} to a third"
     )
-    print("party — everything, exactly, permanently, and again for every pair it")
-    print("serves. That column is the one GIDP empties, and emptying it is the whole")
-    print("of what GIDP buys.")
+    print("party: everything, exactly and permanently, and again for every pair it")
+    print("serves. That column is the one GIDP empties, and emptying it is all")
+    print("that GIDP buys.")
     print()
     print(
         f"The listing leaks {listing.ledger.total(PUBLIC):.2f} bits to an unbounded and permanent"
     )
-    print("audience. That is not a smaller number than the others, it is a")
-    print("different kind of number, and for a company that is not for sale it is")
+    print("audience. That number is of a different kind from the others,")
+    print("whatever its size, and for a company that is not for sale it is")
     print("the only number that matters.")
     print()
     print(
         f"Private set intersection leaks the least at {cp(psi):.2f} bits and cannot decide"
     )
     print("the case: the binding conditions here are a threshold and a condition,")
-    print("not set membership. The sealed comparison decides it and cannot find the")
+    print("and neither is set membership. The sealed comparison decides it and cannot find the")
     print("counterparty in the first place. Both presuppose the rendezvous that is")
-    print("the actual problem.")
+    print("the real problem.")
     print()
     print(
         f"Against a probing counterparty GIDP gives up {cp(probing):.2f} bits in "
         f"{probing.queries} queries,"
     )
     print(
-        f"{100 * cp(probing) / TOTAL:.0f}% of everything at stake — more than the intermediary leaks to"
+        f"{100 * cp(probing) / TOTAL:.0f}% of everything at stake, more than the intermediary leaks to"
     )
     print("the counterparty, and the intermediary at least knows who it is trusting.")
     print("That is Section 24.3 with a number attached, and it is the strongest")

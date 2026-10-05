@@ -77,8 +77,7 @@ with this one. Known implementations, including a first independent
 clean-room implementation and what it found, are listed in
 [`IMPLEMENTATIONS.md`](IMPLEMENTATIONS.md).
 
-How much rests on that question has been measured.
-Unprotected, a counterparty that spends questions instead of asking once
+The probing attack has been measured. Unprotected, a counterparty that spends questions instead of asking once
 extracts 65% of everything private in the worked case, in seventeen claims,
 and the coarsening the specification illustrates stops none of it. Two
 controls the specification recommends do bound it (§24.3). An information
@@ -87,11 +86,11 @@ answers it might give, holds a probing counterparty to under one bit of a
 five-bit secret while serving most honest counterparties; because it is kept
 per interest rather than per counterparty, an adversary holding several
 identities does not dilute it. A claim lattice caps the resolution of any
-answer outright, whatever the number of claims. A budget kept per
+answer, whatever the number of claims. A budget kept per
 counterparty, by contrast, is bypassed by multiple identities (§24.4).
 `spec/alternatives.md` has the numbers.
 
-What remains open is narrower, and stated as such. A budget can be spent by
+What remains open is narrower. A budget can be spent by
 an adversary, so that honest counterparties are refused: a cost in
 availability rather than in secrecy. Correlations between attributes are not
 bounded by budgets kept attribute by attribute. And no result yet says how

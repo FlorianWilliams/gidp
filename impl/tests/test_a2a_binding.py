@@ -1,8 +1,8 @@
-"""Section 22.2 against the published A2A mechanism, not against memory.
+"""Section 22.2 checked against the published A2A mechanism.
 
 The binding is a sketch in the specification and non-normative here too.
-What these tests protect is narrower and worth protecting: that the sketch
-matches the four fields A2A actually defines, that it does not skip the
+These tests protect something narrower: that the sketch
+matches the four fields A2A defines, that it does not skip the
 activation round trip, and that every GIDP object can in fact be carried.
 """
 
@@ -62,7 +62,7 @@ def test_the_extension_is_never_declared_required():
 
 
 def test_declaration_is_not_activation():
-    """The step the specification's sketch omitted entirely."""
+    """The step the specification's sketch omitted."""
     assert echo_activation({}) == {}
     assert not is_active({})
 

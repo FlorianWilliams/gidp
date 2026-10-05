@@ -2,7 +2,7 @@
 
 This example implements the attack the specification names as its open
 problem, and measures it. It ships with the protocol on purpose: an
-implementer setting a query budget deserves a number rather than an intuition,
+implementer setting a query budget deserves a measured number to set it by,
 and a weakness the authors demonstrate themselves is one nobody has to publish
 as a finding against us.
 
@@ -158,10 +158,10 @@ def main() -> None:
     print(LINE)
     print("A value that is never transmitted is located to within a bucket in a")
     print("handful of queries. A budget low enough to stop the attacker also")
-    print("stops an honest counterparty from resolving a genuine question: the")
+    print("stops an honest counterparty from resolving a real question: the")
     print("two are the same lever. Section 24.3 states the open problem; this")
-    print("is what it costs in practice, and why the abuse controls of 12.5 and")
-    print("24.3 are engineering mitigations rather than guarantees.")
+    print("is what it costs, and why the abuse controls of 12.5 and 24.3 are")
+    print("engineering mitigations and not guarantees.")
 
 
 if __name__ == "__main__":

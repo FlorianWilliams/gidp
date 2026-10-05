@@ -1,11 +1,11 @@
 """The A2A binding of Section 22.2, exercised against the real mechanism.
 
 Section 22.2 is a sketch and says so. Writing it against the published
-Agent2Agent specification rather than from memory turned up three things the
+Agent2Agent specification, instead of from memory, turned up three things the
 sketch had wrong or missing, all recorded in `../../SPEC-ISSUES.md` as S-14,
 and one question the sketch does not raise at all.
 
-What A2A actually provides, as of its version 1.0:
+What A2A provides, as of its version 1.0:
 
 *Declaration.* An agent advertises an extension in its Agent Card, under
 `capabilities.extensions`, as an `AgentExtension` object with four fields:
@@ -25,8 +25,8 @@ cannot collide and core types are never modified.
 
 The question the sketch does not raise: GIDP has its own negotiation.
 Section 14.1 has `SessionOpen` propose features and `SessionAccept` return
-the intersection actually supported. Layered on A2A there are now two
-handshakes, and they are not redundant — the A2A one asks *do you speak GIDP
+the intersection supported by both. Layered on A2A there are now two
+handshakes, and each has its own job: the A2A one asks *do you speak GIDP
 at all*, the GIDP one asks *which of GIDP's optional features are in force for
 this session*. Conflating them is the obvious implementation mistake, and
 the second is not derivable from the first: a peer may activate the
@@ -59,9 +59,9 @@ OBJECT_KEY = f"{EXTENSION_URI}/object"
 #: The activation header of the A2A extension mechanism.
 ACTIVATION_HEADER = "A2A-Extensions"
 
-# SessionClose and DiscoveryProjection are neither requests nor responses --
+# SessionClose and DiscoveryProjection are neither requests nor responses:
 # a close discharges an outstanding request or stands alone (Section 14), and
-# a projection travels to a provider rather than to a peer -- so the object
+# a projection travels to a provider instead of a peer. So the object
 # module's three tuples do not enumerate every object that crosses a wire.
 # A binding has to, or it silently cannot carry them.
 _BY_TYPE = {
@@ -130,8 +130,8 @@ def parse_activation(headers: dict[str, str]) -> list[str]:
 def echo_activation(headers: dict[str, str]) -> dict[str, str]:
     """What a responder that supports GIDP returns.
 
-    It echoes only what it actually activated, which is the whole point of
-    the round trip: a client cannot assume its request was honoured.
+    It echoes only what it activated. That is the purpose of the round
+    trip: a client cannot assume its request was honoured.
     """
     requested = parse_activation(headers)
     return activation_header([EXTENSION_URI]) if EXTENSION_URI in requested else {}
@@ -149,9 +149,9 @@ def is_active(response_headers: dict[str, str]) -> bool:
 def to_message(obj: TransmittedObject, role: str = "agent") -> dict[str, Any]:
     """Wrap a GIDP object in an A2A Message.
 
-    The object goes in `metadata` under a URI-prefixed key, not in a Part:
+    The object goes in `metadata` under a URI-prefixed key, outside any Part:
     A2A's own guidance is that an extension adds attributes to the metadata
-    map rather than modifying core types, and a GIDP object is not content
+    map and leaves core types unmodified, and a GIDP object is not content
     for a human to read.
     """
     return {

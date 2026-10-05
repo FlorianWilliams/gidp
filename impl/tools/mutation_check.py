@@ -5,13 +5,13 @@
 Coverage says which lines ran. It does not say whether anything would have
 failed had those lines been wrong, and a suite can execute every line of a
 specification while asserting nothing about it. Each mutation below removes
-or inverts one load-bearing guarantee. A mutation that *survives* — the suite
-still passes — marks a guarantee the tests do not actually defend, and is a
-finding about the tests rather than about the code.
+or inverts one guarantee the specification depends on. A mutation that
+*survives* (the suite still passes) marks a guarantee the tests do not defend,
+and is a finding about the tests and not about the code.
 
 The mutations are chosen from the properties the specification asks a
-conforming implementation to have, not from whatever happens to be easy to
-break.
+conforming implementation to have, and not from whatever happens to be easy
+to break.
 """
 
 from __future__ import annotations
@@ -208,7 +208,7 @@ MUTATIONS = (
     Mutation(
         "a shape mismatch answers unknown rather than failing (14.2, S-13)",
         "gidp/evaluation.py",
-        "        if not all(isinstance(v, Hashable) for v in (*left, *right)):\n            # A range has no membership to intersect. The honest answer is\n            # that this Agent cannot determine one (Section 15.1), not a\n            # crash -- see the note on shape mismatches below.\n            return None\n",
+        "        if not all(isinstance(v, Hashable) for v in (*left, *right)):\n            # A range has no membership to intersect. The correct answer is\n            # that this Agent cannot determine one (Section 15.1); raising\n            # would be wrong (see the note on shape mismatches above).\n            return None\n",
         "",
     ),
     Mutation(

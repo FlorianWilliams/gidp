@@ -1,13 +1,12 @@
 """Every object a session produces validates against the generated schema.
 
 GIDP 0.2 must publish a normative JSON Schema. Generating it from the models
-is only useful if the schema actually accepts what a conforming session emits,
+is only useful if the schema accepts what a conforming session emits,
 so this replays two complete sessions and validates every object on the wire
 against the schema file that `tools/emit_schema.py` writes.
 
-This is the test that would catch a schema drifting from the code — which is
-the usual fate of a hand-maintained schema, and the reason 0.1 deliberately
-publishes none.
+This is the test that would catch a schema drifting from the code, which is
+the usual fate of a hand-maintained schema and the reason 0.1 publishes none.
 """
 
 from __future__ import annotations

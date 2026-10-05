@@ -1,4 +1,4 @@
-"""The mechanism [KMN2005] actually prescribes, applied here.
+"""The mechanism [KMN2005] prescribes, applied here.
 
 Everything measured so far tried to bound leakage by counting questions. A
 question is the wrong unit. An honest counterparty asks one wide band and
@@ -7,11 +7,11 @@ everything. Counted in questions those two look alike, which is why no
 threshold separated them. Counted in *bits* they do not look alike at all.
 
 Simulatable auditing says the decision to answer or refuse must depend only
-on the queries asked and the answers already given — never on the datum being
-protected — so that an attacker able to reproduce the decision learns nothing
-from a refusal. That is implementable here, exactly, and it is automatic: no
-identity, no operator, no human, nothing carried across sessions but the
-responder's own record of what it has already said.
+on the queries asked and the answers already given, never on the datum being
+protected, so that an attacker able to reproduce the decision learns nothing
+from a refusal. That is implementable here without approximation, and it is
+automatic: it needs no identity, operator or human, and carries nothing across
+sessions but the responder's own record of what it has already said.
 
 The responder keeps the posterior an observer would hold: the set of values
 still consistent with everything it has answered. Before answering a new
@@ -49,11 +49,11 @@ def _answer_of(floor: int, claim: Claim) -> ClaimResult:
 
 @dataclass
 class Auditor:
-    """A budget denominated in bits, not in questions.
+    """A budget denominated in bits instead of questions.
 
     `posterior` is what an observer knows, held by the responder so that it
     can see what it is giving away. It is not secret: the observer has it too,
-    which is precisely what makes a refusal computed from it uninformative.
+    which is what makes a refusal computed from it uninformative.
     """
 
     budget_bits: float = 2.0
@@ -112,7 +112,7 @@ def extractor(auditor: Auditor, floor: int, attempts: int = 40) -> None:
 
 
 def honest(auditor: Auditor, floor: int, counterparties: int, seed: int = 5) -> int:
-    """Each asks once, about the band it can actually pay."""
+    """Each asks once, about the band it can pay."""
     rng = random.Random(seed)
     served = 0
     for _ in range(counterparties):
@@ -161,23 +161,23 @@ def main() -> None:
 
     print()
     print("=" * 92)
-    print("Why the unit was the whole problem")
+    print("Why the unit was the problem")
     print("=" * 92)
     print()
     print("An honest counterparty asks whether its ceiling clears the floor.")
     print("That is one question over a wide band and it costs a fraction of a")
     print("bit, so forty of them cost about what two of them cost. An extractor")
     print("asks a narrowing sequence, and each question costs a full bit by")
-    print("construction — that is what bisection *is*. Counted in questions the")
+    print("construction, since that is what bisection is. Counted in questions the")
     print("two populations overlap and no threshold separates them, which is")
     print("what every earlier measurement here reported. Counted in bits they")
     print("are not the same population at all.")
     print()
-    print("The refusal is also honest in the technical sense. It is computed")
+    print("The refusal is also uninformative in the technical sense. It is computed")
     print("from what the observer already knows, never from the value, so it")
     print("cannot be read as a signal about the value. An auditor that refused")
     print("because of the datum would be the leak it was built to stop, which")
-    print("is the 2005 result this implements rather than rediscovers.")
+    print("is the 2005 result this implements instead of rediscovering.")
     print()
     print("What it does not do: stop an adversary that accepts the budget and")
     print("takes what it buys. A budget of two bits gives away two bits, to")

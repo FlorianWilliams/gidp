@@ -2,8 +2,8 @@
 
 The Sybil demonstration reported that no cap both stopped the attacker and
 served the honest counterparty. That was true of the caps it tried, in the
-scenario it used, and stating it as a general result would be exactly the kind
-of claim this project keeps refusing to accept from itself.
+scenario it used, and stating it as a general result would be the kind of
+claim this project refuses to accept from itself.
 
 The quantity that decides it is a ratio. An honest session costs one claim per
 attribute it cares about. An extraction costs one bisection per *private*
@@ -31,7 +31,7 @@ from gidp.vocab import ClaimOperator  # noqa: E402
 def extraction_cost(candidates: int, step: int = 5_000_000) -> int:
     """Questions a posterior-driven adversary needs to resolve one threshold.
 
-    Measured against the real evaluator rather than assumed to be log2: a
+    Measured against the real evaluator instead of assumed to be log2: a
     bisection over a grid does not always land on a power of two, and the
     demonstration's five-question extraction was one such case.
     """
@@ -96,7 +96,7 @@ def main() -> None:
     print()
     print("Each private attribute must be bisected separately, so extraction")
     print("grows with how much is being protected while an honest session does")
-    print("not — it asks each attribute once whether it is private or not.")
+    print("not: it asks each attribute once whether it is private or not.")
     print()
     print(f"{'private attrs':>14} {'extraction':>12} {'honest':>9} {'window':>12}")
     print("-" * 92)
@@ -118,9 +118,9 @@ def main() -> None:
     print("A window is not a guarantee. An adversary that stays inside the cap")
     print("gets whatever the cap buys, every time, and an adversary patient")
     print("enough to return tomorrow gets it again unless the cap is a rate")
-    print("rather than a total. What the window does say is that the budget is")
-    print("a real instrument rather than a gesture, and that its setting is a")
-    print("computation rather than a guess: it sits between what a customer")
+    print("and not a total. What the window does say is that the budget is")
+    print("a real instrument, and that its setting can be")
+    print("computed instead of guessed: it sits between what a customer")
     print("needs and what the secret costs.")
 
 

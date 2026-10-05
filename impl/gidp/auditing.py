@@ -15,11 +15,11 @@ both are here.
 state, so honest traffic never depletes it and an adversary cannot drain it,
 and it needs nothing declared about the attribute beyond a width. Because a
 private bound is tested at the *edge* of the band asked, this caps resolution
-outright at `log2(range / width)` for any number of claims. Its cost is
+at `log2(range / width)` for any number of claims. Its cost is
 precision: a counterparty rounds its question and is answered.
 
 `BitBudget` caps how much the responder will concede in total. It is tighter
-and it is a commons: honest counterparties spend it too, and once spent the
+and it is shared: honest counterparties spend it too, and once spent the
 responder goes quiet. It also needs the deployment to declare what values an
 attribute may take, because "how much was conceded" has no meaning without
 knowing what was possible.
@@ -79,19 +79,19 @@ class GranularityLattice:
 class BitBudget:
     """Cap the information conceded about an attribute.
 
-    ``priors`` gives, per attribute, the values it might hold — **in the
-    shape the attribute actually holds them**. A threshold stored as
+    ``priors`` gives, per attribute, the values it might hold, in the
+    shape the attribute holds them. A threshold stored as
     ``{"min": 45_000_000}`` needs a prior of such mappings, not of bare
     integers: a prior in the wrong shape makes every candidate answer alike,
     which the worst-case rule reads as a maximally informative claim and
-    refuses. Everything still looks safe and nothing is ever answered, which
-    is the failure mode to know about because it is silent.
+    refuses. Everything still looks safe and nothing is ever answered; the
+    failure is silent, so it is worth knowing about.
 
-    Candidates are tracked by their position in the prior rather than by
+    Candidates are tracked by their position in the prior, not by their
     value, so a value of any shape works, hashable or not.
 
     The responder keeps the subset still consistent with what it has answered
-    — which is what an observer holds too, and is therefore not a secret —
+    (an observer holds the same subset, so it is not a secret)
     and refuses a claim whose *worst case over the answers it might give*
     would cross the budget. Taking the worst case is what keeps the decision
     independent of the value.
