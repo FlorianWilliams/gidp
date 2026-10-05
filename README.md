@@ -73,7 +73,9 @@ disagreement is logged in `impl/SPEC-ISSUES.md`.
 an attempt to break it: a market it claims to serve and does not, an inference
 attack cheaper than the one in `examples/probing.py`, a reading of the
 truthfulness rule that permits a lie, or a second implementation that disagrees
-with this one.
+with this one. Known implementations, including a first independent
+clean-room implementation and what it found, are listed in
+[`IMPLEMENTATIONS.md`](IMPLEMENTATIONS.md).
 
 How much rests on that question is now measured rather than asserted. A
 counterparty that spends questions instead of asking once extracts 65% of

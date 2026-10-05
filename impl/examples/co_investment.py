@@ -192,7 +192,10 @@ CLAIMS = [
     Claim(
         key="valuation_ceiling",
         operator=ClaimOperator.OVERLAPS,
-        value={"min": 70_000_000, "max": 110_000_000},
+        # A bucket hypothesis, not the company's own private range: Section
+        # 14.3 forbids a request to carry the requester's private values,
+        # and the reference refuses one that does (E-01).
+        value={"min": 80_000_000, "max": 100_000_000},
     ),
     # The dependency, asked plainly. The follower answers that it has one,
     # which tells the company the round is contingent, not assembled.

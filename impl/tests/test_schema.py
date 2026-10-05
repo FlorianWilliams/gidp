@@ -86,3 +86,37 @@ def test_the_schema_rejects_a_value_outside_a_closed_vocabulary(schema_dir):
     }
     with pytest.raises(jsonschema.ValidationError):
         jsonschema.validate(instance=bad, schema=schema)
+
+
+def test_every_field_the_specification_requires_is_required(schema_dir):
+    """E-09: the first export left `type` and `version` optional because the
+    code gives them defaults. The schema must say what the specification
+    says, and the mirror table must name only fields that exist."""
+    sys.path.insert(0, str(ROOT / "tools"))
+    from emit_schema import SPEC_REQUIRED
+
+    for name, fields in SPEC_REQUIRED.items():
+        schema = json.loads((schema_dir / f"{name}.schema.json").read_text())
+        for field in fields:
+            assert field in schema["properties"], f"{name}.{field} is not a property"
+            assert field in schema["required"], f"{name}.{field} is not required"
+
+
+def test_a_message_without_its_type_is_rejected(schema_dir):
+    _, _, wire = run_cross_border()
+    _, message = wire.transcript[0]
+    instance = message.model_dump(mode="json", exclude_none=True)
+    del instance["type"]
+    schema = json.loads(
+        (schema_dir / f"{type(message).__name__}.schema.json").read_text()
+    )
+    with pytest.raises(jsonschema.ValidationError):
+        jsonschema.validate(instance=instance, schema=schema)
+
+
+def test_the_committed_schemas_are_current(schema_dir):
+    for path in sorted(schema_dir.glob("*.json")):
+        committed = ROOT / "schema" / path.name
+        assert json.loads(committed.read_text()) == json.loads(path.read_text()), (
+            f"{path.name} is stale: run tools/emit_schema.py schema/"
+        )

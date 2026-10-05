@@ -103,10 +103,13 @@
     }
   },
   "required": [
+    "allowed_results",
+    "claims",
     "expires_at",
-    "session_id",
     "request_id",
-    "claims"
+    "session_id",
+    "type",
+    "version"
   ],
   "title": "CompatibilityRequest",
   "type": "object",

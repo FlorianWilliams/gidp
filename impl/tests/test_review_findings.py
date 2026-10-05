@@ -793,3 +793,110 @@ def test_a_handoff_consent_covers_only_its_named_target():
     assert a.handoff("urn:example:negotiation").target.protocol_ref == (
         "urn:example:negotiation"
     )
+
+
+# ---------------------------------------------------------------------------
+# E-01, E-02 — found by the first independent clean-room implementation
+# (TypeScript, from the published text alone, October 2026). Its audit
+# reproduced both against its own code; replayed against the reference,
+# both reproduced here too, and both tests failed before the fix.
+# ---------------------------------------------------------------------------
+
+
+def test_a_requester_cannot_send_its_own_private_value():
+    """E-01, Section 14.3: a request MUST NOT contain the requester's own
+    private values. Refused before emission, and nothing is recorded."""
+    a, b = _pair()
+    with pytest.raises(ProtocolError, match="14.3"):
+        a.ask([Claim(key="threshold", operator=ClaimOperator.OVERLAPS,
+                     value={"min": 0, "max": 80})])
+    # A hypothesis the requester does not hold travels normally.
+    response = _exchange(a, b, [Claim(key="threshold", operator=ClaimOperator.OVERLAPS,
+                                      value={"min": 50, "max": 60})])
+    assert response.results
+
+
+def test_a_requester_cannot_send_its_own_private_dependency():
+    """E-01, Sections 14.3 and 19.1: the four reserved lists are the
+    requester's values like any other -- the evaluator's exact case."""
+    a = Agent(ref="agent:a", standing_interest=_interest(
+        interest=ConditionalInterest(
+            action="consider",
+            conditions={"domain": ["enterprise_software"]},
+            conditional_on=["anchor_commitment"],
+        )
+    ))
+    b = Agent(ref="agent:b", standing_interest=_interest())
+    a.confirm_accept(b.handle_session_open(a.open_session("s-e1", purpose="test")))
+    with pytest.raises(ProtocolError, match="14.3"):
+        a.ask([Claim(key="conditional_on", operator=ClaimOperator.INTERSECTS,
+                     value=["anchor_commitment"])])
+    # A dependency the requester does not itself hold may be asked about.
+    _exchange(a, b, [Claim(key="conditional_on", operator=ClaimOperator.INTERSECTS,
+                           value=["other_dependency"])])
+
+
+def _identity_revealed_pair() -> tuple[Agent, Agent]:
+    from gidp.objects import AuthoritySpec, StandingInterest
+    from gidp.vocab import Authority, AuthorityValue
+
+    def interest(identity: str) -> StandingInterest:
+        base = _interest()
+        conditions = dict(base.interest.conditions, principal_identity=identity)
+        # Releasable at session depth once its consent is granted: the
+        # policy alone would let it go, so only authority can stop it.
+        policy = DisclosurePolicy(attributes={
+            **base.disclosure_policy.attributes,
+            "principal_identity": DisclosureClass(surface=Surface.SESSION),
+        })
+        return base.model_copy(update={
+            "interest": base.interest.model_copy(update={"conditions": conditions}),
+            "disclosure_policy": policy,
+            "authority": AuthoritySpec(levels={
+                **base.authority.levels,
+                Authority.INTRODUCE: AuthorityValue.TRUE,
+            }),
+        })
+
+    a = Agent(ref="agent:a", standing_interest=interest("Borealis SA"))
+    b = Agent(ref="agent:b", standing_interest=interest("Acme GmbH"))
+    a.confirm_accept(b.handle_session_open(a.open_session("s-e2", purpose="test")))
+    _qualify_both(a, b)
+    request = a.request_consent(ConsentAction.REVEAL_IDENTITY, ["principal_identity"])
+    response = b.handle_consent_request(request)
+    assert response.status is ConsentStatus.GRANTED
+    a.record_consent(response)
+    b.session.record_consent(response, discharge=False)
+    return a, b
+
+
+def test_identity_confirmation_rereads_introduce_at_every_use():
+    """E-02, Sections 10.6 and 16.3: a consent opens a possibility and
+    waives no other row. Once the Principal withdraws INTRODUCE, a claim
+    that would confirm the identity is declined, granted consent or not."""
+    from gidp.vocab import Authority, AuthorityValue
+
+    a, b = _identity_revealed_pair()
+    b.standing_interest.authority.levels[Authority.INTRODUCE] = AuthorityValue.FALSE
+    response = _exchange(a, b, [Claim(key="principal_identity",
+                                      operator=ClaimOperator.EQUALS,
+                                      value="Acme GmbH")])
+    assert [o.result for o in response.results] == [ClaimResult.DECLINED]
+
+
+def test_identity_disclosure_rereads_introduce_at_every_use():
+    """E-02, the second door: the DisclosureResponse path re-reads it too."""
+    from gidp.vocab import Authority, AuthorityValue
+
+    a, b = _identity_revealed_pair()
+    granted = b.handle_disclosure_request(
+        a.request_disclosure("principal_identity", purpose="introduce")
+    )
+    assert granted.status is DisclosureStatus.GRANTED  # the door is really open
+    a.session.record_disclosure(granted)
+    b.standing_interest.authority.levels[Authority.INTRODUCE] = AuthorityValue.FALSE
+    response = b.handle_disclosure_request(
+        a.request_disclosure("principal_identity", purpose="introduce")
+    )
+    assert response.status is DisclosureStatus.DECLINED
+    assert "Acme" not in response.model_dump_json()

@@ -70,11 +70,14 @@
   },
   "required": [
     "expires_at",
-    "session_id",
+    "features",
+    "max_depth",
+    "profile",
     "request_ref",
     "responder",
-    "max_depth",
-    "profile"
+    "session_id",
+    "type",
+    "version"
   ],
   "title": "SessionAccept",
   "type": "object",

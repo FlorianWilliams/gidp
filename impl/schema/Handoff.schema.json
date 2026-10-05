@@ -98,9 +98,14 @@
     }
   },
   "required": [
+    "authorized_scope",
+    "contingent_on",
     "expires_at",
+    "requires_principal_presence",
     "session_id",
-    "target"
+    "target",
+    "type",
+    "version"
   ],
   "title": "Handoff",
   "type": "object",

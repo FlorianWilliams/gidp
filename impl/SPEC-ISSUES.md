@@ -1194,3 +1194,35 @@ were already recorded; consent content per action and the trust
 boundary table are added to the 0.2 list.
 
 **Resolution — applied to GIDP 0.1 on 2026-09-29.**
+
+## E-01, E-02, E-09 — corrections carried to the 0.1 reference (5 October 2026)
+
+The first independent implementation of GIDP 0.1 (see `IMPLEMENTATIONS.md`)
+found two defects in this reference implementation and one in its exported
+schemas. The specification text was right in each case and is unchanged;
+the code and the artefacts were not.
+
+**E-01 — a request could carry the requester's own private value.**
+Section 14.3 forbids it; `Agent.ask` checked nothing, and the co-investment
+example sent the company's private valuation range as its hypothesis.
+`ask` now refuses, before anything is emitted or recorded, a claim that
+pins one of this side's private values (surface `local` or gated), the
+four reserved dependency lists included. The guard compares pinned values
+— the value, an element of it, a range collapsed onto it — and is not
+provenance tracking: a band built around the secret passes. Example
+corrected; tests, a property and a mutation added.
+
+**E-02 — identity confirmed after INTRODUCE was withdrawn.** A granted
+`reveal_identity` consent kept both identity doors open after the
+Principal set INTRODUCE to `false`. Section 16.3: consent waives no other
+row. Both the claim path and the disclosure path now re-read INTRODUCE at
+every use. Tests and two mutations added.
+
+**E-09 — schemas.** The exported schemas left `type` and `version`, and
+several per-object fields the specification lists as required, optional,
+because the code gives them defaults. The export now applies the
+specification's required-field lists, and a test checks the mirror.
+
+The other findings of the same run concern the conformance corpus, the
+profile format and open questions for 0.2; they are recorded on the 0.2
+development branch.

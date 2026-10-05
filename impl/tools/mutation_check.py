@@ -34,6 +34,28 @@ class Mutation:
 
 MUTATIONS = (
     Mutation(
+        "a request never carries the requester's own private value (14.3, E-01)",
+        "gidp/agent.py",
+        "            leaked = self._own_private_value_in(claim)",
+        "            leaked = None",
+    ),
+    Mutation(
+        "an identity claim re-reads INTRODUCE at every use (10.6, 16.3, E-02)",
+        "gidp/agent.py",
+        """            elif claim.key in IDENTITY_ATTRIBUTES and (
+                claim.key not in self.consents.identity_revealed
+                or self._authority(Authority.INTRODUCE) is AuthorityValue.FALSE""",
+        """            elif claim.key in IDENTITY_ATTRIBUTES and (
+                claim.key not in self.consents.identity_revealed""",
+    ),
+    Mutation(
+        "an identity disclosure re-reads INTRODUCE at every use (10.6, 16.3, E-02)",
+        "gidp/agent.py",
+        """            request.attribute not in self.consents.identity_revealed
+            or self._authority(Authority.INTRODUCE) is AuthorityValue.FALSE""",
+        """            request.attribute not in self.consents.identity_revealed""",
+    ),
+    Mutation(
         "the responder's reported status gates the initiator (14.6)",
         "gidp/session.py",
         "            and self.peer_status is not None",
@@ -54,8 +76,8 @@ MUTATIONS = (
     Mutation(
         "an identity claim is declined without reveal_identity (10.6)",
         "gidp/agent.py",
-        "                claim.key in IDENTITY_ATTRIBUTES",
-        "                False",
+        "            elif claim.key in IDENTITY_ATTRIBUTES and (",
+        "            elif False and (",
     ),
     Mutation(
         "no qualifying status is reported while a request is pending (17.2)",
@@ -72,8 +94,8 @@ MUTATIONS = (
     Mutation(
         "an identity attribute travels only under reveal_identity (10.6)",
         "gidp/agent.py",
-        "            request.attribute in IDENTITY_ATTRIBUTES",
-        "            False",
+        "        if request.attribute in IDENTITY_ATTRIBUTES and (",
+        "        if False and (",
     ),
     Mutation(
         "identity cannot ride disclose_attributes (10.6, 14.5)",

@@ -90,13 +90,15 @@
     }
   },
   "required": [
-    "expires_at",
-    "session_id",
-    "request_id",
     "attribute",
+    "expires_at",
+    "intended_use",
     "purpose",
+    "request_id",
     "requested_surface",
-    "intended_use"
+    "session_id",
+    "type",
+    "version"
   ],
   "title": "DisclosureRequest",
   "type": "object",

@@ -87,6 +87,22 @@ class AuditEntry:
     detail: str
 
 
+def _points(value: Any) -> list[Any]:
+    """The exact values a held or asked value pins down.
+
+    A scalar pins itself, a list pins its elements, and a range pins a value
+    only when it is degenerate (min == max). A non-degenerate range pins
+    nothing: an interval whose edge happens to equal a private number is not
+    refused, since a shared origin such as 0 would refuse half of all ranges.
+    """
+    if isinstance(value, dict):
+        low, high = value.get("min"), value.get("max")
+        return [low] if low is not None and low == high else []
+    if isinstance(value, list | tuple | set):
+        return [p for item in value for p in _points(item)]
+    return [value]
+
+
 @dataclass
 class Agent:
     """An Agent holding one Standing Interest."""
@@ -258,6 +274,18 @@ class Agent:
             c if c.claim_id is not None else c.model_copy(update={"claim_id": f"{request_id}.{i}"})
             for i, c in enumerate(claims)
         ]
+        for claim in claims:
+            leaked = self._own_private_value_in(claim)
+            if leaked is not None:
+                # Section 14.3: a request MUST NOT contain the requester's own
+                # private values -- the four reserved dependency lists of
+                # Section 19.1 included. Refused before anything is emitted
+                # or recorded. The guard compares known values; it cannot
+                # prove the provenance of a value the caller transformed.
+                raise ProtocolError(
+                    f"claim {claim.claim_id!r} on {claim.key!r} carries this "
+                    f"side's own private value of {leaked!r} (14.3)"
+                )
         withdrawn = [cid for c in claims for cid in c.supersedes]
         self.session.check_supersedes("sent", withdrawn)
         request = CompatibilityRequest(
@@ -272,6 +300,35 @@ class Agent:
             self.session.pending_supersedes[request.request_id] = withdrawn
         self._log("compatibility_request", ", ".join(c.key for c in claims))
         return request
+
+    def _own_private_value_in(self, claim: Claim) -> str | None:
+        """The key whose private value this claim would carry, if any.
+
+        Private means: not releasable at session depth without a decision --
+        surface `local` (evaluation_only, never) or any gate. Compared by
+        the exact values each side pins down, so `intersects [x]` over a
+        private set containing x, or the degenerate range {x, x} over a
+        private x, is caught as well as `equals x`. Conservative -- a
+        hypothesis that merely coincides with the secret is refused too --
+        and not provenance tracking: a value the caller transformed, such
+        as a band built around the secret, passes unseen.
+        """
+        interest = self.standing_interest.interest
+        own: dict[str, Any] = dict(interest.conditions)
+        for reserved in ("conditional_on", "provides", "requires", "excludes"):
+            values = getattr(interest, reserved)
+            if values:
+                own[reserved] = values
+        if claim.key not in own:
+            return None
+        cls = self.standing_interest.class_of(claim.key)
+        if cls.surface is not Surface.LOCAL and cls.gate is Gate.NONE:
+            return None
+        held = own[claim.key]
+        held_points = _points(held)
+        if claim.value == held or any(p in held_points for p in _points(claim.value)):
+            return claim.key
+        return None
 
     def handle_compatibility_request(
         self, request: CompatibilityRequest
@@ -302,14 +359,16 @@ class Agent:
                 # Section 18: a refusal implies nothing, and this one implies
                 # less than most -- an observer can reproduce the decision.
                 result = ClaimResult.DECLINED
-            elif (
-                claim.key in IDENTITY_ATTRIBUTES
-                and claim.key not in self.consents.identity_revealed
+            elif claim.key in IDENTITY_ATTRIBUTES and (
+                claim.key not in self.consents.identity_revealed
+                or self._authority(Authority.INTRODUCE) is AuthorityValue.FALSE
             ):
                 # Section 10.6: `compatible` to `principal_identity equals
                 # "Acme GmbH"` confirms the identity without any
                 # DisclosureResponse carrying it -- the third door, after
-                # the two S-33 closed. Declined, which implies nothing.
+                # the two S-33 closed. Declined, which implies nothing. A
+                # consent opens a possibility and waives no other row of
+                # Section 16.3: INTRODUCE is re-read at every use (E-02).
                 result = ClaimResult.DECLINED
             else:
                 evaluation = evaluate_claim(self.standing_interest, claim)
@@ -444,9 +503,9 @@ class Agent:
             # never as the operational outcome 'unauthorized'.
             return self._declined(request, "DISCLOSE authority is false")
 
-        if (
-            request.attribute in IDENTITY_ATTRIBUTES
-            and request.attribute not in self.consents.identity_revealed
+        if request.attribute in IDENTITY_ATTRIBUTES and (
+            request.attribute not in self.consents.identity_revealed
+            or self._authority(Authority.INTRODUCE) is AuthorityValue.FALSE
         ):
             # Section 10.6: the identity rules attach to the data, not to
             # the message. An identity attribute travels only under a

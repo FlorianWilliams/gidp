@@ -74,11 +74,13 @@
     }
   },
   "required": [
-    "expires_at",
-    "session_id",
-    "request_ref",
     "attribute",
-    "status"
+    "expires_at",
+    "request_ref",
+    "session_id",
+    "status",
+    "type",
+    "version"
   ],
   "title": "DisclosureResponse",
   "type": "object",
