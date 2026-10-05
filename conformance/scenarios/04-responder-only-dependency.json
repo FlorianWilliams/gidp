@@ -1,6 +1,6 @@
 {
   "scenario": "responder-only-dependency",
-  "notes": "A dependency known only to the responder, protected evaluation_only, must still mark the Opportunity as contingent -- as the token `undisclosed`, never by name. The responder states it in its CompatibilityResponse (14.3); the initiator merges it (14.6).",
+  "notes": "A dependency known only to the responder, protected evaluation_only, must still mark the Opportunity as contingent, using the token `undisclosed` and never its name. The responder states it in its CompatibilityResponse (14.3); the initiator merges it (14.6).",
   "spec": [
     "10.3",
     "14.3",

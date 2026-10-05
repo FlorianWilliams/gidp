@@ -1,6 +1,6 @@
 {
   "scenario": "profile-minimum-coverage",
-  "notes": "A profile requiring two dimensions blocks qualification after a compatible answer on one (15.2). The responder's own requirements gate the initiator through the reported status (14.6): B reports open, A must not emit. The scenario also pins the intermediate period: while the responder's last report is open, the initiator remains PROBING and post-qualification actions are refused -- transition, kept status and emission are one event on the initiator's side.",
+  "notes": "A profile requiring two dimensions blocks qualification after a compatible answer on one (15.2). The responder's own requirements gate the initiator through the reported status (14.6): B reports open, A must not emit. The scenario also pins the intermediate period: while the responder's last report is open, the initiator remains PROBING and post-qualification actions are refused, because transition, kept status and emission are one event on the initiator's side.",
   "spec": [
     "14.6",
     "15.2"

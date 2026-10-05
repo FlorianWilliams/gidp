@@ -51,7 +51,7 @@ from ..objects import (
 #: deployment substitutes its own, and two deployments that choose different
 #: URIs do not interoperate, which is a reason to allocate one before there
 #: are two.
-EXTENSION_URI = "https://example.org/gidp/extensions/conditional-interest-discovery/0.1"
+EXTENSION_URI = "https://gidp.dev/extensions/gidp/0.1"
 
 #: A2A carries extension data under URI-prefixed keys in `metadata`.
 OBJECT_KEY = f"{EXTENSION_URI}/object"

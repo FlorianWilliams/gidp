@@ -32,7 +32,7 @@ KEPT_WITHOUT_A_DEMONSTRATION = {
     "CloseReason.EXPIRED": "reachable when a Standing Interest or session outlives its validity; "
     "no example waits long enough to show it",
     "Feature.MULTI_PARTY": "Section 19.2 is experimental and this implementation does not "
-    "implement it, by the implementation plan's own rule",
+    "implement it: an experimental section is not demonstrated",
     "HandoffKind.WORKFLOW": "a handoff target that is neither a human nor a protocol; plausible "
     "and unexercised",
     "IdentityStatus.DECLINED": "an Opportunity whose counterparty refused identity; the worked "

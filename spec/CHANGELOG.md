@@ -1,7 +1,7 @@
 # Changelog — Graduated Interest Disclosure
 
 This file records versions of the **specification**. It is not the git log:
-git records every edit, this records the versions a reader may cite.
+git records every edit; this file records the versions a reader may cite.
 
 ## Versioning rules
 
@@ -37,15 +37,15 @@ First public draft, under the name *Graduated Interest Disclosure*.
 Consolidates three earlier internal drafts written under the working name
 *Conditional Interest Discovery*, abandoned before publication because its
 contraction collides with IPFS content identifiers inside the same layer, and incorporates two independent adversarial reviews of the consolidated
-text, twenty-one issues found while writing the reference implementation,
-five found by the first external review of the specification, read
-without the code, six by the second, which re-read the corrected text,
-and fourteen by the third round — the same reviewer's fourth pass plus a
-second reviewer's first, fresh reading (`impl/SPEC-ISSUES.md`, S-01 to
-S-46).
+text, and sixty-four issues (`impl/SPEC-ISSUES.md`, S-01 to S-64): twenty-one
+found while writing the reference implementation; five found by the first
+external review of the specification, read without the code; six by the
+second, which re-read the corrected text; fourteen by the third round, which
+comprised the same reviewer's third pass and a second reviewer's first, fresh
+reading; two by the first reviewer's fourth pass; seven by the second
+reviewer's second reading; and nine by a third fresh reading.
 
-The external review is worth naming for what it found rather than for
-having happened. Three of its findings were normative contradictions that
+The external review matters for what it found. Three of its findings were normative contradictions that
 no implementation could satisfy without inventing behaviour: a consent the
 session needed could not be asked for (S-22), a required field forced the
 transmission of a dependency the Disclosure Policy protected (S-23), and a
@@ -55,13 +55,13 @@ before fixing it showed two of them to be live defects of the reference
 implementation, not only of the text. They were corrected in both before
 publication, which is why they belong to 0.1 and not to a 0.2.
 
-The second review confirmed the corrections and found what they had missed:
-mostly propagation — sentences elsewhere in the document still asserting
-what a corrected section no longer asserts (S-27, S-29, S-30) — plus a
-consent path that told a counterparty to wait on an authority that had been
-refused (S-28), a missing line in the state table together with the
-undecided fate of an emitted Opportunity, now decided as frozen at
-qualification (S-31), and the one genuine design gap of the batch: the
+The second review confirmed the corrections and found what they had missed.
+Most of it was propagation: sentences elsewhere in the document still
+asserting what a corrected section no longer asserts (S-27, S-29, S-30). It
+also found a consent path that told a counterparty to wait on an authority
+that had been refused (S-28), a missing line in the state table together with
+the undecided fate of an emitted Opportunity, now decided as frozen at
+qualification (S-31), and the one real design gap of the batch: the
 initiator emits the Opportunity but cannot know the responder's protected
 contingencies, so `CompatibilityResponse` now carries them in communicable
 form and the initiator merges them (S-32). The same date added the decision
@@ -79,12 +79,13 @@ and said containment, renamed `overlaps` while a rename is still free
 14.6, with profile minimum coverage a MUST, because a qualification built
 from overlap claims is a screen and the document should not let a reader
 believe otherwise. `SessionOpen` gains an OPTIONAL `projection_ref`. The
-rest is propagation and honesty — the full account is in SPEC-ISSUES.
+rest is propagation and corrections of overclaiming; the full account is in
+SPEC-ISSUES.
 
-A fifth pass closed the round with two raccords (S-47, S-48): a deferred
+The first reviewer's fourth pass closed the round with two consistency fixes (S-47, S-48): a deferred
 qualification is recomputed at the return to PROBING rather than
-remembered from mid-wait — fixing which surfaced that the status-kept
-rule of S-35 had existed only in prose — and a claim on an identity
+remembered from mid-wait (fixing this surfaced that the status-kept
+rule of S-35 had existed only in prose), and a claim on an identity
 attribute is declined without reveal_identity consent, closing the third
 door after S-33's two. The reviewer then judged the version fit to
 stabilise and submit to implementers.
@@ -102,34 +103,34 @@ all-conditionally-compatible policy of Section 24.3 is named as a
 non-conforming comparator. Both reviewers now converge on the same two
 next steps: the editorial pass, and implementers.
 
-The editorial pass followed, surgically rather than wholesale: the
+The editorial pass followed as a set of targeted edits: the
 histories of corrected failures, the naming history, the borrowed
 XACML distinction and the measured-curve narratives moved to a new
-`rationale.md`, leaving one-line traces where the reasoning was
-load-bearing; the specification's experimental figures now cite
+`rationale.md`, leaving one-line traces where the argument depended
+on the reasoning; the specification's experimental figures now cite
 `alternatives.md` and their own populations; the one full statement of
 the capability-discovery distinction is Appendix D. The three-document
-shape the reviewers asked for — specification, design rationale,
-experimental record — now exists as GIDP-0.1.md, rationale.md and
-alternatives.md. Deeper shortening is deliberately left for the 0.2
+shape the reviewers asked for (specification, design rationale,
+experimental record) now exists as GIDP-0.1.md, rationale.md and
+alternatives.md. Deeper shortening is held over to the 0.2
 edition: with the substance frozen, each further compression is pure
 risk against no deadline.
 
-A third fresh reading re-derived much of the deferred programme — the
+A third fresh reading re-derived much of the deferred programme (the
 expected behaviour of a good reader meeting a document that states its
 own limits, and the reason Section 7 now points such a reader at
-open-problems.md — and contributed three real changes (S-56 to S-64):
+open-problems.md) and contributed three real changes (S-56 to S-64):
 qualification is bilateral over the wire, the initiator emitting only
 when the responder's reported status qualifies, which is the local
 confirmation three reviewers independently asked for at zero new
 objects; a session is explicitly about one candidate configuration,
 which is what an incompatible refutes; and a Handoff requires a granted
 consent naming its target, CONSENTED alone establishing nothing about
-that action. Plus six local raccords, including the dangling reference
+that action. It also added six local consistency fixes, including the dangling reference
 and the too-broad pending rule that this week's own fixes had left.
 
-The last of those, S-12, is worth naming here because it changes what the
-document claims rather than what it specifies. A comparative harness built to
+One of the twenty-one issues found while writing the reference implementation, S-12, is recorded separately here because it changes what
+the document claims and leaves what it specifies unchanged. A comparative harness built to
 test the protocol against existing mechanisms showed that the coarsening
 illustrated in Section 15.4 provides no protection against inference: it
 relabels one deterministic answer as another, and an adaptive querent's

@@ -1,6 +1,6 @@
 # Graduated Interest Disclosure
 
-**Version 0.1 — draft for review. Wire version token: `gidp/0.1`.**
+**Version 0.1, draft for review. Wire version token: `gidp/0.1`.**
 
 Most of what an economy would like to match never gets stated. A company that
 would sell at the right price does not announce it. A candidate open to the
@@ -10,8 +10,8 @@ knowable, and stating them publicly costs more than the match is worth.
 
 Graduated Interest Disclosure is an open protocol for that class of interest.
 It lets an agent, acting for a principal under an explicit and auditable
-delegation, establish whether two parties are worth introducing — without
-either side disclosing what it is protecting, and without a central operator
+delegation, establish whether two parties are worth introducing, without
+either side disclosing what it is protecting and without a central operator
 holding both sides' secrets.
 
 The primitive is the **Conditional Interest**: *not necessarily seeking X, but
@@ -36,15 +36,15 @@ stops there.
 | [`spec/rationale.md`](spec/rationale.md) | Why the rules are what they are: histories, worked failures, borrowed distinctions. Non-normative. |
 | [`spec/open-problems.md`](spec/open-problems.md) | The formal open problem, the questions 0.1 knowingly defers, and the positions taken. Non-normative. |
 | [`spec/alternatives.md`](spec/alternatives.md) | Why not use a broker, a listing, a secure comparison or a set intersection? Measured, not argued. Non-normative. |
-| [`spec/LIMITS.md`](spec/LIMITS.md) | Where this protocol should **not** be used. Non-normative. |
+| [`spec/LIMITS.md`](spec/LIMITS.md) | Where this protocol should not be used. Non-normative. |
 | [`spec/CHANGELOG.md`](spec/CHANGELOG.md) | Versioning policy and history. |
-| [`impl/`](impl/) | Reference implementation in Python, with the four worked domains, the probing attack, the limit cases, and the JSON Schemas. |
+| [`impl/`](impl/) | Reference implementation in Python, with the four worked domains, the probing attack, the four limit cases, and the JSON Schemas. |
 | [`impl/SPEC-ISSUES.md`](impl/SPEC-ISSUES.md) | Every ambiguity the implementation found in the draft, and what changed because of it. |
 
 Read the explainer first, then the specification. If you are looking for
 reasons to reject the design, `spec/LIMITS.md`, `spec/alternatives.md` and
-`spec/open-problems.md` are where the weaknesses are written down rather than
-hidden — including the measurement showing that one of the specification's own
+`spec/open-problems.md` are where the weaknesses are written down,
+including the measurement showing that one of the specification's own
 stated mitigations does not work, and the number saying how much a probing
 counterparty can extract.
 
@@ -63,8 +63,8 @@ python -m baselines.sybil        # what a query budget is worth against many ide
 python -m baselines.projection   # the Section 11.4 trade-off, measured
 ```
 
-The implementation is the specification's test, not its authority: where the
-two disagree, the specification is wrong until it is fixed, and the
+The implementation tests the specification and has no authority over it: where
+the two disagree, the specification is wrong until it is fixed, and the
 disagreement is logged in `impl/SPEC-ISSUES.md`.
 
 ## Status and what would help
@@ -75,7 +75,7 @@ attack cheaper than the one in `examples/probing.py`, a reading of the
 truthfulness rule that permits a lie, or a second implementation that disagrees
 with this one.
 
-How much rests on that question is measured rather than asserted.
+How much rests on that question has been measured.
 Unprotected, a counterparty that spends questions instead of asking once
 extracts 65% of everything private in the worked case, in seventeen claims,
 and the coarsening the specification illustrates stops none of it. Two
@@ -93,7 +93,7 @@ What remains open is narrower, and stated as such. A budget can be spent by
 an adversary, so that honest counterparties are refused: a cost in
 availability rather than in secrecy. Correlations between attributes are not
 bounded by budgets kept attribute by attribute. And no result yet says how
-good the best truthful policy can be — the open problem of §24.3: bounding
+good the best truthful policy can be. That is the open problem of §24.3: bounding
 what an *adaptive* querent learns from a truthful compatibility oracle while
 keeping it useful. Candidate directions are in
 `spec/open-problems.md`, including one that the limit cases have since
@@ -101,9 +101,9 @@ qualified.
 
 ## Licence
 
-Documents under `spec/`, and this README: **CC BY 4.0** — see
+Documents under `spec/`, and this README: CC BY 4.0; see
 [`LICENSE-DOCS.md`](LICENSE-DOCS.md).
-Code under `impl/`: **Apache License 2.0** — see [`LICENSE`](LICENSE).
+Code under `impl/`: Apache License 2.0; see [`LICENSE`](LICENSE).
 
 ## Contact
 

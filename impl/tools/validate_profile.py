@@ -2,11 +2,11 @@
 
     python tools/validate_profile.py ../profiles/co-investment-0.1.profile.json
 
-The validator is dependency-free on purpose: a registry or venue that
-gates the opening of a vertical on a valid manifest should not need this
-repository's stack to run the gate. It enforces the structural shape of
+The validator has no dependencies, so that a party that requires a valid
+manifest before accepting a profile does not need this repository's stack
+to check it. It enforces the structural shape of
 `profiles/manifest.schema.json` and the cross-field rules a schema cannot
-express — the rules that keep a profile from weakening the core:
+express: the rules that keep a profile from weakening the core.
 
 - a manifest extends nothing but the two permitted extension points, and
   both only under its own namespace;

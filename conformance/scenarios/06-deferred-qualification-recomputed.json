@@ -1,6 +1,6 @@
 {
   "scenario": "deferred-qualification-recomputed",
-  "notes": "The reviewer's four-step sequence (S-47): a qualifying result arrives while a disclosure is pending (step 2), a further claim resolves unknown during the same wait (step 3); at the return to PROBING (step 4) the entry conditions are recomputed over the propositions then standing, so the session does NOT qualify. Nothing qualifying is remembered from mid-wait.",
+  "notes": "The four-step sequence of S-47: a qualifying result arrives while a disclosure is pending (step 2), a further claim resolves unknown during the same wait (step 3); at the return to PROBING (step 4) the entry conditions are recomputed over the propositions then standing, so the session does NOT qualify. Nothing qualifying is remembered from mid-wait.",
   "spec": [
     "15.2",
     "17.2"

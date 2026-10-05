@@ -1,6 +1,6 @@
 {
   "scenario": "expired-question-blocks",
-  "notes": "The decided 0.2 deadline semantics (draft revision 3). A question held for a PROBE approval (Section 16.3) and never answered expires: the wait ends without closing the session, but the proposition remains unresolved on BOTH sides and blocks qualification -- expiring an awkward question must not make a session qualifiable. Recovery in the same session: its own sender supersedes the expired claim (the one 0.2 extension to supersedes; superseding an incompatible result remains forbidden).",
+  "notes": "The decided 0.2 deadline semantics (draft revision 3). A question held for a PROBE approval (Section 16.3) and never answered expires: the wait ends without closing the session, but the proposition remains unresolved on BOTH sides and blocks qualification: expiring an awkward question must not make a session qualifiable. Recovery in the same session: its own sender supersedes the expired claim (this is the one extension 0.2 makes to supersession; superseding an incompatible result remains forbidden).",
   "spec": [
     "14",
     "14.2",

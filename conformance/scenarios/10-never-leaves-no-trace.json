@@ -1,6 +1,6 @@
 {
   "scenario": "never-leaves-no-trace",
-  "notes": "A claim on a `never` attribute is declined rather than evaluated, and a `never` dependency produces no contingency marker at all -- a flag that exists only because of it would be a transmitted result produced from it (10.3).",
+  "notes": "A claim on a `never` attribute is declined rather than evaluated, and a `never` dependency produces no contingency marker at all, since a flag that exists only because of it would be a transmitted result produced from it (10.3).",
   "spec": [
     "10.3",
     "14.6",

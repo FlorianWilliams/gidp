@@ -1,6 +1,6 @@
 # Specification issues found while implementing
 
-Every ambiguity met while writing this implementation is logged here **before**
+Every ambiguity met while writing this implementation is logged here before
 being resolved in code, per the working rule of the implementation plan. An
 implementation that found nothing would mean the implementer stopped reading
 carefully.
@@ -8,12 +8,19 @@ carefully.
 Each entry states what the specification says, what a reader cannot determine
 from it, what this implementation decided, and whether GIDP 0.1 should change.
 
-**Status: twenty of twenty-one were applied to GIDP 0.1 on 23 September 2026**, before the
-specification was frozen for publication. S-22 to S-26 were found by the first
-external review, on 25 September, and applied the same day — still before
-publication, which is why they belong to 0.1 rather than to a later version. The entries are kept because the
-record of what an implementation found is worth more than a clean file: it is
-the evidence that the draft was tested rather than merely written.
+**Status, 5 October 2026.** The file holds two series. S-01 to S-64 were
+found between 23 and 29 September 2026, S-01 to S-21 while writing this
+implementation and S-22 to S-64 by external review. All were applied before
+the specification was frozen for publication, which is why they belong to 0.1
+and not to a later version. Each changed GIDP 0.1 except S-19, an
+implementation defect against text that was already correct, applied to the
+reference implementation alone. E-01 to E-12 were found on 5 October 2026 by
+the first independent implementation, after the freeze. E-01, E-02 and E-09
+were corrected in the 0.1 reference implementation and its exported schemas;
+the other E-items concern the corpus, the profile format and the gaps recorded
+for 0.2 in `spec/open-problems.md`. The entries are kept because the record of
+what an implementation found is worth more than a clean file: it is the
+evidence that the draft was tested as well as written.
 
 ---
 
@@ -24,7 +31,7 @@ the evidence that the draft was tested rather than merely written.
 and per direction of request", and gives one transition table.
 
 **Ambiguity.** When B sends a `DisclosureRequest` and A answers, both sides
-move from `PROBING` to `DISCLOSURE_PENDING` and back — but only B has a
+move from `PROBING` to `DISCLOSURE_PENDING` and back, but only B has a
 request to discharge, because the `request_id` is B's. The table does not
 distinguish the two roles, so an implementer must invent the distinction.
 
@@ -34,14 +41,14 @@ responder's own view: the state moves, nothing is discharged. Same for consent.
 **Spec should change.** Yes, minor: state in 17.2 that a side discharges only
 the requests it sent, and that the transitions apply to both views.
 
-**Resolution — applied to GIDP 0.1 on 2026-09-23.** Section 17.2 now states that the transitions apply to both Agents' views and that an Agent discharges only the requests it sent.
+**Resolution.** Applied to GIDP 0.1 on 2026-09-23. Section 17.2 now states that the transitions apply to both Agents' views and that an Agent discharges only the requests it sent.
 
 ---
 
 ## S-02 — Appendix C.1 is internally inconsistent
 
-**Spec.** The worked example narrates five claim resolutions — geography,
-market access, transaction structures, valuation class, management condition —
+**Spec.** The worked example narrates five claim resolutions (geography,
+market access, transaction structures, valuation class, management condition)
 and then reports an Opportunity with `evaluated_dimensions: 12` and
 `compatible_dimensions: 10`.
 
@@ -53,7 +60,7 @@ the example accordingly reports 5 and 3.
 
 **Spec should change.** Yes: either narrate twelve claims or report five.
 
-**Resolution — applied to GIDP 0.1 on 2026-09-23.** Appendix C.1 now reports five dimensions evaluated and three compatible, matching what it narrates — and matching what `examples/cross_border.py` prints.
+**Resolution.** Applied to GIDP 0.1 on 2026-09-23. Appendix C.1 now reports five dimensions evaluated and three compatible, matching what it narrates and what `examples/cross_border.py` prints.
 
 ---
 
@@ -72,7 +79,7 @@ appear in `open_conditions` and not in `compatible_dimensions`.
 
 **Spec should change.** Yes: define both in 14.6.
 
-**Resolution — applied to GIDP 0.1 on 2026-09-23.** Section 14.6 now defines both counts, counts each claim key once, excludes `conditionally_compatible` from `compatible_dimensions`, and states the identity `compatible + open_conditions = evaluated`.
+**Resolution.** Applied to GIDP 0.1 on 2026-09-23. Section 14.6 now defines both counts, counts each claim key once, excludes `conditionally_compatible` from `compatible_dimensions`, and states the identity `compatible + open_conditions = evaluated`.
 
 ---
 
@@ -86,17 +93,17 @@ that none resolved `incompatible`, `unknown` or `requires_principal_approval`.
 **Ambiguity.** A session in which one claim is `compatible` and nine are
 `declined` qualifies under the letter of 15.2 and produces an Opportunity. That
 is almost certainly not intended: `declined` carries no information at all
-(Section 18 insists on exactly that), so treating it as neutral lets an
+(Section 18 insists on this), so treating it as neutral lets an
 Opportunity rest on silence.
 
 **Decided here.** Followed the letter: `declined` does not block. Flagged as
 the most substantive issue found.
 
-**Spec should change.** Yes, and this one is not cosmetic. Either add
+**Spec should change.** Yes, and the change is substantive. Either add
 `declined` to the blocking list, or require a minimum proportion of
 `compatible` results.
 
-**Resolution — applied to GIDP 0.1 on 2026-09-23.** **The rule changed.** Section 15.2 now requires every claim to have resolved `compatible` or `conditionally_compatible`; `declined`, `unknown`, `requires_disclosure` and `requires_principal_approval` all prevent qualification, and a requester may re-ask a claim to unblock it. `test_declined_result_prevents_qualification` guards it.
+**Resolution.** Applied to GIDP 0.1 on 2026-09-23, and the rule changed: Section 15.2 now requires every claim to have resolved `compatible` or `conditionally_compatible`; `declined`, `unknown`, `requires_disclosure` and `requires_principal_approval` all prevent qualification, and a requester may re-ask a claim to unblock it. `test_declined_result_prevents_qualification` guards it.
 
 ---
 
@@ -106,7 +113,7 @@ the most substantive issue found.
 projections per provider, and Section 24.2 warns against stable identifiers
 because they let an observer correlate projections across providers.
 
-**Ambiguity.** An endpoint that identifies the Agent is exactly the stable
+**Ambiguity.** An endpoint that identifies the Agent is the stable
 identifier 24.2 warns about; distinct projections per provider achieve nothing
 if all of them carry the same endpoint.
 
@@ -117,7 +124,7 @@ reading, and this note records the cost.
 per-projection or otherwise unlinkable across providers, or 24.2 should
 acknowledge the exception.
 
-**Resolution — applied to GIDP 0.1 on 2026-09-23.** Section 11.1 now says `endpoint` and `projection_id` SHOULD be unlinkable across providers, with the cross-reference to 24.2.
+**Resolution.** Applied to GIDP 0.1 on 2026-09-23. Section 11.1 now says `endpoint` and `projection_id` SHOULD be unlinkable across providers, with the cross-reference to 24.2.
 
 ---
 
@@ -126,7 +133,7 @@ acknowledge the exception.
 **Spec.** Section 14.4: "A `declined` response MUST NOT indicate whether the
 attribute exists or what its value is."
 
-**Ambiguity.** An Agent that simply does not hold the attribute must therefore
+**Ambiguity.** An Agent that does not hold the attribute must therefore
 answer `declined`, which is correct for privacy and means the vocabulary has no
 way to say "not applicable". A requester cannot distinguish "refused" from
 "nothing there", which is by design but is never stated.
@@ -136,7 +143,7 @@ way to say "not applicable". A requester cannot distinguish "refused" from
 **Spec should change.** Editorial only: say so explicitly in 14.4, because
 every implementer will hesitate here.
 
-**Resolution — applied to GIDP 0.1 on 2026-09-23.** Section 14.4 now says explicitly that an Agent holding no value answers `declined`, and why the vocabulary has no "not applicable".
+**Resolution.** Applied to GIDP 0.1 on 2026-09-23. Section 14.4 now says explicitly that an Agent holding no value answers `declined`, and why the vocabulary has no "not applicable".
 
 ---
 
@@ -155,7 +162,7 @@ may retry identically.
 **Spec should change.** Probably: either make the close a MUST, or accept the
 cost and say the initiator cannot distinguish this close from any other.
 
-**Resolution — applied to GIDP 0.1 on 2026-09-23.** Section 14.1 now states that the initiator cannot distinguish a depth-mismatch close from any other `unsupported` close, and that signalling the reason would itself be a disclosure.
+**Resolution.** Applied to GIDP 0.1 on 2026-09-23. Section 14.1 now states that the initiator cannot distinguish a depth-mismatch close from any other `unsupported` close, and that signalling the reason would itself be a disclosure.
 
 ---
 
@@ -163,18 +170,18 @@ cost and say the initiator cannot distinguish this close from any other.
 
 **Spec.** Section 14.2 defines `within` as "value inside a range or bucket".
 
-**Ambiguity.** When the responder's own value is itself a range — which is the
-normal case for a reservation value — "inside" is undefined: overlap,
+**Ambiguity.** When the responder's own value is itself a range, which is the
+normal case for a reservation value, "inside" is undefined: overlap,
 containment, or midpoint?
 
-**Decided here.** Overlap, because containment would make almost every honest
+**Decided here.** Overlap, because containment would make almost every truthful
 claim incompatible. The choice is visible in `evaluation._within` and it is the
 choice that makes the probing attack of `examples/probing.py` work as cheaply
 as it does.
 
 **Spec should change.** Yes: define the comparison for range-valued private
 attributes, and note the inference consequence of whichever is chosen.
-**Resolution — applied to GIDP 0.1 on 2026-09-23.** Section 14.2 now defines `within` as overlap for range-valued private attributes, and notes the inference consequence.
+**Resolution.** Applied to GIDP 0.1 on 2026-09-23. Section 14.2 now defines `within` as overlap for range-valued private attributes, and notes the inference consequence.
 
 
 ---
@@ -187,11 +194,11 @@ attributes, and note the inference consequence of whichever is chosen.
 transmitted through GIDP". Section 15.4 illustrates a private threshold answered
 without being transmitted.
 
-**Ambiguity.** Read naively — and the first version of `tests/test_scenario.py`
-read it that way — this says the value never appears on the wire. It cannot
+**Ambiguity.** Read naively (and the first version of `tests/test_scenario.py`
+read it that way), this says the value never appears on the wire. It cannot
 mean that. A claim carries a *candidate* value chosen by the querent: asking
 "is `founder_operational` compatible?" necessarily puts that string in the
-request. If the responder happens to hold exactly that value, the string is on
+request. If the responder happens to hold that same value, the string is on
 the wire, put there by the party that does not hold it.
 
 The guarantee is therefore **per sender**: the holder of a `local` value never
@@ -200,14 +207,16 @@ protocol broken the first time they see a claim echo a private value, and a
 reviewer looking for a soft target will read it as a leak.
 
 **Decided here.** The test asserts the per-sender property, and a second test
-makes the nuance explicit rather than leaving it implicit.
+states the nuance explicitly.
 
-**Spec should change.** Yes, editorial but load-bearing: Section 9.1 should say
+**Spec should change.** Yes, editorially, though the point carries weight: Section 9.1 should say
 that an Agent MUST NOT transmit a `local` attribute *of the Standing Interest
 it holds*, and Section 15.4 should note that a querent may name a candidate
 value, that a coarsened answer asserts nothing about it, and that the querent
-nevertheless learns its guess is not ruled out — which is the inference channel
+nevertheless learns its guess is not ruled out. That is the inference channel
 of Section 24.3, seen from the other end.
+
+**Resolution.** Applied to GIDP 0.1 on 2026-09-23. Section 9.1 now binds the holder of the Standing Interest, and Section 15.4 notes what a querent naming a candidate value learns.
 
 ---
 
@@ -222,14 +231,14 @@ usable bilaterally, and gives the example `requires: capability X` meeting
 `provides: capability X`.
 
 **Ambiguity.** It never says *how*. A claim names a key (Section 14.2) and the
-responder resolves it against its Standing Interest — but the four primitives
-are lists on the Conditional Interest, not entries among its conditions, so a
+responder resolves it against its Standing Interest. The four primitives,
+however, are lists on the Conditional Interest and not entries among its conditions, so a
 claim naming `provides` resolves to nothing and comes back `unknown`. The
 bilateral use the section describes is unreachable as written. Nor does the
 specification say whether the Disclosure Policy applies to them.
 
-It matters more than it looks, because the asymmetry is where the value is.
-What an Agent *provides* is ordinarily disclosable — it is what makes it
+This matters more than it appears to, because the asymmetry is where the value is.
+What an Agent *provides* is ordinarily disclosable, since it is what makes it
 findable. What it *requires* is the mirror image of what it lacks, and a
 capability gap admitted to a prospective partner is admitted to a prospective
 competitor. A protocol that cannot express that difference cannot serve the
@@ -239,12 +248,14 @@ partnership case at all.
 the Conditional Interest's lists, and classified by the Disclosure Policy like
 any other attribute. In the example `provides` is `session` and `requires` is
 `local`, so "do you provide X?" answers `compatible` while "do you require Y?"
-answers `conditionally_compatible` — truthful, and the gap stays home.
+answers `conditionally_compatible`: truthful, and the gap stays home.
 
 **Spec should change.** Yes. Section 19.1 should state that the four are
 reserved claim keys, that the Disclosure Policy classifies them like any
 attribute, and should note the provides/requires asymmetry as the expected
-pattern rather than leaving each implementer to discover it.
+pattern so that each implementer does not have to discover it.
+
+**Resolution.** Applied to GIDP 0.1 on 2026-09-23. Section 19.1 now names the four as reserved claim keys, classified by the Disclosure Policy, and states the asymmetric pattern.
 
 ---
 
@@ -253,15 +264,15 @@ pattern rather than leaving each implementer to discover it.
 **Found.** 2026-09-23, by the fourth domain (`examples/co_investment.py`), the
 first to use an interdependent Conditional Interest.
 
-**Spec.** Section 8.4 defines the interdependent class — *I will consider X if
-another party performs or commits to Y* — and says it uses the dependency
+**Spec.** Section 8.4 defines the interdependent class (*I will consider X if
+another party performs or commits to Y*) and says it uses the dependency
 primitives of Section 19 and is the entry point to multi-party discovery.
 Section 14.6 defines the Opportunity's fields, and Section 15.2 the conditions
 under which a session qualifies.
 
 **Ambiguity, and it is not small.** A bilateral session between a follower and
 a company can qualify with every claim `compatible` or
-`conditionally_compatible` — including the claim that asks the follower
+`conditionally_compatible`, including the claim that asks the follower
 whether it has a `conditional_on` dependency, which answers `compatible`
 because it truthfully does. The resulting Opportunity carried no trace of that
 dependency: `open_conditions` is defined from claim *results*, and a
@@ -269,7 +280,7 @@ dependency that is truthfully confirmed is not an open condition. The
 Opportunity therefore read as an assembled round when it was a participation
 contingent on a lead investor who did not exist.
 
-Nothing in the specification was violated. That is what makes it serious: two
+Nothing in the specification was violated, and that is why the issue is serious: two
 conforming implementations produce an object that misleads a human, and the
 protocol's own state machine is satisfied.
 
@@ -285,6 +296,8 @@ non-empty. This is a change to the object model, made before publication and
 therefore absorbed into 0.1 (see `../spec/CHANGELOG.md`); after publication it
 would have required 0.2.
 
+**Resolution.** Applied to GIDP 0.1 on 2026-09-23. Section 14.6 requires `contingent_on`; Section 14.7 carries it on the Handoff.
+
 ---
 
 ## S-12 — Coarsening is presented as an inference control and is not one
@@ -298,17 +311,17 @@ replacing a truthful answer "in order to limit inference (coarsening,
 randomised response within these bounds, privacy budgets)". Section 24.3 lists
 "bucketed or randomised responses" among the mitigations against probing.
 
-**The defect.** The default policy — coarsen when the truthful answer would
-have been affirmative and the attribute is evaluation-only — maps one
+**The defect.** The default policy (coarsen when the truthful answer would
+have been affirmative and the attribute is evaluation-only) maps one
 deterministic answer onto another. `compatible` becomes
 `conditionally_compatible`; `incompatible` stays `incompatible`. The two
 truths still produce two distinguishable answers, so a querent's partition of
 the responder's possible values is *identical* to the partition it would have
-obtained from a plainly truthful oracle. Measured over an adaptive querent at
+obtained from a fully truthful oracle. Measured over an adaptive querent at
 budgets of 4, 8, 16 and 64 claims, the two policies leak the same number of
 bits in every cell, to the last decimal.
 
-Coarsening does exactly what Section 15.4 was written for: it keeps `80M` off
+Coarsening does what Section 15.4 was written for: it keeps `80M` off
 the wire. It does nothing whatever for Section 15.5's stated purpose. Since
 15.5 and 24.3 both present it as an inference control, an implementer who
 follows the specification will believe they have a mitigation in place and
@@ -319,18 +332,18 @@ answer leaks nothing and qualifies every counterparty, including those that
 should have been refused. Declining every local answer leaks nothing and
 qualifies none. Randomising half the local answers holds an adversary to
 3.04 bits at a budget of 8 where a deterministic policy has already given up
-7.94 — and gives up 7.94 itself by a budget of 16, because the adversary
+7.94; it gives up 7.94 itself by a budget of 16, because the adversary
 re-asks, while costing 39 points of true-negative rate.
 
 **Decided here.** Nothing in the code changes: the default policy is correct
 for what it is for, and the alternatives are worse. The harness, its sweep and
 `tests/test_baselines.py` are the record.
 
-**Spec should change.** Yes, and it is the kind of change that matters more
+**Spec should change.** Yes. This change matters more
 than an object-model fix, because it corrects a claim a reader would otherwise
 rely on.
 
-**Resolution — applied to GIDP 0.1 on 2026-09-23.** Section 15.4 now states
+**Resolution.** Applied to GIDP 0.1 on 2026-09-23. Section 15.4 now states
 that coarsening protects the value and not the inference, and why. Section
 15.5 no longer attributes an inference-limiting purpose to the permitted
 replacements, and says that the question is answered in 24.3. Section 24.3 now
@@ -356,9 +369,9 @@ type: 'dict'`; `within` against a label or a list raised `TypeError: '<' not
 supported between instances of 'str' and 'int'`. Three lines of generated
 input, three uncaught exceptions in the evaluation core.
 
-It is worse than an ordinary crash. The responder's behaviour becomes a
-function of the *shape* of its own private value — a querent that sends
-`within` and receives an error, rather than an answer, has learned that the
+This is worse than an ordinary crash. The responder's behaviour becomes a
+function of the *shape* of its own private value: a querent that sends
+`within` and receives an error in place of an answer has learned that the
 attribute is not numeric, which is information the Disclosure Policy never
 authorised. And a responder that can be made to fail by a well-formed message
 with an ill-fitting operator can be made to fail by anyone: the same message
@@ -371,7 +384,7 @@ reason it matters is the paragraph above.
 **Spec should change.** Yes. An implementer's first instinct is to reject a
 mismatched claim as malformed, and that instinct produces both failures.
 
-**Resolution — applied to GIDP 0.1 on 2026-09-23.** Section 14.2 now requires
+**Resolution.** Applied to GIDP 0.1 on 2026-09-23. Section 14.2 now requires
 `unknown` on a shape mismatch, forbids treating it as a malformed message,
 forbids failing, and states both reasons.
 
@@ -387,9 +400,9 @@ Agent2Agent 1.0 specification instead of from memory.
 `required`, citing "specification §4.6".
 
 **Three errors and an omission.** `AgentCapabilities` is §4.4.3 and
-`AgentExtension` is §4.4.4, not §4.6. `AgentExtension` has a fourth field,
+`AgentExtension` is §4.4.4; neither is §4.6. `AgentExtension` has a fourth field,
 `params`, which is where a GIDP implementation would naturally declare the
-profiles it supports. And the sketch said nothing about **activation**: in
+profiles it supports. And the sketch said nothing about activation: in
 A2A, declaring an extension in the Agent Card does not turn it on. A client
 sends the `A2A-Extensions` header listing the URIs it intends to activate and
 the responder echoes the subset it actually activated. An extension that was
@@ -397,7 +410,7 @@ not echoed is not in force.
 
 The omission is the substantive one. Activation is the point at which a GIDP
 exchange can be refused before any GIDP object exists, and therefore before
-any Disclosure Policy has been consulted — which is the earliest and cheapest
+any Disclosure Policy has been consulted. It is the earliest and cheapest
 refusal available to a responder, and Section 22.2 did not tell an
 implementer it was there.
 
@@ -413,20 +426,20 @@ feature at all.
 activation round trip and carriage in `metadata` under URI-prefixed keys,
 with round-trip tests over every object a real session puts on the wire.
 Writing it also showed that `REQUEST_TYPES`, `RESPONSE_TYPES` and
-`ONE_WAY_TYPES` do not between them enumerate every transmitted object —
-`SessionClose` and `DiscoveryProjection` are in none of them — so a binding
+`ONE_WAY_TYPES` do not between them enumerate every transmitted object
+(`SessionClose` and `DiscoveryProjection` are in none of them), so a binding
 that trusts those tuples silently cannot carry two object types.
 
 **Spec should change.** Yes, editorially but concretely: a sketch that cites
 the wrong section and omits the handshake is worse than no sketch, because a
 reader will copy it.
 
-**Resolution — applied to GIDP 0.1 on 2026-09-23.** Section 22.2 now cites
+**Resolution.** Applied to GIDP 0.1 on 2026-09-23. Section 22.2 now cites
 §4.4.3 and §4.4.4, includes `params`, describes the activation round trip and
 what a non-echo means, states the `metadata` carriage convention and why a
 GIDP object does not belong in a Part, warns that the two negotiations are
 independent, and notes that an unallocated URI is an interoperability
-question rather than a detail.
+question and more than a detail.
 
 ---
 
@@ -440,8 +453,8 @@ result meaning "answering requires a per-instance Principal decision that is
 pending", and Section 15.2 makes it one of the results that prevent a session
 from qualifying.
 
-**The defect.** Nothing can produce it. Gates — including
-`principal_approval` — are properties of the Disclosure Policy and govern
+**The defect.** Nothing can produce it. Gates, including
+`principal_approval`, are properties of the Disclosure Policy and govern
 disclosure and consent, and Section 15.4 is emphatic that answering a claim is
 not disclosing. So within GIDP 0.1's own model there is no construct under
 which answering a claim requires a Principal decision, the result is
@@ -450,15 +463,15 @@ Three enumerations carry a "pending principal approval" token; two are
 reachable and this one is not.
 
 **Decided here.** Removed from the result vocabulary. A closed vocabulary that
-nothing can produce is not a harmless spare part: it is an interoperability
+nothing can produce is an interoperability
 obligation on every implementer, for a case none of them can reach.
 
-**Spec should change.** Yes. Removing it also makes Section 15.2 say something.
+**Spec should change.** Yes. Removing it also gives Section 15.2's rule some content.
 
-**Resolution — applied to GIDP 0.1 on 2026-09-23.** Removed from the Section
+**Resolution.** Applied to GIDP 0.1 on 2026-09-23. Removed from the Section
 15.1 table and from the Section 15.2 blocking list. If a deployment shows that
 a Principal should approve *answers* and not only disclosures, a future
-version can reintroduce it with the construct that produces it — noting that
+version can reintroduce it with the construct that produces it, noting that
 such a rule must remain simulatable in the sense of Section 24.3, since a
 decision keyed to the responder's own values is a channel.
 
@@ -468,8 +481,8 @@ decision keyed to the responder's own values is a channel.
 
 **Found.** 2026-09-23, same coverage pass. All five members unused.
 
-**Spec.** Section 15.3 says operational outcomes — `unsupported`,
-`unauthorized`, `expired`, `rate_limited`, `temporarily_unavailable` — "belong
+**Spec.** Section 15.3 says operational outcomes (`unsupported`,
+`unauthorized`, `expired`, `rate_limited`, `temporarily_unavailable`) "belong
 to the transport binding, not to the GIDP object set: a binding conveys them
 through its own error mechanism, and GIDP defines no object for them."
 
@@ -485,14 +498,14 @@ name what a binding conveys.
 defines no enumeration for them either, so that the next implementer does not
 repeat this.
 
-**Resolution — applied to GIDP 0.1 on 2026-09-23.**
+**Resolution.** Applied to GIDP 0.1 on 2026-09-23.
 
 ---
 
 ## S-17 — A gated consent could be asked for and never answered
 
 **Found.** 2026-09-23, by the coverage tool: `ConsentStatus.DECLINED` and
-`IdentityStatus.GRANTED` were reached by nothing, which turned out not to be a
+`IdentityStatus.GRANTED` were reached by nothing, which turned out to be more than a
 documentation gap.
 
 **Spec.** Section 14 requires every request-type object to be answered by
@@ -505,11 +518,11 @@ refusal.
 `pending_principal_approval` and had no method by which the Principal's
 answer ever arrived. A gated consent therefore stayed provisional for the life
 of the session, the request was never discharged, and the refusal branch of
-17.2 was unreachable. The `principal_approval` gate — the mechanism the
-specification offers for the most sensitive attributes — could ask a human a
+17.2 was unreachable. The `principal_approval` gate, which is the mechanism the
+specification offers for the most sensitive attributes, could ask a human a
 question and could not hear the reply. The same held for a gated disclosure.
 
-That no test noticed is the interesting part. The conformance suite checked
+No test noticed it. The conformance suite checked
 that a provisional response does not discharge a request, which passed, and
 nothing checked that anything ever does.
 
@@ -524,13 +537,13 @@ say that the Principal's decision arrives as the terminal response to the
 original request, because an implementer reading 14.5 alone will build what
 this implementation built.
 
-**Resolution — applied to GIDP 0.1 on 2026-09-23.**
+**Resolution.** Applied to GIDP 0.1 on 2026-09-23.
 
 ---
 
 ## S-18 — `retention` was advice wearing the word "limit"
 
-**Found.** 2026-09-23, by instructing a lead that had been listed as
+**Found.** 2026-09-23, by investigating a lead that had been listed as
 promising and left uninvestigated: XACML's obligation model.
 
 **Spec.** Section 10.7 said a disclosure request "SHOULD state retention
@@ -541,16 +554,16 @@ future work. Section 25.4 said "recipients SHOULD honour them."
 `session_only` and keep the value for ever without breaching anything, and a
 discloser reading the field has no more assurance than if the field were
 absent. The field travels on the wire, appears in the object model, and
-carries no obligation — which is a worse position than not defining it,
+carries no obligation. That is a worse position than not defining it,
 because a Principal shown "retention: session_only" by an implementation will
 reasonably believe something enforces it.
 
 XACML made this distinction twenty years ago and resolved it the only way a
 protocol can. An *obligation* is an operation the enforcement point must carry
 out; *advice* may be safely ignored; and a conforming enforcement point must
-**deny access outright** when it cannot discharge an obligation attached to a
-permit. The lever is not enforcement, which no policy language has — it is
-that failing to discharge makes the implementation non-conformant rather than
+deny access outright when it cannot discharge an obligation attached to a
+permit. The lever is not enforcement, which no policy language has. It is
+that failing to discharge makes the implementation non-conformant, where otherwise it would be
 merely disappointing.
 
 **Decided here.** An Agent declares the retention modes it can discharge and
@@ -562,10 +575,10 @@ which is the safe outcome.
 **Spec should change.** Yes. A limit nothing turns on should not be called a
 limit.
 
-**Resolution — applied to GIDP 0.1 on 2026-09-23.** Section 10.7 now forbids
+**Resolution.** Applied to GIDP 0.1 on 2026-09-23. Section 10.7 now forbids
 stating a retention the requester cannot discharge and requires omission
 instead; Section 25.4's "recipients SHOULD honour them" becomes a MUST for a
-recipient that stated one. The specification also says plainly that GIDP cannot
+recipient that stated one. The specification also says outright that GIDP cannot
 verify discharge and does not pretend to.
 
 ---
@@ -573,8 +586,8 @@ verify discharge and does not pretend to.
 ## S-19 — `approval_required` authority was obeyed for consent and ignored for disclosure
 
 **Found.** 2026-09-24, while testing whether `AuthorityValue.approval_required`
-and `Gate.principal_approval` were redundant. They are not — they are
-different axes — but the implementation consulted only one of them on the
+and `Gate.principal_approval` were redundant. They are not (they are
+different axes), but the implementation consulted only one of them on the
 path that matters.
 
 **Spec.** Section 16.2: "Where a level is `approval_required`, the
@@ -586,7 +599,7 @@ both permit.
 
 **The defect.** `handle_disclosure_request` checked `DISCLOSE` only for
 `false`, then deferred entirely to the attribute's gate. A Principal who set
-`DISCLOSE: approval_required` — "ask me before disclosing anything" — was
+`DISCLOSE: approval_required` ("ask me before disclosing anything") was
 obeyed for attributes that happened to carry `principal_approval` and silently
 ignored for every attribute that carried no gate of its own. The consent path
 had it right; the disclosure path did not. The reference implementation was
@@ -603,21 +616,21 @@ them as alternatives will implement one.
 `pending_principal_approval` regardless of the attribute's gate, unless the
 Principal has pre-approved that attribute.
 
-**Spec should change.** No — the specification was already correct and
+**Spec should change.** No. The specification was already correct and
 explicit. This is an implementation defect, recorded because the register
 should show what the code got wrong as well as what the text did, and because
-the near-redundancy that produced it is worth naming for the next implementer.
+the near-redundancy that produced it is a trap the next implementer should be told about.
 
-**Resolution — applied to the reference implementation on 2026-09-24**, with a
+**Resolution.** Applied to the reference implementation on 2026-09-24, with a
 conformance test and a mutation that fails without it.
 
 ---
 
 ## S-20 — A required field the specification never asked for
 
-**Found.** 2026-09-24, by Flo, in one sentence: if `interest_class` does
-nothing, why keep it? The right answer turned out not to be the one I was
-preparing.
+**Found.** 2026-09-24, by the author, in one sentence: if `interest_class` does
+nothing, why keep it? The right answer turned out not to be the one being
+prepared.
 
 **Spec.** Section 8 recognises four classes of Conditional Interest and says
 they "differ in what is hidden, not in protocol mechanics", requiring a
@@ -626,7 +639,7 @@ first criterion repeats that, adding that the class is never transmitted "so
 this criterion is verified by local inspection".
 
 **The defect, and it is the implementation's.** The specification never
-defines a field. It asks that four *situations* be expressible — which they
+defines a field. It asks that four *situations* be expressible, and they
 are, through the Disclosure Policy, since what distinguishes them is which
 attribute is local and which is disclosable. The reference implementation
 invented a required `interest_class` attribute, made every Principal populate
@@ -634,21 +647,21 @@ it, and then read it nowhere. A required field that no behaviour consults is a
 tax on every implementer, and two implementations given one will eventually
 disagree about what it means.
 
-The conformance criterion was worse. "Verified by local inspection" is not a
-criterion; it is a note saying nobody checked. The first version of the test
+The conformance criterion was worse. "Verified by local inspection" is a
+note saying nobody checked, and cannot serve as a criterion. The first version of the test
 proved that assigning a Python attribute stores it.
 
 **Decided here.** The field and its enumeration are removed. The four classes
 stay in Section 8, as prose, where a taxonomy that guides thinking belongs.
 
-**Spec should change.** Yes, twice. Section 8 now says plainly that no field
+**Spec should change.** Yes, twice. Section 8 now says explicitly that no field
 carries the classification and why. Criterion 1 is now executable: express the
 four situations, run a session for each, and check that they differ only in
 their Disclosure Policies while producing the same sequence of protocol
-objects — which is also the criterion that carries the horizontality claim of
-Appendix F.2, and which had been resting on inspection.
+objects. This is also the criterion that carries the horizontality claim of
+Appendix F.2, which had been resting on inspection.
 
-**Resolution — applied to GIDP 0.1 on 2026-09-24.**
+**Resolution.** Applied to GIDP 0.1 on 2026-09-24.
 
 ---
 
@@ -661,18 +674,18 @@ part of the chain no unit test covers: two participants authored separately.
 lets a profile define attribute vocabularies.
 
 **The defect.** A claim asking `geography intersects ["germany"]`, answered by
-a responder holding `["munich"]`, resolves `incompatible`. That is truthful —
-the sets are disjoint — and wrong, since both parties mean the same place. The
-result is a **false negative asserted as a certainty**, and Section 15.2 makes
+a responder holding `["munich"]`, resolves `incompatible`. That is truthful,
+since the sets are disjoint, and wrong, since both parties mean the same place. The
+result is a false negative asserted as a certainty, and Section 15.2 makes
 it block qualification, so a session between two compatible Principals ends
 because they named one thing at two granularities.
 
-`unknown` would have been survivable; `incompatible` is not, and the
-difference matters: one invites another claim, the other ends the session.
+`unknown` would have been survivable; `incompatible` is not, because
+one invites another claim and the other ends the session.
 
 Every unit test in this suite missed it because every test authors both sides
 at once and therefore uses one vocabulary by construction. The four worked
-domains have the same blind spot, which is exactly what Appendix F.2 warns its
+domains have the same blind spot, which is what Appendix F.2 warns its
 own threshold cannot remove, and it took two independently written profiles to
 show it.
 
@@ -682,7 +695,7 @@ agreement between parties who have never met, which is what a horizontal
 protocol is supposed to avoid, and it fails the moment someone writes a
 conforming interest at a different granularity.
 
-The second instinct — put an interpreter at the operator — is worse. An
+The second instinct, putting an interpreter at the operator, is worse. An
 operator that resolves `munich` against `germany` *inside a session* has to see
 the claims, and possibly the values behind them, which reinstates the
 confidential intermediary this protocol exists to remove.
@@ -692,8 +705,8 @@ the party that holds the value, so only that party's own values need placing in
 a hierarchy. A Standing Interest may carry, per attribute, a mapping from each
 value to the value that contains it; the responder answers `compatible` when an
 asked value is anything a held value is part of, `unknown` when the asked value
-lies below a held one — a German company has not said which city it is in —
-and `incompatible` otherwise. Nothing is negotiated, nothing is shared, the
+lies below a held one (a German company has not said which city it is in),
+and `incompatible` otherwise. Nothing is negotiated or shared, the
 hierarchy never leaves the Standing Interest, and a responder that declares
 none keeps set semantics and the false negative with them.
 
@@ -703,7 +716,7 @@ strictly less.
 
 **Spec should change.** Yes, and differently from the first attempt.
 
-**Resolution — applied to GIDP 0.1 on 2026-09-24.** Section 14.2 states the
+**Resolution.** Applied to GIDP 0.1 on 2026-09-24. Section 14.2 states the
 three-way rule and its asymmetry, notes that the hierarchy is never
 transmitted, and contrasts it with Section 12.4: a provider resolves for the
 whole index because it sees only projections, while inside a session only the
@@ -727,31 +740,31 @@ asked before qualification. No implementation can resolve that without
 inventing a transition.
 
 The test for it found a worse one next to it. `QUALIFIED` + `DisclosureRequest`
-led to `DISCLOSURE_PENDING`, whose terminal answer led to `PROBING` —
+led to `DISCLOSURE_PENDING`, whose terminal answer led to `PROBING`
 unconditionally. A qualified session that asked one more question was no
 longer qualified, could not qualify again because the Opportunity had already
 been produced, and could never reach a `Handoff`. Every worked domain stopped
 before asking anything after qualification, so none of them met it.
 
 **Decided.** A disclosure or a consent is a request made *within* a stage of
-the session, not a stage of its own: its answer returns the session to the
+the session and is not a stage of its own: its answer returns the session to the
 stage it was asked in. `ConsentRequest` with `action: disclose_attributes` may
 be sent from `PROBING`; a grant there opens the gate and leaves the session in
-`PROBING`. Every other consent action — identity, contact, handoff — stays
-behind qualification, which now enforces Section 5 by an explicit rule rather
-than by an absent row. `DisclosureRequest` is permitted from `CONSENTED`.
+`PROBING`. Every other consent action (identity, contact, handoff) stays
+behind qualification, which now enforces Section 5 by an explicit rule instead
+of by an absent row. `DisclosureRequest` is permitted from `CONSENTED`.
 `granted_if_reciprocal` and `granted_if_verified` stay pending, as Section 14
 already said and the table contradicted; the implementation had followed
 Section 14.
 
-**Resolution — applied to GIDP 0.1 on 2026-09-25.** Sections 14.5 and 17.2.
+**Resolution.** Applied to GIDP 0.1 on 2026-09-25. Sections 14.5 and 17.2.
 
 ---
 
 ## S-23 — A required field that the Disclosure Policy forbids
 
-**Found.** 2026-09-25, external review (T03). The test found that it was not
-only a contradiction in the text but a live leak in the code.
+**Found.** 2026-09-25, external review (T03). The test found that it was a
+live leak in the code as well as a contradiction in the text.
 
 **Spec.** Section 19.1 classifies the dependency lists like any other
 attribute. Section 14.6 required every Agent to put every dependency it holds
@@ -761,11 +774,11 @@ in the Opportunity's `contingent_on`.
 had to be transmitted or the field left incomplete, and the text chose
 neither. The implementation chose transmission, silently: the default class of
 an unlisted attribute is `evaluation_only`, and `contingent_on` copied
-`conditional_on` verbatim, so **by default a private dependency went on the
-wire**.
+`conditional_on` verbatim, so by default a private dependency went on the
+wire.
 
 Two further gaps surfaced while fixing it. The implementation could not express
-`never` at all — every local attribute was evaluation-only. And Section 14.6
+`never` at all: every local attribute was evaluation-only. And Section 14.6
 required a `Handoff` to carry the contingency forward while Section 14.7 gave
 the Handoff no field to carry it in.
 
@@ -773,12 +786,12 @@ the Handoff no field to carry it in.
 dependency travels as named. A held one travels by name only if the policy
 permits `conditional_on` at the session's depth when the Opportunity is built;
 otherwise the single token `undisclosed` says the Opportunity is contingent
-without saying on what — a derived result, which is what `evaluation_only`
+without saying on what. That is a derived result, which is what `evaluation_only`
 permits. A `never` dependency leaves no trace, because a flag that exists only
 because of it is a result produced from it. A claim on a `never` attribute is
 declined. The Handoff carries `contingent_on` under the same rule.
 
-**Resolution — applied to GIDP 0.1 on 2026-09-25.** Sections 10.3, 14.6, 14.7.
+**Resolution.** Applied to GIDP 0.1 on 2026-09-25. Sections 10.3, 14.6, 14.7.
 
 ---
 
@@ -793,9 +806,9 @@ results are "keyed by claim key and the most recent answer stands".
 **The defect.** A key is a dimension; a claim is a proposition. Asked whether
 a value lay in two different ranges, the responder answered `incompatible`
 then `compatible`, and the second overwrote the first: the session
-**qualified** on a dimension that had failed. The same overwrite ran across
-directions — a proposition one side declined was erased by the other side's
-compatible answer on the same key — and within one request, where two claims
+qualified on a dimension that had failed. The same overwrite ran across
+directions (a proposition one side declined was erased by the other side's
+compatible answer on the same key) and within one request, where two claims
 on one key collapsed into one entry.
 
 **Decided.** Every claim carries a `claim_id`, and a result belongs to the
@@ -803,14 +816,14 @@ proposition it answers, identified by that id and the direction. Asking again
 adds a proposition; replacing one takes an explicit `supersedes` naming claims
 of the same sender. A proposition answered `incompatible` cannot be withdrawn:
 a known contradiction closes the session, and a requester allowed to withdraw
-it and ask a neighbouring value would have bisection — the attack of Section
-24.3 — as a supported feature. The counts of Section 14.6 are per dimension
+it and ask a neighbouring value would have bisection (the attack of Section
+24.3) as a supported feature. The counts of Section 14.6 are per dimension
 over the standing propositions, which keeps their identity intact.
 
 The JSON Schema publishes `claim_id` as required even though the in-process
 constructor lets the Agent fill it, because the schema describes the wire.
 
-**Resolution — applied to GIDP 0.1 on 2026-09-25.** Sections 14.2, 14.3,
+**Resolution.** Applied to GIDP 0.1 on 2026-09-25. Sections 14.2, 14.3,
 14.6, 15.2.
 
 ---
@@ -824,23 +837,23 @@ constructor lets the Agent fill it, because the schema describes the wire.
 qualifying.
 
 **The defect.** A responder whose own evaluation said `incompatible` could
-answer `conditionally_compatible`, and with one genuinely compatible dimension
+answer `conditionally_compatible`, and with one truly compatible dimension
 elsewhere the session reached an Opportunity on a dimension the responder knew
-had failed. The default Agent never did this — it coarsened only true answers —
+had failed. The default Agent never did this (it coarsened only true answers),
 but the library function every profile would call allowed it, and so did the
 text. Separately, nothing said what an Opportunity asserts, and the obvious
-reading — that the Principals are compatible — is false even without coarsening:
+reading, that the Principals are compatible, is false even without coarsening:
 dimension-by-dimension claims cannot see that two sides agree on every
 dimension and on no whole configuration.
 
 **Decided.** Coarsening is asymmetric: `compatible` may become
 `conditionally_compatible`, `unknown` or `declined`; `incompatible` may become
 only `unknown` or `declined`. And Section 14.6 now states what an Opportunity
-asserts — no standing proposition met a contradiction its responder knew of —
+asserts (no standing proposition met a contradiction its responder knew of)
 and what it does not, with the counterexample, and tells a profile that needs
 joint satisfiability to ask for the combination as one claim.
 
-**Resolution — applied to GIDP 0.1 on 2026-09-25.** Sections 14.6, 15.2, 15.5.
+**Resolution.** Applied to GIDP 0.1 on 2026-09-25. Sections 14.6, 15.2, 15.5.
 
 ---
 
@@ -848,20 +861,20 @@ joint satisfiability to ask for the combination as one claim.
 
 **Found.** 2026-09-25, external review (section 4 of its report).
 
-Two of these are faults in this file's own process rather than in the
+Two of these are faults in this file's own process and not in the
 specification. S-15 removed `requires_principal_approval` from the result
 vocabulary and was marked resolved while Section 14 still listed it as a
 provisional response. S-16 removed the enumeration of operational outcomes and
 was marked resolved while Section 26 still listed them among the closed
 vocabularies to register. Closing an issue now means searching the whole
-document for what it removed, not editing the paragraph it was found in.
+document for what it removed, beyond the paragraph it was found in.
 
 The others, corrected on the same day: the fallback of Section 15.3 assumed a
 close reason for every operational outcome, and there are fewer; Section 14.8
 gave an empty `features` intersection as a reason to refuse although the
 bilateral core needs no feature; Section 22.2 justified carrying GIDP objects
-in A2A `metadata` by claiming a Part is for humans, which is false — A2A Parts
-carry structured data — and the real reason is Section 6.10; Section 2
+in A2A `metadata` by claiming a Part is for humans, which is false (A2A Parts
+carry structured data), and the real reason is Section 6.10; Section 2
 referred to an Appendix H that does not exist; Section 20's reference to an
 `evidence_ref` named a field no section defines; Section 12 required a
 provider to stop returning a withdrawn projection both on acceptance and within
@@ -871,7 +884,7 @@ does not exist; and the example Opportunity omitted the required
 `contingent_on`. Also corrected: two sentences broken by the rename to GIDP,
 and "those four" after a list of three.
 
-**Resolution — applied to GIDP 0.1 on 2026-09-25.**
+**Resolution.** Applied to GIDP 0.1 on 2026-09-25.
 
 
 ---
@@ -898,19 +911,19 @@ a refusal on the consent path too, in the specification and in
 
 **S-29 — one absolute sentence survived the Section 24.3 correction.**
 Section 15.3 still said `declined` "carries no information whatever";
-Section 24.3 had just spent a paragraph qualifying exactly that claim. The
-sentence now says what is true: constructed to convey nothing about
-compatibility to the counterparty, not information-free to every observer.
+Section 24.3 had just spent a paragraph qualifying that very claim. The
+sentence now says what is true: it is constructed to convey nothing about
+compatibility to the counterparty, which does not make it information-free to every observer.
 
 **S-30 — the Handoff example omitted `contingent_on`.** The field had been
-made required (S-25) and the example not updated.
+made required (S-11) and the example not updated.
 
 **S-31 — the state table lacked `CompatibilityResponse` from `QUALIFIED`,
 and the fate of an emitted Opportunity was undecided.** The reference
 implementation already accepted the response (its `COMPATIBILITY` event
 covers both directions); the table now says so. The open question the
-reviewer posed — what becomes of an Opportunity when a later result is
-non-qualifying — is now decided: the Opportunity represents the evaluation
+reviewer posed, what becomes of an Opportunity when a later result is
+non-qualifying, is now decided: the Opportunity represents the evaluation
 at the moment of the transition, qualification is reached at most once, a
 later `incompatible` closes the session and any other result changes
 nothing; re-evaluation is a new session, and the disclosure budget, kept per
@@ -920,9 +933,9 @@ Standing Interest, carries over.
 Opportunity is emitted by the initiator from its own session view; a
 dependency held by the responder under `evaluation_only` was invisible to
 it, so the responder received an Opportunity that misstated its own
-evaluation — the confidentiality of `contingent_on` (S-25) was fixed, its
-bilateral construction was not. `CompatibilityResponse` now carries an
-OPTIONAL `contingent_on` under exactly the rule of Section 14.6, the
+evaluation. The confidentiality of `contingent_on` (S-23) had been fixed; its
+bilateral construction had not. `CompatibilityResponse` now carries an
+OPTIONAL `contingent_on` under the same rule as Section 14.6, the
 responder states its communicable contingencies there, and the initiator
 merges them.
 
@@ -932,20 +945,20 @@ the two rules easiest to get wrong: an authenticated peer is not a network
 member, and a late approval is re-checked against the current policy), and
 the persistence requirements for the disclosure budget (Section 24.3: no
 reset by new session, restart or replica; no double-spend under
-concurrency). The review's structural proposals — separating session phase
+concurrency). The review's structural proposals (separating session phase
 from pending requests and granted consents, a bilaterally accepted summary
 before emission, a fully typed first profile, an implementation-independent
-conformance corpus — are recorded in `spec/open-problems.md` for 0.2.
+conformance corpus) are recorded in `spec/open-problems.md` for 0.2.
 
-**Resolution — applied to GIDP 0.1 on 2026-09-28.**
+**Resolution.** Applied to GIDP 0.1 on 2026-09-28.
 
 
 ---
 
-## S-33 to S-46 — third review round (28 September 2026): the reviewer's fourth pass, and a first fresh reading
+## S-33 to S-46 — third review round (28 September 2026): the reviewer's third pass, and a first fresh reading
 
 Two reports: the reviewer of S-22 to S-32 read the corrected text a third
-time and found four raccords; a second reviewer, reading the specification
+time and found four consistency fixes to make; a second reviewer, reading the specification
 for the first time, found the rest. All applied to GIDP 0.1 before
 publication.
 
@@ -953,7 +966,7 @@ publication.
 most serious of the batch).** `reveal_identity` was forbidden before
 qualification, but `disclose_attributes` was permitted before it, gated on
 `DISCLOSE`, and nothing excluded `principal_identity` from its scope; a
-direct `DisclosureRequest` on an identity attribute classified plainly
+direct `DisclosureRequest` on an identity attribute classified simply as
 `session` had the same reading. Section 10.6 now attaches the identity
 rules to the nature of the data: an identity attribute travels only under a
 `reveal_identity` consent (INTRODUCE, post-qualification), MUST NOT appear
@@ -969,13 +982,13 @@ while a request is pending; it fires on the return to `PROBING`, where the
 implementation MUST apply it before any further message. `Session.qualify`
 defers accordingly.
 
-**S-35 to S-37 — raccords on our own recent fixes.** Section 15.2's
+**S-35 to S-37 — consistency fixes on our own recent corrections.** Section 15.2's
 definition of `potentially_compatible` now says its conditions are
 conditions of entry and the status is kept thereafter (the freeze of S-31
 had not been propagated into the definition); Section 16.3 gains the depth
 row (Section 14.1's `declined` could otherwise fall into the approval
-branch) and a scope paragraph saying the table governs transmission, not
-local evaluation — applied literally it would have refused the very
+branch) and a scope paragraph saying the table governs transmission and leaves
+local evaluation alone, since applied literally it would have refused the very
 evaluation `evaluation_only` permits; and Section 14's "MAY close" on a
 disagreeing Opportunity recipient is harmonised with Section 14.6's "MUST
 close" on a mismatched one.
@@ -986,16 +999,16 @@ operator rename is free before publication and breaking after it. Renamed
 in the specification, the vocabulary, the schemas and every example.
 
 **S-39 to S-46 — propagation and honesty.** The A2A binding no longer
-claims `metadata` keeps objects "out of the prompt by construction" — the
+claims `metadata` keeps objects "out of the prompt by construction": the
 container frames, the implementation enforces. The Section 14.6 example
 showed an identity granted at the instant of qualification, before it
 could be requested. Section 14.6 now carries the fresh reviewer's
-within-one-dimension example — ceiling 80, floor 90, both `compatible`
-with 50–100 both ways, no common price — and requires (MUST, was MAY) a
+within-one-dimension example (ceiling 80, floor 90, both `compatible`
+with 50–100 both ways, no common price) and requires (MUST, was MAY) a
 profile to state the minimum claims before its Opportunities carry
 operational meaning; absent that, an Opportunity is a screening result.
 Conformance criterion 1's broken sentence is rewritten (invariants across
-the four situations, not identical traces; the interdependent case is
+the four situations, as opposed to identical traces; the interdependent case is
 conditional on the optional feature), and criterion 3 adds the budget
 ledger to its inputs, since a shared budget and randomised refusals make a
 lone session's replay underdetermined. Section 26's closure now names its
@@ -1003,45 +1016,45 @@ two profile-extensible vocabularies instead of contradicting them.
 Appendix A's `class` field, which Section 8 spends a paragraph refusing to
 define, is removed. C.1's Opportunity proposed a minority investment
 nobody had authorised; A's mandate now includes it. Three "MUST NOT infer"
-are rephrased to bind what a result means in the protocol rather than
-legislate statistics. And three sentences are softened to what is true:
+are rephrased to bind what a result means in the protocol instead of
+legislating statistics. And three sentences are softened to what is true:
 the introduction's "the only way to be found is to announce"
-(confidential islands exist — Section 1.1 describes them), the claim that
+(confidential islands exist, and Section 1.1 describes them), the claim that
 neighbouring protocols "all assume" capability discovery (PAP's mandates
 carry search and disclosure scopes), and "[RANI2026] solves the passive
 case" (it treats one, under its own model).
 
-**Also added:** `projection_ref` (OPTIONAL) on `SessionOpen` — the routing
+**Also added:** `projection_ref` (OPTIONAL) on `SessionOpen`, the routing
 key without which an endpoint representing several Standing Interests
 cannot know which interest a session is about; and the negotiation
 boundary stated operationally in Section 14.3: a claim is a test of a
-hypothesis, not a position, and a recipient MUST NOT treat it, or its
+hypothesis and does not state a position, and a recipient MUST NOT treat it, or its
 pattern, as an offer or an indication of availability.
 
 Found while testing: one conformance test asserted a private value's
 digits were absent from a serialisation that included `expires_at`, so it
-failed whenever the clock's microseconds contained "80" — the source of
+failed whenever the clock's microseconds contained "80". This was the source of
 two phantom failures. It now excludes the timestamp.
 
-**Resolution — applied to GIDP 0.1 on 2026-09-28.**
+**Resolution.** Applied to GIDP 0.1 on 2026-09-28.
 
 
 ---
 
-## S-47, S-48 — the reviewer's fifth pass (28 September 2026): two raccords, then approval
+## S-47, S-48 — the reviewer's fourth pass (28 September 2026): two consistency fixes, then approval
 
 The reviewer judged the version fit to stabilise as the experimental 0.1
 and submit to implementers, with two targeted fixes.
 
 **S-47 — a deferred qualification is recomputed, not remembered.** The
 S-34 rule ("neither fires nor lapses") could be read as memorising a
-qualification met mid-wait, although a further result — an `unknown` at
-step three — could arrive during the same wait. Decided, per the
+qualification met mid-wait, although a further result (an `unknown` at
+step three) could arrive during the same wait. Decided, per the
 reviewer's own proposal: while a request is pending, `session_status`
 remains `open`; on the return to `PROBING` the entry conditions are
 recomputed over the propositions standing at that moment; where they
-hold, status, state and Opportunity advance together — which also
-restores the exact coincidence Section 14.6 asserts. Fixing the text
+hold, status, state and Opportunity advance together, which also
+restores the coincidence Section 14.6 asserts. Fixing the text
 exposed that `Session.status()` had never implemented the S-35 keep
 either: the "status is kept after qualification" rule existed only in
 prose. Both are now in the code, each with a mutation.
@@ -1053,13 +1066,13 @@ answered `compatible` confirms the identity without any
 now `declined` unless a `reveal_identity` consent is in force, in the
 text and in the agent, tested before and after consent.
 
-The reviewer's remaining request — a light editorial pass moving the
+The reviewer's remaining request, a light editorial pass moving the
 historical justifications out of the normative text and into this file
-and the rationale document — is deliberately not bundled here: it
+and the rationale document, is not bundled here: it
 touches many sections at once and deserves its own pass with nothing
 else in flight.
 
-**Resolution — applied to GIDP 0.1 on 2026-09-28.**
+**Resolution.** Applied to GIDP 0.1 on 2026-09-28.
 
 
 ---
@@ -1068,7 +1081,7 @@ else in flight.
 
 Read the corrected version directly, withdrew its earlier criticisms in
 their previous form, and asked for consistency between the new rules
-rather than new protections. All applied.
+in place of new protections. All applied.
 
 **S-49 — profile requirements enter the entry conditions.** Section 14.6
 required a profile to state minimum claims; Section 15.2 qualified
@@ -1076,22 +1089,22 @@ without consulting them, so a compatible answer on role alone qualified
 a session whose profile also required location. The profile's
 requirements are now part of the entry conditions, in the text and in
 `Session.required_dimensions` (the core profile requires none), with a
-test and a mutation. Added alongside: naming `compatible_with` is not by
-itself the answer to buyer-at-80 — the profile must say what its
+test and a mutation. Added alongside: naming `compatible_with` does not by
+itself answer buyer-at-80; the profile must say what its
 predicate actually tests.
 
 **S-50 — the pending-`open` rule narrowed to its case.** S-47's "remains
 `open` whatever the standing results" was too broad in both directions
 the reviewer named: a wait after qualification keeps the kept status
 (the normal QUALIFIED → CONSENT_PENDING path), and an `incompatible`
-recorded mid-wait closes at once rather than waiting politely. The
-implementation already did both — its checks run in the right order —
+recorded mid-wait closes at once without waiting politely. The
+implementation already did both, because its checks run in the right order,
 so this is a text-only fix, now pinned by two tests.
 
 **S-51 — `PROBE: approval_required` has one defined path.** No
 provisional CompatibilityResponse exists and none is added: the Agent
 holds the request locally until its Principal decides, answers
-terminally before `expires_at`, and silence resolves by expiry — a
+terminally before `expires_at`, and silence resolves by expiry. A
 provisional "my Principal is deciding whether I may answer" would
 itself disclose the shape of the responder's authority. The reference
 implementation is a synchronous library; the wait belongs to its
@@ -1107,7 +1120,7 @@ the library; spec text only.
 **S-53 — the hierarchy rule presumed one meaning of a general value.**
 `germany` as approximate knowledge → `unknown` to `munich` (the core's
 cautious default); `germany` as accepted set → a profile MAY direct
-`compatible`. The distinction is typed by the profile, where the
+`compatible`. The distinction is typed by the profile, which is where the
 horizontal ambition's one-word-three-meanings trap is disarmed.
 
 **S-54 — projection routing closed.** A candidate reference carries the
@@ -1120,34 +1133,34 @@ guessing.
 is.** Section 24.3 listed it among possible behaviours; Section 15.5
 forbids that answer over a truth of `incompatible`. It is now stated as
 a non-conforming comparator that appears in the measurements as a
-bound, not as an option.
+bound, and is no longer offered as an option.
 
 The reviewer's remaining asks are the same two as everyone's now: the
 editorial pass (history out of the normative text, one normative home
 per rule) and the handover to independent implementers, with its five
-traces — of which 1, 2 and 3 are pinned by tests here, and 4 and 5 are
+traces, of which 1, 2 and 3 are pinned by tests here, and 4 and 5 are
 the spec-defined behaviours of S-51 and S-52, whose orchestration lives
 above this library.
 
-**Resolution — applied to GIDP 0.1 on 2026-09-28.**
+**Resolution.** Applied to GIDP 0.1 on 2026-09-28.
 
 
 ---
 
-## S-56 to S-64 — a third fresh reading, and why the same points resurface
+## S-56 to S-64 — a third fresh reading (29 September 2026), and why the same points resurface
 
 A new reviewer, given the current version with no history, re-derived
-much of the recorded 0.2 programme — which is the expected behaviour of
-a competent reader meeting a document that states its own limits — and
-contributed what previous passes had not seen. The genuinely new items,
+much of the recorded 0.2 programme (the expected behaviour of
+a competent reader meeting a document that states its own limits) and
+contributed what previous passes had not seen. The new items,
 applied:
 
 **S-56 — qualification is now bilateral over the wire.** Three
 reviewers independently proposed local confirmation before
 introduction; the third's scenario (one question, one `compatible`,
 identity requestable) settled it. The mechanism costs no new object:
-each side evaluates Section 15.2's entry conditions over its own view —
-own profile requirements included — and the initiator MUST NOT emit an
+each side evaluates Section 15.2's entry conditions over its own view,
+its own profile requirements included, and the initiator MUST NOT emit an
 Opportunity unless the responder's most recent `CompatibilityResponse`
 reported `potentially_compatible`. The responder's reported status is
 its local confirmation, given without disclosing why. Implemented
@@ -1155,11 +1168,11 @@ its local confirmation, given without disclosing why. Implemented
 mutation added.
 
 **S-57 — what a session is about.** A session evaluates one candidate
-configuration; an `incompatible` refutes the candidate, not the
-Principals (the executive who refuses Paris but would take London has
+configuration; an `incompatible` refutes the candidate and leaves the
+Principals unrejected (the executive who refuses Paris but would take London has
 not been rejected; the Paris session has). Alternatives travel inside
 one session as sets or ranges, or in a new session against the same
-budget — which is also why closure hands no bisection tool to an
+budget, which is also why closure hands no bisection tool to an
 adversary. Stated in Section 17.2.
 
 **S-58 — a Handoff needs its own consent.** Being in `CONSENTED`
@@ -1169,9 +1182,9 @@ target; a recipient not covered closes `unsupported`. The meaning of
 `scope` is now stated per action. Enforced in `Agent.handoff` (the
 emitting side), exercised by every example, negative-tested (a consent
 for something else does not do; a consent for one target does not cover
-another), mutation added. What a handoff consent does not yet carry —
-recipient identity beyond the target reference, information set,
-duration — is recorded in open-problems.
+another), mutation added. What a handoff consent does not yet carry
+(recipient identity beyond the target reference, information set,
+duration) is recorded in open-problems.
 
 **S-59 to S-64 — the local table, all real.** The PROBE-expiry path of
 S-51 is now an explicit exception to "every request is answered";
@@ -1179,21 +1192,24 @@ S-51 is now an explicit exception to "every request is answered";
 required-ness explicitly unexpressed in 0.1; the dangling "reciprocity
 note" reference S-52 introduced is removed; `until_handoff` is defined
 for the session that closes without a Handoff (falls back to
-`session_only`); the reference implementation is named a demonstration
-rather than a conforming deployment on budget persistence; and Section
+`session_only`); the reference implementation is named a demonstration,
+and not a conforming deployment, on budget persistence; and Section
 24.12 states that a trusted intermediary trades away the no-custodian
-property, which is architectural, not universal.
+property, which is architectural and not universal.
 
 Also added: a reading-guide paragraph in Section 7, telling a reader
-that a limit stated plainly is usually a decision with its reasoning in
-`open-problems.md` — the direct answer to why fresh readers keep
+that a limit stated outright is usually a decision with its reasoning in
+`open-problems.md`. This is the direct answer to why fresh readers keep
 re-deriving the deferred questions. The reviewer's remaining points
 (typed attribute meanings as profile obligations, trust-actor table,
 symmetric output control, budget knowledge model, three-document split)
 were already recorded; consent content per action and the trust
 boundary table are added to the 0.2 list.
 
-**Resolution — applied to GIDP 0.1 on 2026-09-29.**
+**Resolution.** Applied to GIDP 0.1 on 2026-09-29.
+
+
+---
 
 ## E-01 to E-12 — the first independent implementation (5 October 2026)
 
@@ -1206,7 +1222,7 @@ corpus, its truly blind pass met 77 of 80 expectations, its corrected
 pass 79; none of the misses was a misreading of the specification.
 Classified here: *reference* (a defect of this implementation), *corpus*,
 *artefact* (schemas, profile), *specification* (a gap, recorded in
-open-problems for 0.2 — 0.1 is frozen).
+open-problems for 0.2, since 0.1 is frozen).
 
 **E-01 — reference. A request could carry the requester's own private
 value.** Section 14.3 forbids it; `Agent.ask` checked nothing, and the
@@ -1214,8 +1230,8 @@ co-investment example itself sent the company's private valuation range
 as its hypothesis. `ask` now refuses, before anything is emitted or
 recorded, a claim that pins one of this side's private values (surface
 `local` or gated), the four reserved dependency lists included. The
-guard compares pinned values — the value, an element of it, a range
-collapsed onto it — and is not provenance tracking: a band built around
+guard compares pinned values (the value, an element of it, a range
+collapsed onto it) and does no provenance tracking: a band built around
 the secret passes. Example corrected; tests, a property and a mutation
 added.
 
@@ -1250,8 +1266,8 @@ so no worst-case posterior could be computed. The format now requires
 each joint predicate to state its `wire` form and each budgeted attribute
 to declare its finite `domain`.
 
-**Specification gaps** — recorded in `spec/open-problems.md` under the
-same date: the scope of `reveal_identity` (D/R03), whether a SessionOpen
+**Specification gaps.** Recorded in `spec/open-problems.md` under the
+same date, with the implementer's journal entries in parentheses: the scope of `reveal_identity` (R03), whether a SessionOpen
 is held under PROBE `approval_required` (D18), who sets a session's
 duration (D09), the concordance rule when an initiator's Opportunity adds
 contingencies (D19), partial consent (D12). The evaluator independently
