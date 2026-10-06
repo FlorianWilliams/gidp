@@ -78,7 +78,8 @@ clean-room implementation and what it found, are listed in
 [`IMPLEMENTATIONS.md`](IMPLEMENTATIONS.md).
 
 The probing attack has been measured. Unprotected, a counterparty that spends questions instead of asking once
-extracts 65% of everything private in the worked case, in seventeen claims,
+extracts 65% of the worked case's hypothesis space over its five private
+facts (9.94 of 15.30 bits, as `spec/alternatives.md` defines them), in seventeen claims,
 and the coarsening the specification illustrates stops none of it. Two
 controls the specification recommends do bound it (§24.3). An information
 budget kept per Standing Interest, and decided on the worst case over the
