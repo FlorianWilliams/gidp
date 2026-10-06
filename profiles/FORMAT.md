@@ -131,8 +131,10 @@ budgeted attribute:
   where it tests one edge only, is open for 0.2.
 - `domain.<attr>`: `{min, max}`, on the lattice; the finite public
   hypothesis space is the cells between them. A Principal whose value lies
-  outside the domain is outside what the budget protects, and its Agent
-  should decline claims on that attribute rather than answer them.
+  outside the domain is outside what the budget protects. A refusal given
+  only in that case would tell the querent so; `spec/drafts/
+  disclosure-controls-0.2.md` proposes total domains for 0.2, and until
+  then such a value is a configuration error to fix before deployment.
 - `prior`: `uniform` over the cells, the only prior this format version
   defines.
 - `bits_per_attribute.<attr>`: the worst-case budget, cumulative over the
