@@ -48,10 +48,10 @@ pip install -e ".[dev]"
 Then, in order of what each one tells you:
 
 ```
-pytest -q                          # 249 passed
+pytest -q                          # 252 passed
 ruff check .                       # All checks passed!
 mypy gidp                          # Success
-python tools/mutation_check.py     # All 45 mutations were caught.
+python tools/mutation_check.py     # All 47 mutations were caught.
 ```
 
 Of the four, the mutation check is the one to spend a minute on. It breaks the implementation

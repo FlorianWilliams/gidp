@@ -11,7 +11,8 @@ the value would be the leak it was built to prevent.
 The two have opposite shapes and neither dominates the other, which is why
 both are here.
 
-`GranularityLattice` constrains where a claim's bounds may fall. It holds no
+`GranularityLattice` constrains where a claim's bounds may fall: a band
+must be a union of whole cells of the lattice. It holds no
 state, so honest traffic never depletes it and an adversary cannot drain it,
 and it needs nothing declared about the attribute beyond a width. Because a
 private bound is tested at the *edge* of the band asked, this caps resolution
@@ -34,7 +35,7 @@ from math import log2
 from typing import Any, Protocol
 
 from .objects import Claim, StandingInterest
-from .vocab import ClaimResult
+from .vocab import ClaimOperator, ClaimResult
 
 
 class DisclosureAudit(Protocol):
@@ -63,16 +64,28 @@ class GranularityLattice:
         width = self.widths.get(claim.key, 0)
         if not width:
             return True
-        # Only a band can be held to the lattice. A scalar or a list names
-        # points, and `equals 45` confirms 45 exactly whatever the width, so
-        # on a constrained attribute every other shape is declined.
-        if not isinstance(claim.value, dict):
+        # The lattice cuts the attribute into cells [k*width, (k+1)*width - 1].
+        # An answer may distinguish cells and nothing finer, so the only
+        # admissible question is an `overlaps` band made of whole cells.
+        # Everything else names something narrower than a cell: `equals`
+        # tests a value exactly (P-03, P-05), a scalar or a list names
+        # points, and two inclusive bands that share an edge, such as
+        # [20, 40] and [40, 60], isolate the edge between them (P-05).
+        if claim.operator is not ClaimOperator.OVERLAPS:
             return False
-        return all(
-            isinstance(bound, int) and bound % width == 0
-            for bound in (claim.value.get("min"), claim.value.get("max"))
-            if bound is not None
-        )
+        value = claim.value
+        if not isinstance(value, dict) or not set(value) <= {"min", "max"}:
+            return False
+        low, high = value.get("min"), value.get("max")
+        if low is None and high is None:
+            return False
+        if low is not None and not (isinstance(low, int) and low % width == 0):
+            return False
+        if high is not None and not (
+            isinstance(high, int) and (high + 1) % width == 0
+        ):
+            return False
+        return low is None or high is None or low <= high
 
     def record(
         self, claim: Claim, interest: StandingInterest, result: ClaimResult

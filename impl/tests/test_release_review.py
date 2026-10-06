@@ -1,5 +1,5 @@
 """Defects found by the first review of the published release (6 October
-2026), by a reviewer who ran the code. SPEC-ISSUES.md P-01 to P-03.
+2026), by reviewers who ran the code. SPEC-ISSUES.md P-01 to P-03 and P-05.
 
 Each test reproduces the reviewer's case and failed before its fix.
 """
@@ -171,8 +171,75 @@ def test_the_lattice_declines_a_point_question():
     value exactly."""
     assert _lattice_result(ClaimOperator.EQUALS, 45) is ClaimResult.DECLINED
     assert _lattice_result(ClaimOperator.INTERSECTS, [45]) is ClaimResult.DECLINED
+    # The lattice's own rule, whatever the evaluator would make of the shape.
+    assert _lattice_result(ClaimOperator.OVERLAPS, 45) is ClaimResult.DECLINED
+    assert _lattice_result(ClaimOperator.OVERLAPS, [45]) is ClaimResult.DECLINED
 
 
 def test_the_lattice_still_answers_a_band_on_the_lattice():
-    result = _lattice_result(ClaimOperator.OVERLAPS, {"min": 40, "max": 60})
+    result = _lattice_result(ClaimOperator.OVERLAPS, {"min": 40, "max": 59})
     assert result is not ClaimResult.DECLINED
+
+
+# -- P-05: a band is made of whole cells --------------------------------------
+
+
+def test_the_lattice_declines_equals_on_a_band():
+    """`equals {"min": 40}` has bounds on the lattice and used to pass,
+    confirming a private threshold of exactly 40."""
+    assert _lattice_result(ClaimOperator.EQUALS, {"min": 40}) is ClaimResult.DECLINED
+
+
+def test_bands_sharing_an_edge_are_declined():
+    """[20, 40] and [40, 60] both answered would isolate 40."""
+    for band in ({"min": 20, "max": 40}, {"min": 40, "max": 60}, {"min": 40, "max": 40}):
+        assert _lattice_result(ClaimOperator.OVERLAPS, band) is ClaimResult.DECLINED
+
+
+def _answers(value, width: int, claims: list[tuple]) -> tuple:
+    interest = StandingInterest(
+        id="local:si",
+        principal_ref="local:p",
+        interest=ConditionalInterest(action="consider", conditions={"x": value}),
+        disclosure_policy=DisclosurePolicy(
+            attributes={"x": DisclosureClass(surface=Surface.LOCAL)}
+        ),
+        authority=AuthoritySpec(
+            levels={Authority.PROBE: AuthorityValue.TRUE}, evidence_ref="urn:demo"
+        ),
+    )
+    a = Agent(ref="agent:a", standing_interest=_interest())
+    b = Agent(ref="agent:b", standing_interest=interest, query_budget=100_000,
+              disclosure_audit=GranularityLattice(widths={"x": width}))
+    a.confirm_accept(b.handle_session_open(a.open_session("s-x", purpose="test")))
+    out = []
+    for operator, operand in claims:
+        response = b.handle_compatibility_request(
+            a.ask([Claim(key="x", operator=operator, value=operand)])
+        )
+        assert isinstance(response, CompatibilityResponse)
+        out.append(response.results[0].result)
+    return tuple(out)
+
+
+def test_no_question_resolves_finer_than_a_cell():
+    """Every band, point and threshold over a small range, with every core
+    operator, is put to the lattice, which decides what to answer. Whatever
+    it admits, two values in the same cell must receive identical answers,
+    for a scalar and for a threshold. This is the property the lattice
+    claims; P-03 and P-05 were both counterexamples to it."""
+    width, top = 4, 12
+    shapes = [{"min": lo, "max": hi} for lo in range(top) for hi in range(lo, top)]
+    shapes += [{"min": v} for v in range(top)] + [{"max": v} for v in range(top)]
+    shapes += list(range(top)) + [[v] for v in range(top)]
+    claims = [
+        (operator, shape)
+        for operator in (ClaimOperator.OVERLAPS, ClaimOperator.EQUALS,
+                         ClaimOperator.INTERSECTS)
+        for shape in shapes
+    ]
+    for kind in (lambda v: v, lambda v: {"min": v}):
+        by_cell: dict[int, set[tuple]] = {}
+        for v in range(top):
+            by_cell.setdefault(v // width, set()).add(_answers(kind(v), width, claims))
+        assert all(len(answers) == 1 for answers in by_cell.values())

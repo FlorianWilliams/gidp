@@ -18,9 +18,9 @@ reference implementation alone. E-01 to E-12 were found on 5 October 2026 by
 the first independent implementation, after the freeze. E-01, E-02 and E-09
 were corrected in the 0.1 reference implementation and its exported schemas;
 the other E-items concern the corpus, the profile format and the gaps recorded
-for 0.2 in `spec/open-problems.md`. P-01 to P-04 were found on 6 October 2026
-by a review of the published release and are recorded at the end of this
-file. The entries are kept because the record of
+for 0.2 in `spec/open-problems.md`. P-01 to P-05 were found on 6 October 2026
+by two reviews of the published release and are recorded at the end of
+this file. The entries are kept because the record of
 what an implementation found is evidence that the draft was tested as well
 as written, and is worth more than a clean file.
 
@@ -1322,3 +1322,34 @@ the specification, which changes no conforming behaviour.
 
 The same review reported three `mypy` errors under a recent pydantic; they
 are fixed, and `mypy gidp` is clean.
+
+## P-05 — the lattice still answered questions finer than a cell (6 October 2026)
+
+A second review of the release, also by a large language model given the
+repository without its history, ran the code after P-03 and found that the
+correction had closed one door of two. With a width of 20 and a private
+threshold `{"min": 40}`, `equals {"min": 40}` has both bounds on the lattice
+and was answered, confirming the threshold exactly. With a scalar 40, the
+inclusive bands `[20, 40]` and `[40, 60]` both answered positively isolate
+40, since each ends on the point the other begins with.
+
+The lattice now cuts an attribute into cells `[k*w, (k+1)*w - 1]` and admits
+only an `overlaps` band made of whole cells: a lower bound on a multiple of
+the width, an upper bound one below a multiple. Every other operator and
+shape is declined on a constrained attribute. A test now checks the property
+the lattice promises: over a small range, every band, point
+and threshold under every core operator is put to the lattice, and two
+values in the same cell must receive identical answers, for a scalar and
+for a threshold. It failed before this change and passes after it.
+
+Section 24.3 says a profile may require "every claim's bounds to fall on a
+lattice". Read with inclusive bounds, that wording admits the edge-sharing
+case. It should say that a band is a union of whole cells. This changes what
+an implementation of an optional control must do, so it is queued with P-04
+for the next revision of the specification; `spec/open-problems.md` states
+it now, and `profiles/FORMAT.md` defines the lattice in cells. A joint
+predicate's candidate is a point, which the whole-cell rule declines; 0.2
+must say whether a lattice point is admissible against a range-valued
+attribute. The measurements in `baselines/frontier.py` use their own policy
+over a private threshold, which any band tests at one edge only; for that
+model the resolution cap holds as published, and the figures are unchanged.

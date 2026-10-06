@@ -75,7 +75,7 @@ def test_a_claim_off_the_lattice_is_declined():
 
 def test_a_claim_on_the_lattice_is_answered():
     a, b = _pair(GranularityLattice(widths={"valuation_floor": 20_000_000}))
-    assert _ask(a, b, {"min": 0, "max": 60_000_000}) is not ClaimResult.DECLINED
+    assert _ask(a, b, {"min": 0, "max": 59_999_999}) is not ClaimResult.DECLINED
 
 
 def test_the_lattice_keeps_nothing_between_claims():
@@ -83,7 +83,7 @@ def test_the_lattice_keeps_nothing_between_claims():
     lattice = GranularityLattice(widths={"valuation_floor": 20_000_000})
     a, b = _pair(lattice)
     for _ in range(50):
-        assert _ask(a, b, {"min": 0, "max": 60_000_000}) is not ClaimResult.DECLINED
+        assert _ask(a, b, {"min": 0, "max": 59_999_999}) is not ClaimResult.DECLINED
 
 
 # -- the bit budget --------------------------------------------------------
@@ -132,7 +132,7 @@ def test_an_attribute_with_no_prior_is_not_audited():
     instead of guessing."""
     budget = BitBudget(priors={}, budget_bits=0.0)
     a, b = _pair(budget)
-    assert _ask(a, b, {"min": 0, "max": 60_000_000}) is not ClaimResult.DECLINED
+    assert _ask(a, b, {"min": 0, "max": 59_999_999}) is not ClaimResult.DECLINED
 
 
 def test_no_audit_means_no_bound():

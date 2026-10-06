@@ -119,10 +119,15 @@ hypothesis space and a prior; a manifest that gives only a number of bits
 gives nothing two implementations can compute alike (E-12). So, per
 budgeted attribute:
 
-- `granularity.<attr>.min_bucket_width`: the lattice. Claim bounds fall
-  on integer multiples of the width (origin 0) and a band is at least one
-  cell wide; constraining where edges may fall, not only how wide a band
-  is, is what caps resolution (Section 24.3).
+- `granularity.<attr>.min_bucket_width`: the lattice, cells
+  `[k*w, (k+1)*w - 1]` (origin 0). A band is a union of whole cells: its
+  lower bound falls on a multiple of the width and its upper bound one
+  below a multiple. With inclusive bounds, two bands that share an edge
+  isolate that edge, so constraining where edges may fall, and not only how
+  wide a band is, is what caps resolution (Section 24.3; P-05). A joint
+  predicate's candidate is a point and is therefore not a band; whether a
+  point on the lattice is admissible against a range-valued attribute,
+  where it tests one edge only, is open for 0.2.
 - `domain.<attr>`: `{min, max}`, on the lattice; the finite public
   hypothesis space is the cells between them. A Principal whose value lies
   outside the domain is outside what the budget protects, and its Agent

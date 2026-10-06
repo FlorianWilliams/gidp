@@ -70,10 +70,22 @@ MUTATIONS = (
         "        if not approved:",
     ),
     Mutation(
-        "the lattice declines every claim that is not a band (24.3, P-03)",
+        "the lattice admits only overlaps (24.3, P-03, P-05)",
         "gidp/auditing.py",
-        "        if not isinstance(claim.value, dict):\n            return False",
-        "        if not isinstance(claim.value, dict):\n            return True",
+        "        if claim.operator is not ClaimOperator.OVERLAPS:\n            return False",
+        "        if False:\n            return False",
+    ),
+    Mutation(
+        "the lattice declines a scalar or a list (24.3, P-03)",
+        "gidp/auditing.py",
+        """        if not isinstance(value, dict) or not set(value) <= {"min", "max"}:""",
+        """        if not isinstance(value, dict):\n            return True\n        if not set(value) <= {"min", "max"}:""",
+    ),
+    Mutation(
+        "a band ends on the last value of a cell, so bands cannot share an edge (24.3, P-05)",
+        "gidp/auditing.py",
+        "            isinstance(high, int) and (high + 1) % width == 0",
+        "            isinstance(high, int) and (high % width == 0 or (high + 1) % width == 0)",
     ),
     Mutation(
         "a request never carries the requester's own private value (14.3, E-01)",
