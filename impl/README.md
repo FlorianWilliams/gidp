@@ -48,11 +48,13 @@ pip install -e ".[dev]"
 Then, in order of what each one tells you:
 
 ```
-pytest -q                          # 201 passed
+pytest -q                          # 235 passed
 ruff check .                       # All checks passed!
 mypy gidp                          # Success
 python tools/mutation_check.py     # All 42 mutations were caught.
 ```
+
+What each layer catches and misses, the guarantees and their tests, and the rules adopted after the reviews of the release are in [`VERIFICATION.md`](VERIFICATION.md).
 
 Of the four, the mutation check is the one to spend a minute on. It breaks the implementation
 deliberately, one guarantee at a time, each guarantee corresponding to a
