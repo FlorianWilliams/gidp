@@ -26,11 +26,11 @@ include = ["gidp*"]
 requires = ["setuptools>=77"]   # SPDX string form of `license` needs 77+
 build-backend = "setuptools.build_meta"
 
-# The specification URL is the protocol identifier and must resolve for
-# good. It is declared once a domain exists; an unresolvable placeholder
-# here fails the build, which is the correct behaviour.
-# [project.urls]
-# Specification = "https://gidp.dev"
+# The specification URL is the protocol identifier and must resolve for good.
+[project.urls]
+Specification = "https://gidp.dev"
+Source = "https://github.com/FlorianWilliams/gidp"
+Issues = "https://github.com/FlorianWilliams/gidp/issues"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
