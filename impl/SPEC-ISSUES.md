@@ -20,8 +20,8 @@ were corrected in the 0.1 reference implementation and its exported schemas;
 they are recorded at the end of this file. The other E-items concern the
 corpus, the profile format and the gaps recorded for 0.2 in
 `spec/open-problems.md`, and are recorded on the `0.2-dev` branch. P-01 to
-P-05 were found on 6 October 2026 by two reviews of the published release
-and are recorded at the end of this file. The entries are kept because the record of
+P-09 were found on 6 October 2026 by reviews of the published releases and
+are recorded at the end of this file. The entries are kept because the record of
 what an implementation found is worth more than a clean file: it is the
 evidence that the draft was tested as well as written.
 
@@ -1317,3 +1317,51 @@ observe, and only one that implements this optional control;
 `spec/open-problems.md` states it too. The measurements in `baselines/frontier.py` use their own policy
 over a private threshold, which any band tests at one edge only; for that
 model the resolution cap holds as published, and the figures are unchanged.
+
+## P-06 to P-09 — review of release 0.1.1 (6 October 2026)
+
+Two reviews of 0.1.1, both by large language models given the repository
+without its history, ran the code. P-03 and P-05 were confirmed fixed. Four
+further findings follow.
+
+**P-06 — the budget did not count the dependency primitives.** `BitBudget`
+works out what each answer would reveal by substituting every candidate
+value and re-evaluating the claim. It substituted into `conditions`, while
+`provides`, `requires`, `excludes` and `conditional_on` live in their own
+lists (Section 19.1). The real value was never replaced, every candidate
+answered like it, and a claim confirming the secret looked free: with four
+possible values and a budget of zero bits, `intersects ["cap-2"]` was
+answered and `disclosed` still reported zero. Candidates are now
+substituted where the evaluator reads them. Test (all four primitives) and
+mutation added.
+
+**P-07 — the lattice assumed integers.** Cells `[20, 39]` and `[40, 59]`
+leave 39.5 between them, answered `incompatible` by both, which places it
+to within one unit. The lattice is now defined over integers in the
+attribute's unit, and a constrained attribute holding anything else raises
+`LatticeDomainError` on every claim. It is raised and not declined, because
+a refusal that depended on the value would leak. Specification 0.1.2 states
+the integer domain. Test and mutation added.
+
+**P-08 — the frontier measured a model of the lattice.**
+`baselines/frontier.py` carried its own copy of the lattice rule, which
+still accepted the point questions P-05 forbids, so its figures did not
+measure the shipped control. It now calls `GranularityLattice`, and its
+adversary and customers ask in whole cells. The leak figures are unchanged
+(2.36, 3.36 and 4.36 bits for 40M, 20M and 10M). Service changes in one
+row: a 20M lattice with a three-bit budget now answers forty customers out
+of forty instead of thirty-six, which makes it an improvement on the
+lattice alone; `spec/open-problems.md` is corrected accordingly.
+
+**P-09 — `log2(range / width)` bounded resolution and was read as information.** On the
+measured grid of 41 thresholds and a 40M lattice, the last cell holds one
+threshold, and the admissible claim `overlaps {"max": 199999999}` answered
+`incompatible` identifies it: 5.36 bits, where the formula promised 2.32.
+The lattice caps resolution at one cell; what a cell reveals depends on how
+many possible values it holds. Specification 0.1.2, the module docstring,
+`frontier.py` and `open-problems.md` now say so.
+
+The same reviews repeat two points already recorded: the leak figures
+measure the reduction of a hypothesis space chosen for each experiment,
+not economic risk or re-identification; and the second implementation has
+not been run against this one.

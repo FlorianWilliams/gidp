@@ -243,3 +243,72 @@ def test_no_question_resolves_finer_than_a_cell():
         for v in range(top):
             by_cell.setdefault(v // width, set()).add(_answers(kind(v), width, claims))
         assert all(len(answers) == 1 for answers in by_cell.values())
+
+
+# -- P-06: the budget counts the dependency primitives -----------------------
+
+
+DEPENDENCY_PRIOR = (["cap-1"], ["cap-2"], ["cap-3"], ["cap-4"])
+
+
+def _dependency_result(key: str):
+    from gidp.auditing import BitBudget
+    from gidp.vocab import Feature
+
+    conditions = ConditionalInterest(action="consider", **{key: ["cap-2"]})
+    interest = StandingInterest(
+        id="local:si",
+        principal_ref="local:p",
+        interest=conditions,
+        disclosure_policy=DisclosurePolicy(
+            attributes={key: DisclosureClass(surface=Surface.LOCAL)}
+        ),
+        authority=AuthoritySpec(
+            levels={Authority.PROBE: AuthorityValue.TRUE}, evidence_ref="urn:demo"
+        ),
+    )
+    budget = BitBudget(priors={key: DEPENDENCY_PRIOR}, budget_bits=0.0)
+    a = Agent(ref="agent:a", standing_interest=_interest())
+    b = Agent(ref="agent:b", standing_interest=interest, disclosure_audit=budget)
+    opened = a.open_session("s-d", purpose="test", features=[Feature.DEPENDENCY_PRIMITIVES])
+    a.confirm_accept(b.handle_session_open(opened))
+    response = b.handle_compatibility_request(
+        a.ask([Claim(key=key, operator=ClaimOperator.INTERSECTS, value=["cap-2"])])
+    )
+    assert isinstance(response, CompatibilityResponse)
+    return response.results[0].result, budget.disclosed(key)
+
+
+def test_a_zero_bit_budget_refuses_a_discriminating_dependency_question():
+    """`BitBudget` simulated each candidate in `conditions`, where the
+    evaluator never reads a dependency primitive: every candidate answered
+    like the real value, the claim looked free, and a zero-bit budget let
+    it confirm the secret while reporting zero bits disclosed."""
+    for key in ("requires", "provides", "excludes", "conditional_on"):
+        result, disclosed = _dependency_result(key)
+        assert result is ClaimResult.DECLINED, key
+        assert disclosed == 0.0, key
+
+
+# -- P-07: the lattice is defined over integers -------------------------------
+
+
+def test_a_lattice_attribute_holding_a_decimal_is_a_configuration_error():
+    """Cells [20, 39] and [40, 59] leave 39.5 between them, answered
+    incompatible by both, which locates it to one unit. The lattice raises
+    instead of answering, whatever is asked."""
+    import pytest
+
+    from gidp.auditing import LatticeDomainError
+
+    interest = _scalar_interest().model_copy(deep=True)
+    interest.interest.conditions["headcount"] = 39.5
+    a = Agent(ref="agent:a", standing_interest=_interest())
+    b = Agent(ref="agent:b", standing_interest=interest,
+              disclosure_audit=GranularityLattice(widths={"headcount": 20}))
+    a.confirm_accept(b.handle_session_open(a.open_session("s-f", purpose="test")))
+    for band in ({"min": 20, "max": 39}, {"min": 40, "max": 59}, {"min": 0, "max": 19}):
+        with pytest.raises(LatticeDomainError):
+            b.handle_compatibility_request(
+                a.ask([Claim(key="headcount", operator=ClaimOperator.OVERLAPS, value=band)])
+            )

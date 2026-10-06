@@ -30,6 +30,25 @@ submitted as an Internet-Draft, the IETF datatracker archives each revision
 The reference implementation carries its own version and declares which
 specification version it implements; the two do not advance together.
 
+## 0.1.2 — 6 October 2026
+
+Second editorial revision of 0.1, from a review of 0.1.1 by a large language
+model given the repository without its history (`impl/SPEC-ISSUES.md`,
+P-07 and P-09). The wire token stays `gidp/0.1`; no object, field, state,
+result or normative keyword changes.
+
+- Section 24.3, granularity lattice: the cells cover integers in the
+  attribute's unit, so the lattice applies only to integer-valued
+  attributes; a decimal between two cells is answered `incompatible` by both
+  and located to within one unit (P-07).
+- Section 24.3, the bound: the text said the lattice caps resolution at
+  `log2(range / width)`. It caps resolution at one cell. What a cell
+  reveals depends on how many possible values it holds, and a cell holding
+  one reveals it entirely; the text now says so (P-09).
+
+0.1 and 0.1.1 stay available, unchanged, at their tags and at `/spec/0.1/`
+and `/spec/0.1.1/`.
+
 ## 0.1.1 — 6 October 2026
 
 Editorial revision of 0.1, from two reviews of the published release by
