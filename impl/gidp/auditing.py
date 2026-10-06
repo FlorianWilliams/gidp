@@ -15,9 +15,13 @@ both are here.
 must be a union of whole cells of the lattice. It holds no
 state, so honest traffic never depletes it and an adversary cannot drain it,
 and it needs nothing declared about the attribute beyond a width. Because a
-private bound is tested at the *edge* of the band asked, this caps resolution
-at `log2(range / width)` for any number of claims. Its cost is
-precision: a counterparty rounds its question and is answered.
+private bound is tested at the *edge* of the band asked, this caps the
+resolution at one cell for any number of claims. What that resolution is
+worth depends on how many possible values a cell holds: about
+`log2(number of cells)` bits when they are spread evenly, all of it when a
+cell holds one (P-09). The cells cover integers in the attribute's unit,
+and a constrained attribute holding anything else raises (P-07). Its cost
+is precision: a counterparty rounds its question and is answered.
 
 `BitBudget` caps how much the responder will concede in total. It is tighter
 and it is shared: honest counterparties spend it too, and once spent the
@@ -34,6 +38,7 @@ from dataclasses import dataclass, field
 from math import log2
 from typing import Any, Protocol
 
+from .evaluation import DEPENDENCY_KEYS
 from .objects import Claim, StandingInterest
 from .vocab import ClaimOperator, ClaimResult
 
@@ -50,6 +55,37 @@ class DisclosureAudit(Protocol):
         """Note what was answered, for whatever the control keeps."""
 
 
+class LatticeDomainError(ValueError):
+    """A lattice-constrained attribute holds something other than integers.
+
+    The cells `[k*w, (k+1)*w - 1]` cover the integers and nothing between
+    them: a private 39.5 answers `incompatible` to both [20, 39] and
+    [40, 59], which places it to within one unit (P-07). The lattice is
+    therefore defined over integers in the attribute's unit (cents, euros,
+    people), and holding anything else under it is a configuration error.
+    It is raised, never answered: a `declined` that depended on the value
+    would be the leak the control exists to prevent, so the deployment fails
+    loudly instead, on every claim, whatever is asked.
+    """
+
+
+def _require_integers(key: str, value: Any) -> None:
+    if value is None:
+        return
+    if isinstance(value, dict):
+        parts: list[Any] = [v for v in value.values() if v is not None]
+    elif isinstance(value, list | tuple | set):
+        parts = list(value)
+    else:
+        parts = [value]
+    for part in parts:
+        if isinstance(part, bool) or not isinstance(part, int):
+            raise LatticeDomainError(
+                f"{key!r} is under a granularity lattice and must hold integers "
+                f"in its unit; it holds {type(part).__name__}"
+            )
+
+
 @dataclass
 class GranularityLattice:
     """Claim bounds must fall on a lattice, per attribute.
@@ -64,6 +100,7 @@ class GranularityLattice:
         width = self.widths.get(claim.key, 0)
         if not width:
             return True
+        _require_integers(claim.key, interest.value_of(claim.key))
         # The lattice cuts the attribute into cells [k*width, (k+1)*width - 1].
         # An answer may distinguish cells and nothing finer, so the only
         # admissible question is an `overlaps` band made of whole cells.
@@ -127,8 +164,16 @@ class BitBudget:
 
     @staticmethod
     def _as_if(interest: StandingInterest, key: str, value: Any) -> StandingInterest:
+        """The interest as it would be if `key` held `value`, written where
+        the evaluator reads it. The dependency primitives live in their own
+        lists, outside `conditions` (Section 19.1); a candidate written into
+        `conditions` would never replace the real value, every candidate
+        would answer alike, and the budget would count nothing (P-06)."""
         candidate = interest.model_copy(deep=True)
-        candidate.interest.conditions[key] = value
+        if key in DEPENDENCY_KEYS:
+            setattr(candidate.interest, key, list(value))
+        else:
+            candidate.interest.conditions[key] = value
         return candidate
 
     def _answer_for(

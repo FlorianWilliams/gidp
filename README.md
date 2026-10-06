@@ -1,6 +1,6 @@
 # Graduated Interest Disclosure
 
-**Version 0.1.1, draft for review. Wire version token: `gidp/0.1`.**
+**Version 0.1.2, draft for review. Wire version token: `gidp/0.1`.**
 
 Most of what an economy would like to match never gets stated. A company that
 would sell at the right price does not announce it. A candidate open to the

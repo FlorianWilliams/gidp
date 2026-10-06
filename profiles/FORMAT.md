@@ -120,7 +120,8 @@ gives nothing two implementations can compute alike (E-12). So, per
 budgeted attribute:
 
 - `granularity.<attr>.min_bucket_width`: the lattice, cells
-  `[k*w, (k+1)*w - 1]` (origin 0). A band is a union of whole cells: its
+  `[k*w, (k+1)*w - 1]` (origin 0), over integers in the attribute's unit;
+  a lattice applies only to an integer-valued attribute (P-07). A band is a union of whole cells: its
   lower bound falls on a multiple of the width and its upper bound one
   below a multiple. With inclusive bounds, two bands that share an edge
   isolate that edge, so constraining where edges may fall, and not only how

@@ -52,6 +52,18 @@ MUTATIONS = (
         "        coarsen = evaluation.evaluation_only and evaluation.truth is True",
     ),
     Mutation(
+        "the budget substitutes a dependency primitive where it is read (24.3, P-06)",
+        "gidp/auditing.py",
+        "        if key in DEPENDENCY_KEYS:",
+        "        if False:",
+    ),
+    Mutation(
+        "a lattice attribute must hold integers (24.3, P-07)",
+        "gidp/auditing.py",
+        "        _require_integers(claim.key, interest.value_of(claim.key))\n",
+        "",
+    ),
+    Mutation(
         "consent does not outlive its session (14.5, P-01)",
         "gidp/agent.py",
         "        self.consents = SessionConsents()\n",

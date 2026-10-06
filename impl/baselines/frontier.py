@@ -27,11 +27,29 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from baselines.auditing import GRID, STEP, TOTAL_BITS, _answer_of  # noqa: E402
+from baselines.scenario import b_interest  # noqa: E402
+from gidp.auditing import GranularityLattice  # noqa: E402
 from gidp.objects import Claim  # noqa: E402
 from gidp.vocab import ClaimOperator, ClaimResult  # noqa: E402
 
 FLOOR = 45_000_000
 HONEST = 40
+
+
+def _lattice_admits(width: int, claim: Claim) -> bool:
+    lattice = GranularityLattice(widths={"valuation_floor": width})
+    return lattice.admits(claim, b_interest(valuation_floor=FLOOR))
+
+
+def _cell_question(edge: int) -> Claim:
+    """Is the threshold below `edge`? Asked as a band of whole cells,
+    which is the only form the lattice admits (P-05): everything up to the
+    last value of the cell before `edge`."""
+    return Claim(
+        key="valuation_floor",
+        operator=ClaimOperator.OVERLAPS,
+        value={"max": edge - 1},
+    )
 
 
 @dataclass
@@ -97,14 +115,9 @@ class GranularityFloor(Policy):
     width: int = 20_000_000
 
     def admits(self, claim: Claim) -> bool:
-        asked = claim.value
-        if not isinstance(asked, dict):
-            return True
-        return all(
-            bound % self.width == 0
-            for bound in (asked.get("min"), asked.get("max"))
-            if bound is not None
-        )
+        # The library's control, not a model of it (P-08): what is measured
+        # here is what an Agent configured with this width would decline.
+        return _lattice_admits(self.width, claim)
 
 
 @dataclass
@@ -114,12 +127,7 @@ class Both(BitBudget):
     width: int = 20_000_000
 
     def admits(self, claim: Claim) -> bool:
-        asked = claim.value
-        if isinstance(asked, dict) and not all(
-            bound % self.width == 0
-            for bound in (asked.get("min"), asked.get("max"))
-            if bound is not None
-        ):
+        if not _lattice_admits(self.width, claim):
             return False
         return super().admits(claim)
 
@@ -142,11 +150,16 @@ def _probe(policy: Policy, attempts: int = 40) -> float:
         ordered = sorted(alive)
         raw = ordered[(len(ordered) - 1) // 2]
         threshold = (raw // lattice) * lattice
-        claim = Claim(
-            key="valuation_floor",
-            operator=ClaimOperator.OVERLAPS,
-            value={"min": threshold, "max": threshold},
-        )
+        if hasattr(policy, "width"):
+            # Under a lattice the only admissible question is a band of whole
+            # cells: "is the threshold at or below the cell ending here?"
+            claim = _cell_question(threshold + lattice)
+        else:
+            claim = Claim(
+                key="valuation_floor",
+                operator=ClaimOperator.OVERLAPS,
+                value={"min": threshold, "max": threshold},
+            )
         if not policy.admits(claim):
             break
         answer = _answer_of(FLOOR, claim)
@@ -165,11 +178,13 @@ def _serve(policy: Policy, seed: int = 5) -> int:
     served = 0
     for _ in range(HONEST):
         ceiling = rng.choice(GRID[8:])
-        ceiling = (ceiling // lattice) * lattice  # a customer rounds to fit
+        # A customer rounds to fit: everything up to the last value of the
+        # cell its ceiling falls in.
+        edge = (ceiling // lattice + 1) * lattice
         claim = Claim(
             key="valuation_floor",
             operator=ClaimOperator.OVERLAPS,
-            value={"min": 0, "max": ceiling},
+            value={"min": 0, "max": edge - 1},
         )
         if policy.admits(claim):
             policy.record(claim, _answer_of(FLOOR, claim))
@@ -260,8 +275,10 @@ def main() -> None:
     print("never been measured. It holds no state, so honest traffic does not")
     print("deplete it and an adversary cannot drain it; and because a bound is")
     print("probed at the edge of whatever band is asked, constraining where the")
-    print("edges may fall caps the resolution at log2(range / width)")
-    print("however many questions are asked. Its cost is that a customer must")
+    print("edges may fall caps the resolution at one cell however many questions")
+    print("are asked. What a cell is worth depends on how many possible values it")
+    print("holds: about log2(cells) bits when they are spread evenly, all of it")
+    print("when a cell holds one. Its cost is that a customer must")
     print("round its question to the lattice, which is a real loss of precision")
     print("but not a refusal.")
     print()
