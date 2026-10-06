@@ -108,3 +108,4 @@ Code under `impl/`: Apache License 2.0; see [`LICENSE`](LICENSE).
 
 Florian Williams, Independent. contact@gidp.dev.
 Canonical location: https://gidp.dev.
+Source and issue tracker: https://github.com/FlorianWilliams/gidp.

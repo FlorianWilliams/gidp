@@ -1,7 +1,7 @@
 ---
 title: Graduated Interest Disclosure Protocol (GIDP)
 version: 0.1
-date: 2026-09-28
+date: 2026-10-05
 status: Experimental — Early Draft / Request for Comments
 category: Experimental
 ---
@@ -11,7 +11,7 @@ category: Experimental
 **Status of this document:** experimental, early draft, request for comments. This document is not an Internet-Draft, has not been submitted to any standards body, and claims no endorsement. It follows the structure and editorial conventions of IETF Internet-Drafts ([RFC7322] style; BCP 14 requirement language; separate Security, Privacy and IANA Considerations; normative and informative references) so that it can be converted into one if the work warrants it.
 **Category:** Experimental.
 **Version:** 0.1. This is the first public draft. It consolidates three earlier internal drafts and incorporates the results of two independent adversarial reviews of the consolidated text and of seven external review passes by three independent reviewers, each reading the specification without the reference implementation. All of these reviews were carried out by large language models, each given the text without its drafting history; human review begins with this publication.
-**Date:** 28 September 2026.
+**Date:** 5 October 2026.
 **Author / editor:** Florian Williams, Independent. Contact: contact@gidp.dev.
 **Canonical location:** https://gidp.dev. Comments, objections and implementation reports are welcome; see Appendix E (Open Questions and Request for Comments).
 **Licence:** this document is published under the Creative Commons Attribution 4.0 International licence (CC BY 4.0). The reference implementation published alongside it is licensed under the Apache License 2.0. The author is aware of no intellectual property rights covering the mechanisms described here and has filed none.
@@ -1394,7 +1394,7 @@ Capability discovery answers *intent → capable agent*. GIDP answers *private p
 
 **Governance.** Should GIDP become an A2A extension, a separate protocol or a reusable application profile? Which parts should be standardised versus left to Discovery Providers? What namespace and versioning model? If GIDP gains adoption, what governance structure preserves neutrality?
 
-**How to comment.** The canonical location of this document is https://gidp.dev. Objections, corrections, implementation reports and refutations should go to the issue tracker there, or to contact@gidp.dev. Every substantive comment received will be answered in public and, where it changes the text, recorded in the revision history with attribution. A companion document at the same location, *Open Problems and Design Rationale* (`open-problems.md`), carries the non-normative material that does not belong in a specification: the mapping from this document's requirements to existing cryptographic and identity mechanisms, the candidate directions for the open problem of Section 24.3, and the reasoning behind choices this text states without arguing.
+**How to comment.** The canonical location of this document is https://gidp.dev. Objections, corrections, implementation reports and refutations should go to the issue tracker at https://github.com/FlorianWilliams/gidp/issues, or to contact@gidp.dev. Every substantive comment received will be answered in public and, where it changes the text, recorded in the revision history with attribution. A companion document at the same location, *Open Problems and Design Rationale* (`open-problems.md`), carries the non-normative material that does not belong in a specification: the mapping from this document's requirements to existing cryptographic and identity mechanisms, the candidate directions for the open problem of Section 24.3, and the reasoning behind choices this text states without arguing.
 
 **Five questions for reviewers.**
 

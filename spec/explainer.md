@@ -1,6 +1,6 @@
 # The transactions nobody advertises
 
-**Florian Williams · https://gidp.dev · September 2026**
+**Florian Williams · https://gidp.dev · October 2026**
 
 Most of what happens in an economy is advertised. Jobs are posted, companies are listed, properties go on the market, suppliers publish catalogues. Discovery systems are built on that assumption: someone says what they want, someone else searches for it, software matches them. The most valuable transactions do not work that way.
 

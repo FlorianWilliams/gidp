@@ -1,7 +1,7 @@
 ---
 title: Graduated Interest Disclosure — Why not use an existing mechanism?
 version: 0.1
-date: 2026-09-23
+date: 2026-10-05
 status: Non-normative companion to GIDP 0.1
 ---
 

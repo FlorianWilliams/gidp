@@ -30,7 +30,7 @@ submitted as an Internet-Draft, the IETF datatracker archives each revision
 The reference implementation carries its own version and declares which
 specification version it implements; the two do not advance together.
 
-## 0.1 — unreleased
+## 0.1 — 5 October 2026
 
 First public draft, under the name *Graduated Interest Disclosure*.
 

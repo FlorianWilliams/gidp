@@ -1,7 +1,7 @@
 ---
 title: Graduated Interest Disclosure — Open Problems and Design Rationale
 version: 0.1
-date: 2026-09-23
+date: 2026-10-05
 status: Non-normative companion to GIDP 0.1
 ---
 
@@ -11,7 +11,7 @@ status: Non-normative companion to GIDP 0.1
 **Author:** Florian Williams, Independent. Contact: contact@gidp.dev.
 **Canonical location:** https://gidp.dev.
 **Licence:** CC BY 4.0.
-**Date:** 23 September 2026.
+**Date:** 5 October 2026.
 
 A specification should state requirements and leave out arguments for unproven solutions, so this document carries, in five Parts, what does not belong in the normative text. Part I states the open problem the protocol runs into, for people who might solve it. Part II maps GIDP's requirements to mechanisms that already exist, so that a reader can see the protocol asks for no new cryptography. Part III gives the reasoning behind choices the specification makes without justifying. Part IV records open engineering questions, including those raised by reviews and by a first independent implementation. Part V states what would falsify the work.
 
