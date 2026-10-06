@@ -32,7 +32,10 @@ implementation of the bilateral core configured by that profile; a
 journal in which every choice the text did not determine was recorded,
 with the passage that failed to determine it, before the code that made
 the choice; then a single run of the blind scenarios, with any correction
-made after seeing them journalled separately.
+made after seeing them journalled separately. The journal declares two
+exceptions to the rule of recording before coding: one choice was coded
+before its entry was written, though before it was used, and one check
+was written without an entry and withdrawn after the blind run exposed it.
 
 Results, compared afterwards with the full scenarios:
 
