@@ -34,6 +34,30 @@ class Mutation:
 
 MUTATIONS = (
     Mutation(
+        "consent does not outlive its session (14.5, P-01)",
+        "gidp/agent.py",
+        "        self.consents = SessionConsents()\n",
+        "        pass\n",
+    ),
+    Mutation(
+        "PROBE approval_required holds the request (16.3, P-02)",
+        "gidp/agent.py",
+        "        if self._authority(Authority.PROBE) is AuthorityValue.APPROVAL_REQUIRED:",
+        "        if False:",
+    ),
+    Mutation(
+        "a late PROBE approval re-reads authority (16.3, P-02)",
+        "gidp/agent.py",
+        "        if not approved or self._authority(Authority.PROBE) is AuthorityValue.FALSE:",
+        "        if not approved:",
+    ),
+    Mutation(
+        "the lattice declines every claim that is not a band (24.3, P-03)",
+        "gidp/auditing.py",
+        "        if not isinstance(claim.value, dict):\n            return False",
+        "        if not isinstance(claim.value, dict):\n            return True",
+    ),
+    Mutation(
         "a request never carries the requester's own private value (14.3, E-01)",
         "gidp/agent.py",
         "            leaked = self._own_private_value_in(claim)",

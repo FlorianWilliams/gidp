@@ -8,7 +8,7 @@ carefully.
 Each entry states what the specification says, what a reader cannot determine
 from it, what this implementation decided, and whether GIDP 0.1 should change.
 
-**Status, 5 October 2026.** The file holds two series. S-01 to S-64 were
+**Status, 6 October 2026.** The file holds three series. S-01 to S-64 were
 found between 23 and 29 September 2026, S-01 to S-21 while writing this
 implementation and S-22 to S-64 by external review. The reviewers were large language models, each given the specification without its drafting history or the code; human review begins with publication. All were applied before
 the specification was frozen for publication, which is why they belong to 0.1
@@ -19,7 +19,9 @@ the first independent implementation, after the freeze. E-01, E-02 and E-09
 were corrected in the 0.1 reference implementation and its exported schemas;
 they are recorded at the end of this file. The other E-items concern the
 corpus, the profile format and the gaps recorded for 0.2 in
-`spec/open-problems.md`, and are recorded on the `0.2-dev` branch. The entries are kept because the record of
+`spec/open-problems.md`, and are recorded on the `0.2-dev` branch. P-01 to
+P-04 were found on 6 October 2026 by a review of the published release and
+are recorded at the end of this file. The entries are kept because the record of
 what an implementation found is worth more than a clean file: it is the
 evidence that the draft was tested as well as written.
 
@@ -1241,3 +1243,49 @@ specification's required-field lists, and a test checks the mirror.
 The other findings of the same run concern the conformance corpus, the
 profile format and open questions for 0.2; they are recorded on the 0.2
 development branch.
+
+## P-01 to P-04 — first review of the published release (6 October 2026)
+
+A reviewer, a large language model given the published repository without
+its drafting history, read the release and ran the code. Three defects were in this reference implementation; the
+specification was right each time and is unchanged. A fourth finding is a
+claim in the prose that overstated a measurement. Reference implementation
+0.1.1 carries the corrections.
+
+**P-01 — consent outlived its session.** Section 14.5 scopes a consent to a
+session and an action. The Agent kept granted consents on itself, so a
+second session served by the same instance inherited them: after B granted
+A a consent-gated attribute and the session closed, a new peer C received it
+without asking. Consents, handoff consents and pending consent actions now
+start empty with every session the Agent opens or accepts. The information
+budget of Section 24.3 is deliberately not reset: it is kept per Standing
+Interest, which is what makes it resist Section 24.4. Test and mutation
+added.
+
+**P-02 — `PROBE: approval_required` was not held.** Section 16.3 requires an
+Agent whose PROBE level is `approval_required` to hold a compatibility
+request until its Principal decides, with no provisional response. The
+reference checked only `false` and answered at once. It now holds the
+request and sends nothing; `principal_answers_probe` answers terminally on
+approval, closes `declined` on refusal, and re-reads the authority in force
+when the decision arrives. Four tests and two mutations added.
+
+**P-03 — the lattice let point questions through.** `GranularityLattice`
+checked the bounds of a band and admitted every other shape, so on a scalar
+attribute held at width 20, `equals 45` was answered and tested the value
+exactly. On a constrained attribute it now admits only a band whose bounds
+fall on the lattice; a scalar, a list or a point is declined. Tests and a
+mutation added.
+
+**P-04 — "under one bit" described one strategy.** The README, the
+specification (Section 24.3) and `spec/alternatives.md` said a two-bit
+information budget holds a probing counterparty to under one bit. That is
+what the strategy measured in `baselines/auditing.py` extracted (0.97 bits);
+the reviewer extracted 1.90 bits with two other admissible claims. The
+budget caps every strategy at two bits, which is the guarantee; the lower
+figure is one attacker's result. The README and `alternatives.md` now say
+so. The sentence in Section 24.3 is editorial and is queued for 0.1.1 of
+the specification, which changes no conforming behaviour.
+
+The same review reported three `mypy` errors under a recent pydantic; they
+are fixed, and `mypy gidp` is clean.

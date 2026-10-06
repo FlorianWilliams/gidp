@@ -287,6 +287,15 @@ class SessionAccept(Response):
     features: list[Feature] = Field(default_factory=list)
 
 
+def _require_claim_id(schema: dict[str, Any]) -> None:
+    required = schema.setdefault("required", [])
+    assert isinstance(required, list)
+    required.append("claim_id")
+    properties = schema["properties"]
+    assert isinstance(properties, dict)
+    properties["claim_id"] = {"type": "string", "title": "Claim Id"}
+
+
 class Claim(Strict):
     """One question about one dimension (Section 14.2).
 
@@ -308,10 +317,7 @@ class Claim(Strict):
     # in-process constructor may omit it, for the Agent to fill (S-24).
     model_config = ConfigDict(
         **Strict.model_config,
-        json_schema_extra=lambda schema, _: (
-            schema.setdefault("required", []).append("claim_id"),
-            schema["properties"].__setitem__("claim_id", {"type": "string", "title": "Claim Id"}),
-        ),
+        json_schema_extra=lambda schema: _require_claim_id(schema),
     )
 
 

@@ -189,10 +189,12 @@ def derive_projection(
             "Agent (Section 11.1); the Standing Interest id is not opaque"
         )
 
-    return DiscoveryProjection(
-        projection_id=projection_id,
-        endpoint=endpoint,
-        interest_ref=interest_ref,
-        expires_at=expires_at,
-        **fields,
+    return DiscoveryProjection.model_validate(
+        {
+            "projection_id": projection_id,
+            "endpoint": endpoint,
+            "interest_ref": interest_ref,
+            "expires_at": expires_at,
+            **fields,
+        }
     )

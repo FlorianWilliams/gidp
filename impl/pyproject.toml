@@ -1,6 +1,6 @@
 [project]
 name = "gidp-reference"
-version = "0.1.0"
+version = "0.1.1"
 description = "Reference implementation of Graduated Interest Disclosure (GIDP) 0.1"
 requires-python = ">=3.11"
 dependencies = ["pydantic>=2.0"]

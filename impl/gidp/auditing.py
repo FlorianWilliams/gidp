@@ -61,8 +61,13 @@ class GranularityLattice:
 
     def admits(self, claim: Claim, interest: StandingInterest) -> bool:
         width = self.widths.get(claim.key, 0)
-        if not width or not isinstance(claim.value, dict):
+        if not width:
             return True
+        # Only a band can be held to the lattice. A scalar or a list names
+        # points, and `equals 45` confirms 45 exactly whatever the width, so
+        # on a constrained attribute every other shape is declined.
+        if not isinstance(claim.value, dict):
+            return False
         return all(
             isinstance(bound, int) and bound % width == 0
             for bound in (claim.value.get("min"), claim.value.get("max"))
