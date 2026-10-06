@@ -1284,7 +1284,7 @@ what the strategy measured in `baselines/auditing.py` extracted (0.97 bits);
 the reviewer extracted 1.90 bits with two other admissible claims. The
 budget caps every strategy at two bits, which is the guarantee; the lower
 figure is one attacker's result. The README and `alternatives.md` now say
-so. The sentence in Section 24.3 is editorial and is queued for 0.1.1 of
+so. The sentence in Section 24.3 is editorial and was corrected in 0.1.1 of
 the specification, which changes no conforming behaviour.
 
 The same review reported three `mypy` errors under a recent pydantic; they
@@ -1311,9 +1311,9 @@ for a threshold. It failed before this change and passes after it.
 
 Section 24.3 says a profile may require "every claim's bounds to fall on a
 lattice". Read with inclusive bounds, that wording admits the edge-sharing
-case. It should say that a band is a union of whole cells. This changes what
-an implementation of an optional control must do, so it is queued with P-04
-for the next revision of the specification; `spec/open-problems.md` states
-it now. The measurements in `baselines/frontier.py` use their own policy
+case. Specification 0.1.1 now says that an admissible claim is a band of
+whole cells. It is the one change in 0.1.1 that an implementation can
+observe, and only one that implements this optional control;
+`spec/open-problems.md` states it too. The measurements in `baselines/frontier.py` use their own policy
 over a private threshold, which any band tests at one edge only; for that
 model the resolution cap holds as published, and the figures are unchanged.

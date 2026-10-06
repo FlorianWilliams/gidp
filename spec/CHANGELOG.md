@@ -30,6 +30,26 @@ submitted as an Internet-Draft, the IETF datatracker archives each revision
 The reference implementation carries its own version and declares which
 specification version it implements; the two do not advance together.
 
+## 0.1.1 — 6 October 2026
+
+Editorial revision of 0.1, from two reviews of the published release by
+large language models given the repository without its history
+(`impl/SPEC-ISSUES.md`, P-04 and P-05). The wire token stays `gidp/0.1` and
+no object, field, state or result changes.
+
+- Section 24.3, information budget: the text said a two-bit budget holds a
+  probing counterparty to under one bit. That was one strategy's result;
+  the guarantee is the budget itself, two bits. Corrected (P-04).
+- Section 24.3, granularity lattice: "every claim's bounds fall on a
+  lattice" admitted two inclusive bands sharing an edge, and a point under
+  any operator, either of which isolates a value finer than the lattice.
+  The text now states that an admissible claim is a band of whole cells,
+  which is what the resolution cap it states requires (P-05). This is the
+  one change an implementation can observe, and only one that implements
+  this optional control: it declines claims the 0.1 wording let through.
+
+0.1 stays available, unchanged, at its tag (`v0.1`) and at `/spec/0.1/`.
+
 ## 0.1 — 5 October 2026
 
 First public draft, under the name *Graduated Interest Disclosure*.
