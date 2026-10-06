@@ -13,4 +13,4 @@ layer withholds, and none at all against a malicious operator of this process.
 from .vocab import VERSION  # noqa: F401
 
 __all__ = ["VERSION"]
-__version__ = "0.1.0"
+__version__ = "0.1.1"

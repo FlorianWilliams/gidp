@@ -63,6 +63,7 @@ from .vocab import (
     IntendedUse,
     NextAction,
     Retention,
+    SessionState,
     Surface,
 )
 
@@ -131,6 +132,9 @@ class Agent:
     _consent_actions: dict[str, tuple[ConsentAction, list[str]]] = field(
         default_factory=dict
     )
+    #: Section 16.3: compatibility requests held while PROBE is
+    #: `approval_required` and the Principal has not decided.
+    _held_probes: dict[str, CompatibilityRequest] = field(default_factory=dict)
     audit: list[AuditEntry] = field(default_factory=list)
     queries_answered: int = 0
     #: Retention modes this Agent can enforce on what it receives.
@@ -159,6 +163,15 @@ class Agent:
 
     # -- session establishment --------------------------------------------
 
+    def _start_session_state(self) -> None:
+        """Section 14.5: consent is scoped to a session. Whatever a previous
+        session granted, recorded or held does not carry into a new one, even
+        when the same Agent instance serves both."""
+        self.consents = SessionConsents()
+        self.handoff_consents = set()
+        self._consent_actions = {}
+        self._held_probes = {}
+
     def open_session(
         self,
         session_id: str,
@@ -168,6 +181,7 @@ class Agent:
     ) -> SessionOpen:
         if self._authority(Authority.PROBE) is AuthorityValue.FALSE:
             raise ProtocolError("PROBE authority is false; cannot open a session (16)")
+        self._start_session_state()
         self.session = Session(
             session_id=session_id,
             is_initiator=True,
@@ -208,6 +222,7 @@ class Agent:
         agreed = sorted(
             set(message.features) & self.supported_features, key=lambda f: f.value
         )
+        self._start_session_state()
         self.session = Session(
             session_id=message.session_id,
             is_initiator=False,
@@ -335,17 +350,64 @@ class Agent:
 
     def handle_compatibility_request(
         self, request: CompatibilityRequest
-    ) -> CompatibilityResponse | SessionClose:
+    ) -> CompatibilityResponse | SessionClose | None:
+        """Answer a compatibility request, or hold it.
+
+        Returns None when the request is held: PROBE is `approval_required`
+        and Section 16.3 gives that row no provisional response. The Agent
+        sends nothing until `principal_answers_probe` is called; silence is
+        the only wait signal the protocol has here.
+        """
         assert self.session is not None
 
         if self._authority(Authority.PROBE) is AuthorityValue.FALSE:
-            return SessionClose(
-                session_id=self.session.session_id,
-                reason=CloseReason.DECLINED,
-                request_ref=request.request_id,
-                expires_at=_soon(),
-            )
+            return self._decline_probe(request)
 
+        if self._authority(Authority.PROBE) is AuthorityValue.APPROVAL_REQUIRED:
+            self._held_probes[request.request_id] = request
+            # 0.2 deadline semantics: a held proposition is unresolved on the
+            # holder's side too, and blocks qualification until answered,
+            # expired and superseded, or withdrawn.
+            self.session.note_unanswered(
+                "received", [c.claim_id for c in request.claims if c.claim_id]
+            )
+            self._log("probe_held", f"{len(request.claims)} claim(s), awaiting Principal")
+            return None
+
+        return self._answer_compatibility(request)
+
+    def principal_answers_probe(
+        self, request: CompatibilityRequest, approved: bool
+    ) -> CompatibilityResponse | SessionClose | None:
+        """The Principal's decision on a held compatibility request.
+
+        Section 16.3: a late approval re-runs the earlier rows against the
+        authority in force now. A refusal closes the session `declined`,
+        which tells the peer nothing about why. Returns None if the request
+        was not held or the session has since moved on.
+        """
+        held = self._held_probes.pop(request.request_id, None)
+        if held is None or self.session is None:
+            return None
+        if self.session.state is SessionState.CLOSED:
+            return None
+        if not approved or self._authority(Authority.PROBE) is AuthorityValue.FALSE:
+            return self._decline_probe(held)
+        return self._answer_compatibility(held)
+
+    def _decline_probe(self, request: CompatibilityRequest) -> SessionClose:
+        assert self.session is not None
+        return SessionClose(
+            session_id=self.session.session_id,
+            reason=CloseReason.DECLINED,
+            request_ref=request.request_id,
+            expires_at=_soon(),
+        )
+
+    def _answer_compatibility(
+        self, request: CompatibilityRequest
+    ) -> CompatibilityResponse:
+        assert self.session is not None
         self.session.note_compatibility()
         outcomes: list[ClaimOutcome] = []
         requires: list[str] = []
@@ -414,6 +476,9 @@ class Agent:
                 + (" [budget exhausted]" if over_budget else ""),
             )
 
+        # A held question, now answered, is no longer unresolved here.
+        for outcome in outcomes:
+            self.session.unanswered.discard(f"received:{outcome.claim_id}")
         self.session.record_results(outcomes, direction="received")
         self.session.outstanding_requires = set(requires)
 

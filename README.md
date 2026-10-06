@@ -80,8 +80,9 @@ extracts 65% of everything private in the worked case, in seventeen claims,
 and the coarsening the specification illustrates stops none of it. Two
 controls the specification recommends do bound it (§24.3). An information
 budget kept per Standing Interest, and decided on the worst case over the
-answers it might give, holds a probing counterparty to under one bit of a
-five-bit secret while serving most honest counterparties; because it is kept
+answers it might give, caps what any probing counterparty can extract at the
+budget (two bits of a five-bit secret in the measured case; the bisection
+measured there obtained under one) while serving most honest counterparties; because it is kept
 per interest rather than per counterparty, an adversary holding several
 identities does not dilute it. A claim lattice caps the resolution of any
 answer, whatever the number of claims. A budget kept per

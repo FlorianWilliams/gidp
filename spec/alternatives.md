@@ -237,8 +237,9 @@ direction the table above does: this protocol's guarantees hold against a
 counterparty whose questions are bounded. Since these measurements were
 taken, GIDP has gained a principled way to bound them. Budgeting *information*
 rather than questions, with the refusal decided from what an observer already
-knows rather than from the value, holds a probing counterparty to under a bit
-of a five-bit threshold while serving most honest ones. It needs no identity
+knows rather than from the value, caps what any probing counterparty learns
+at the budget (two bits of a five-bit threshold here; the bisection measured
+obtained under one) while serving most honest ones. It needs no identity
 and no operator, so the Sybil result above does not defeat it. It does not, however,
 protect: a budget of two bits gives two bits away, to everyone, for good.
 The measurement is `impl/baselines/auditing.py`.

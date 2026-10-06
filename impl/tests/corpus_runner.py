@@ -156,12 +156,16 @@ class Corpus:
                 # The responder receives the question and holds it for a
                 # PROBE approval (Section 16.3): no response is produced,
                 # and the holder records the unanswered propositions.
-                answerer.session.note_unanswered(
-                    "received", [c.claim_id for c in request.claims]
+                assert answerer.handle_compatibility_request(request) is None, (
+                    f"{label}: the responder answered a question it should hold"
                 )
                 self.held_ask = (asker, answerer, request)
                 return
             response = answerer.handle_compatibility_request(request)
+            if response is None:
+                # Held for a PROBE approval the scenario does not exercise:
+                # the Principal approves and the answer is terminal.
+                response = answerer.principal_answers_probe(request, approved=True)
             asker.receive_compatibility_response(response, request)
             _check(step, response, label)
             by_id = {o.claim_id: o.result.value for o in response.results}
